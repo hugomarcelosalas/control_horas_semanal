@@ -313,15 +313,38 @@ function renderDashboardComparison(users){
  $("comparisonResult").innerHTML=chart;
 }
 function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++;}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}if(cell!==''||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row)}return rows}
-function parseCsv(text){const rows=csvRows(text),head=(rows.shift()||[]).map(x=>x.trim());return rows.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])))}
-function notionDateTime(v){const m=String(v||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);return m?{date:`${m[3]}-${pad(m[2])}-${pad(m[1])}`,time:`${pad(m[4])}:${m[5]}`}:null}
-function numNotion(v){if(v==null||v==='')return 0;return Number(String(v).replace(/\./g,'').replace(',','.'))||0}
+function normalizeNotionHeader(v){return String(v??'').replace(/^\uFEFF/,'').trim().toLowerCase()}
+function parseCsv(text){const rows=csvRows(text),head=(rows.shift()||[]).map(normalizeNotionHeader);return rows.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]??'').trim()])))}
+function notionField(row,...names){for(const name of names){const k=normalizeNotionHeader(name);if(Object.prototype.hasOwnProperty.call(row,k))return row[k]??''}return ''}
+function notionDateTime(v){const raw=String(v||'').trim();let m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);if(m)return{date:m[3]+'-'+pad(m[2])+'-'+pad(m[1]),time:pad(m[4])+':'+m[5]};m=raw.match(/(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})\s+(\d{1,2}):(\d{2})/i);if(!m)return null;const mo=monthsEs[m[2].toLowerCase()];return mo==null?null:{date:m[3]+'-'+pad(mo+1)+'-'+pad(m[1]),time:pad(m[4])+':'+m[5]}}
+function notionDateRange(v){const parts=String(v||'').split('→');if(parts.length<2)return null;const a=parseSpanishDate(parts[0].trim()),b=parseSpanishDate(parts[1].trim());return a&&b?{start:a,end:b}:null}
+function numNotion(v){if(v==null||String(v).trim()==='')return 0;const s=String(v).trim().replace(/\./g,'').replace(',','.');return Number(s)||0}
 const monthsEs={enero:0,febrero:1,marzo:2,abril:3,mayo:4,junio:5,julio:6,agosto:7,septiembre:8,octubre:9,noviembre:10,diciembre:11};
-function parseSpanishDate(s){const m=String(s||'').match(/(\d{1,2}) de ([a-záéíóú]+) de (\d{4})/i);if(!m)return null;const mo=monthsEs[m[2].toLowerCase()];return mo==null?null:`${m[3]}-${pad(mo+1)}-${pad(m[1])}`}
+function parseSpanishDate(s){const m=String(s||'').match(/(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})/i);if(!m)return null;const mo=monthsEs[m[2].toLowerCase()];return mo==null?null:m[3]+'-'+pad(mo+1)+'-'+pad(m[1])}
 function parseWeeklyRange(s){const parts=String(s||'').split('→');if(parts.length<2)return null;const a=parseSpanishDate(parts[0].trim()),b=parseSpanishDate(parts[1].trim());return a&&b?{start:a,end:b}:null}
+function addNotionVacation(username,start,end){const arr=db.vacations[username]=db.vacations[username]||[];const exists=arr.find(v=>v.start===start&&v.end===end);if(exists)return false;arr.push({id:'v_'+Date.now()+'_'+Math.random().toString(36).slice(2),start,end});return true}
 async function importNotionFile(file){if(!isAdmin())return alert('Solo el admin puede importar datos.');const target=selectedEmployee?.username;if(!target)return alert('Selecciona primero un empleado.');let files=[];if(file.name.toLowerCase().endsWith('.zip')){if(!window.JSZip)return alert('No se pudo cargar el lector ZIP. Recarga la página e inténtalo de nuevo.');const z=await JSZip.loadAsync(file);for(const [name,obj] of Object.entries(z.files)){if(!obj.dir&&name.toLowerCase().endsWith('.csv'))files.push({name,text:await obj.async('text')})}}else{files=[{name:file.name,text:await file.text()}]}
- ensureUserData(target);let hours=0,weekly=0;for(const f of files){const rows=parseCsv(f.text),headers=Object.keys(rows[0]||{}).map(x=>x.toLowerCase());if(headers.includes('entrada')&&headers.includes('salida')){for(const row of rows){const staff=row['Staff']||row['staff'];if(staff&&staff.trim().toLowerCase()!==selectedEmployee.name.trim().toLowerCase())continue;const dt=notionDateTime(row['Entrada']||row['entrada']);if(!dt)continue;const key=dt.date;const ex=numNotion(row['hs extras']||row['Hs extras']);const worked=numNotion(row['Horas']||row['horas']);db.records[target][key]={...(db.records[target][key]||{}),entry:dt.time,exit:(notionDateTime(row['Salida']||row['salida'])||{}).time||'',extraHours:ex,workedHours:worked,comments:row['Observaciones']||row['observaciones']||''};hours++}}else if(headers.includes('fecha')&&headers.includes('contrato')){for(const row of rows){const range=parseWeeklyRange(row['Fecha']||row['fecha']);if(!range)continue;const exists=(db.weekly[target]||[]).find(x=>x.start===range.start&&x.end===range.end);const item={id:exists?.id||('w_'+Date.now()+'_'+Math.random().toString(36).slice(2)),start:range.start,end:range.end,previous:numNotion(row['Anterior']||row['anterior']),contract:numNotion(row['Contrato']||row['contrato']),worked:numNotion(row['Esta semana']||row['esta semana']),locked:true};if(exists)Object.assign(exists,item);else db.weekly[target].push(item);weekly++}}}
- await saveDB();alert(`Importación completada para ${selectedEmployee.name}: ${hours} días y ${weekly} líneas semanales.`);render();}
+ ensureUserData(target);let days=0,weekly=0,vacationsImported=0;const seenDaily=new Set(),seenWeekly=new Set();
+ for(const f of files){const rows=parseCsv(f.text);for(const row of rows){
+   const entryRaw=notionField(row,'entrada'),exitRaw=notionField(row,'salida'),obs=notionField(row,'observaciones'),staff=notionField(row,'staff');
+   if(staff&&selectedEmployee.name&&staff.trim().toLowerCase()!==selectedEmployee.name.trim().toLowerCase())continue;
+   const weeklyDate=notionField(row,'fecha');
+   if(weeklyDate&&notionField(row,'contrato')!==''){
+     const range=parseWeeklyRange(weeklyDate);if(!range)continue;
+     const key=range.start+'|'+range.end;if(seenWeekly.has(key))continue;seenWeekly.add(key);
+     const exists=(db.weekly[target]||[]).find(x=>x.start===range.start&&x.end===range.end);
+     const item={id:exists?.id||('w_'+Date.now()+'_'+Math.random().toString(36).slice(2)),start:range.start,end:range.end,previous:numNotion(notionField(row,'anterior')),contract:numNotion(notionField(row,'contrato')),worked:numNotion(notionField(row,'esta semana')),locked:true};
+     if(exists)Object.assign(exists,item);else db.weekly[target].push(item);weekly++;continue;
+   }
+   const range=notionDateRange(entryRaw)||notionDateRange(exitRaw);
+   if(range && /vacacion/i.test(obs)){if(addNotionVacation(target,range.start,range.end))vacationsImported++;continue}
+   const dt=notionDateTime(entryRaw);if(!dt)continue;
+   const out=notionDateTime(exitRaw),key=dt.date,ex=numNotion(notionField(row,'hs extras')),worked=numNotion(notionField(row,'horas'));
+   const prev=db.records[target][key]||{};
+   db.records[target][key]={...prev,entry:prev.entry||dt.time,exit:out?.time||prev.exit||'',extraHours:ex,workedHours:worked,comments:obs};
+   if(!seenDaily.has(key)){seenDaily.add(key);days++}
+ }}
+ await saveDB();alert('Importación completada para '+selectedEmployee.name+': '+days+' días, '+weekly+' semanas y '+vacationsImported+' periodos de vacaciones.');render();}
 setupRange();
 $("dashboardMonth").value=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;$("dashboardYear").value=currentDate.getFullYear();
 function setupDashboardComparisonDefaults(){
