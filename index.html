@@ -109,7 +109,7 @@
     <button id="closeModal" class="modal-close">×</button><p class="eyebrow">REGISTRO DIARIO</p><h2 id="modalDate"></h2>
     <div id="dayLockNotice" class="lock-notice hidden">🔒 Este día está bloqueado por el administrador.</div>
     <form id="dayForm">
-      <div class="two-col"><label>Entrada<input id="entryTime" type="time"></label><label>Salida<input id="exitTime" type="time"></label></div>
+      <div class="two-col"><label>Entrada<input id="entryTime" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM o 1336" maxlength="5"></label><label>Salida<input id="exitTime" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM o 1336" maxlength="5"></label></div>
       <div class="two-col"><label>Horas extras<input id="extraHours" type="number" min="0" step="0.25" placeholder="0"></label><label>Horas trabajadas<input id="workedPreview" type="text" readonly></label></div>
       <label>Comentarios<textarea id="comments" rows="4" placeholder="Añade una observación..."></textarea></label>
       <div class="modal-actions"><button type="button" id="deleteDay" class="danger-outline">Borrar día</button><button type="submit" class="primary">Guardar</button></div>
