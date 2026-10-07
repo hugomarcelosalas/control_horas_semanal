@@ -25,7 +25,7 @@ function monthKey(k){return k.slice(0,7)}
 function isPreviousMonth(k){const d=parseKey(k),n=new Date();return d.getFullYear()<n.getFullYear()||(d.getFullYear()===n.getFullYear()&&d.getMonth()<n.getMonth())}
 function isBeforeToday(k){const d=parseKey(k);const n=new Date();n.setHours(0,0,0,0);return d<n}
 function isMonthLocked(k){const mk=monthKey(k);return db.monthLocks?.[mk]!==false && isPreviousMonth(k)}
-function isDayLocked(k){return isBeforeToday(k)&&!isAdmin() ? true : !!userLocks()[k]||isMonthLocked(k)}
+function isDayLocked(k){const explicit=userLocks()[k];if(explicit===false)return false;if(explicit===true)return true;return isBeforeToday(k)||isMonthLocked(k)}
 function canEditDay(k){return isAdmin()||(!isDayLocked(k))}
 function hoursToMinutes(v){return Math.round((Number(v)||0)*60)}
 function daysInclusive(s,e){return Math.max(1,Math.round((e-s)/86400000)+1)}
