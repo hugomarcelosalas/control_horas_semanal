@@ -55,7 +55,22 @@
           <div><h2>Dashboard de horas</h2><p id="dashboardEmployeeLabel">Resumen del empleado seleccionado. Las vacaciones se muestran con un color diferente.</p></div>
           <button id="closeDashboard" class="ghost">Cerrar dashboard</button>
         </div>
-        <div class="dashboard-toolbar"><label>Mes<input id="dashboardMonth" type="month"></label><label>Año<input id="dashboardYear" type="number" min="2020" max="2100"></label></div>
+        <div class="dashboard-toolbar">
+          <label>Mes<input id="dashboardMonth" type="month"></label><label>Año<input id="dashboardYear" type="number" min="2020" max="2100"></label>
+        </div>
+        <div class="dashboard-filters">
+          <div><strong>Empleados a mostrar</strong><div id="dashboardEmployeeFilters" class="dashboard-employee-filters"></div></div>
+          <button id="dashboardAllEmployees" type="button" class="ghost">Todos</button>
+        </div>
+        <div class="dashboard-comparison">
+          <div><strong>Comparar periodos</strong>
+            <select id="comparisonType"><option value="week">Semana vs semana</option><option value="month">Mes vs mes</option></select>
+          </div>
+          <label>Periodo A<input id="comparisonA" type="date"></label>
+          <label>Periodo B<input id="comparisonB" type="date"></label>
+          <button id="comparisonRefresh" type="button" class="primary">Comparar</button>
+          <div id="comparisonResult" class="comparison-result"></div>
+        </div>
         <div id="dashboardLegend" class="chart-legend"></div><div id="dashboardCalendar" class="dashboard-calendar"></div>
         <div class="chart-legend"><span><i class="legend-box work-legend"></i> Trabajo</span><span><i class="legend-box vacation-legend"></i> Vacaciones</span></div>
         <div class="chart-wrap"><h3>Horas trabajadas por día</h3><div id="barChart" class="bar-chart"></div></div>
