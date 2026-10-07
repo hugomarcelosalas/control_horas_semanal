@@ -157,6 +157,16 @@ function chartBars(items,users){
  return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
 }
 function dashboardUsers(mode){return (mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean)}
+function dashboardMetricsForUser(user,k){
+ const record=(db.records?.[user.username]||{})[k]||{};
+ return {work:totalMinutes(record),vac:vacationMinutesForUser(user,k)};
+}
+function vacationMinutesForUser(user,k){
+ const list=(db.vacations?.[user.username]||[]);
+ const v=list.find(x=>k>=x.start&&k<=x.end);
+ if(!v||!isWeekday(parseKey(k)))return 0;
+ return (Number(user?.weeklyHours)||0)*60/5;
+}
 function dashboardDaySegments(users,k){
  return users.map(u=>{const q=dashboardMetricsForUser(u,k);return {username:u.username,name:u.name,color:u.color||'#172033',minutes:q.work}}).filter(x=>x.minutes>0);
 }
