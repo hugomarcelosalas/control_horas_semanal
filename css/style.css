@@ -24,3 +24,16 @@
 .employee-name{font-weight:800!important;background:#fff!important;border-width:2px!important} .employee-name.active{background:#fff!important}
 .bar-stack{width:18px;min-height:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:stretch;gap:1px}.segment-bar{width:18px!important;border-radius:0!important;min-height:2px}.bar-stack .segment-bar:first-child{border-radius:4px 4px 0 0!important}.bar-stack .vacation-bar{width:18px!important;border-radius:0!important}.bar-item{min-width:26px}
 .dash-day-colors{display:flex;gap:2px;height:7px;margin-top:4px}.dash-day-colors i{display:block;width:100%;min-width:5px;height:7px;border-radius:2px}.dash-day{gap:3px}
+
+/* Dashboard general: barras agrupadas por empleado */
+.grouped-bar-chart{height:230px;display:flex;align-items:flex-end;gap:10px;border-bottom:1px solid #dce2e9;padding:0 5px;overflow-x:auto}
+.chart-group{height:210px;min-width:52px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.chart-bars-row{height:190px;display:flex;align-items:flex-end;justify-content:center;gap:2px}
+.mini-bar{height:190px;min-width:10px;display:flex;flex-direction:column;align-items:center;justify-content:flex-end}
+.mini-bar-value{font-size:7px;color:#697486;white-space:nowrap;min-height:9px}
+.segment-bar,.vacation-bar{width:12px!important;border-radius:3px 3px 0 0!important;min-height:0!important}
+.chart-group>small{font-size:9px;color:#7a8493}
+.chart-legend{display:flex;gap:12px;flex-wrap:wrap;padding:0 0 10px;color:#687386;font-size:11px;font-weight:700}
+.chart-legend span{display:flex;align-items:center;gap:5px}
+.legend-box{width:10px;height:10px;border-radius:2px;display:inline-block}
+.vacation-legend{background:#5b8def}
