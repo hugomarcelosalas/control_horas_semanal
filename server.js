@@ -27,7 +27,7 @@ async function init(){
     const password=process.env.ADMIN_PASSWORD;
     if(!password) throw new Error('ADMIN_PASSWORD is required on first startup');
     const users=DEFAULT_USERS.map(u=>({...u,passwordHash:u.username==='admin'?bcrypt.hashSync(password,12):bcrypt.hashSync(u.username,12)}));
-    const db={users,records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},monthLocks:{},version:8};
+    const db={users,records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},monthLocks:{},auditLog:[],version:8};
     for(const u of users){db.records[u.username]={};db.locks[u.username]={};db.weekly[u.username]=[];db.vacations[u.username]=[];}
     await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[db]);
   }
@@ -40,10 +40,12 @@ function requireAuth(req,res,next){const u=tokenUser(req);if(!u)return res.statu
 function sanitizeIncoming(db){db.version=8;db.records=db.records||{};db.locks=db.locks||{};db.weekly=db.weekly||{};db.vacations=db.vacations||{};db.balanceVisibility=db.balanceVisibility||{};db.monthLocks=db.monthLocks||{};db.users=(db.users||[]).map(u=>({...u,active:u.role==='admin'?true:u.active!==false}));return db}
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
 function publicUsers(users){return users.map(({passwordHash,...u})=>u)}
+function auditChanges(old,incoming,actor){const out=[],now=new Date().toISOString(),actorName=actor?.name||actor?.username||'Administrador',add=message=>out.push({at:now,actorName,message});for(const u of incoming.users||[]){const o=(old.users||[]).find(x=>x.username===u.username);if(!o)add('Creó al empleado '+u.name);else if(JSON.stringify({...o,passwordHash:undefined})!==JSON.stringify({...u,passwordHash:undefined}))add('Actualizó al empleado '+u.name)}for(const u of old.users||[]){if(!(incoming.users||[]).some(x=>x.username===u.username))add('Eliminó al empleado '+u.name)}for(const type of ['records','weekly','vacations','locks']){const users=new Set([...Object.keys(old[type]||{}),...Object.keys(incoming[type]||{})]);for(const username of users){const a=old[type]?.[username]||{},b=incoming[type]?.[username]||{};if(JSON.stringify(a)!==JSON.stringify(b)){const name=(incoming.users||old.users||[]).find(x=>x.username===username)?.name||username;add('Modificó '+type+' de '+name)}}}return out}
 
 app.post('/api/login',async(req,res)=>{try{const username=String(req.body.username||'').trim().toLowerCase(),password=String(req.body.password||'');const db=await getDb();const u=db.users.find(x=>x.username===username);if(!u||u.role!=='admin'&&u.active===false||!bcrypt.compareSync(password,u.passwordHash))return res.status(401).json({error:'Usuario o contraseña incorrectos'});const token=crypto.randomBytes(32).toString('hex');sessions.set(token,{username:u.username,role:u.role,name:u.name,weeklyHours:u.weeklyHours});res.json({token,user:{username:u.username,role:u.role,name:u.name,weeklyHours:u.weeklyHours},db:publicDb(db)});}catch(e){res.status(500).json({error:e.message})}});
 app.post('/api/logout',requireAuth,(req,res)=>{for(const [t,u] of sessions)if(u.username===req.auth.username)sessions.delete(t);res.json({ok:true})});
 app.get('/api/state',requireAuth,async(req,res)=>{res.json(publicDb(await getDb()))});
+app.get('/api/audit',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});const db=await getDb();res.json((db.auditLog||[]).slice().reverse())});
 app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);const me=req.auth;
   if(me.role!=='admin'){
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
@@ -54,7 +56,7 @@ app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), i
   }
   const oldByUser=new Map(old.users.map(u=>[u.username,u]));
   incoming.users=(incoming.users||[]).map(u=>({...u,passwordHash:oldByUser.get(u.username)?.passwordHash}));
-  await putDb(incoming);res.json({ok:true,db:publicDb(incoming)});
+  const changes=auditChanges(old,incoming,me);incoming.auditLog=[...(old.auditLog||[]),...changes].slice(-500);await putDb(incoming);res.json({ok:true,db:publicDb(incoming)});
 }catch(e){res.status(500).json({error:e.message})}});
 
 app.post('/api/admin/user',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const db=await getDb(),{name,username,password,weeklyHours,active,color}=req.body;const u=String(username||'').trim().toLowerCase();if(!name||!u||!password)return res.status(400).json({error:'Faltan datos'});if(db.users.some(x=>x.username===u))return res.status(409).json({error:'Ese usuario ya existe'});db.users.push({username:u,name:String(name).trim(),role:'employee',weeklyHours:Number(weeklyHours)||40,active:active!==false,color:String(color||'#2563eb'),passwordHash:bcrypt.hashSync(String(password),12)});db.records[u]={};db.locks[u]={};db.weekly[u]=[];db.vacations[u]=[];db.balanceVisibility[u]=true;await putDb(db);res.json(publicDb(db));}catch(e){res.status(500).json({error:e.message})}});
