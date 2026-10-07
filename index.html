@@ -31,7 +31,7 @@
     <main class="container">
       <section class="hero">
         <div><p class="eyebrow">ZONA DE CONTROL</p><h1 id="employeeTitle">Mi horario</h1><p id="employeeSubtitle"></p></div>
-        <div class="hero-stat"><span>Balance actual · todos los empleados</span><strong id="heroBalance">0:00</strong></div>
+        <div id="heroBalanceBox" class="hero-stat"><span>Balance actual</span><strong id="heroBalance">0:00</strong></div>
       </section>
 
       <section id="adminPanel" class="panel hidden">
@@ -56,7 +56,7 @@
           <button id="closeDashboard" class="ghost">Cerrar dashboard</button>
         </div>
         <div class="dashboard-toolbar"><label>Mes<input id="dashboardMonth" type="month"></label><label>Año<input id="dashboardYear" type="number" min="2020" max="2100"></label></div>
-        <div id="dashboardCalendar" class="dashboard-calendar"></div>
+        <div id="dashboardLegend" class="chart-legend"></div><div id="dashboardCalendar" class="dashboard-calendar"></div>
         <div class="chart-legend"><span><i class="legend-box work-legend"></i> Trabajo</span><span><i class="legend-box vacation-legend"></i> Vacaciones</span></div>
         <div class="chart-wrap"><h3>Horas trabajadas por día</h3><div id="barChart" class="bar-chart"></div></div>
         <div class="chart-wrap"><h3>Horas trabajadas por semanas (lunes a domingo)</h3><div id="weeklyBarChart" class="bar-chart"></div></div>
@@ -114,7 +114,7 @@
 
   <div id="userModal" class="modal hidden"><div class="modal-card">
     <button id="closeUserModal" class="modal-close">×</button><p class="eyebrow">ADMINISTRACIÓN</p><h2 id="userModalTitle">Crear usuario</h2>
-    <form id="userForm"><label>Nombre<input id="newName" required></label><label>Usuario<input id="newUsername" required></label><label>Contraseña<input id="newPassword" type="password"></label><label>Horas contratadas por semana<input id="newWeeklyHours" type="number" min="0" step="0.5" value="40" required></label><label>Color del empleado<input id="newColor" type="color" value="#172033"></label><label class="checkbox-line"><input id="newActive" type="checkbox" checked> Empleado activo</label><button id="userSubmit" class="primary full" type="submit">Crear usuario</button></form>
+    <form id="userForm"><label>Nombre<input id="newName" required></label><label>Usuario<input id="newUsername" required></label><label>Contraseña<input id="newPassword" type="password"></label><label>Horas contratadas por semana<input id="newWeeklyHours" type="number" min="0" step="0.5" value="40" required></label><label>Color del empleado<input id="newColor" type="color" value="#2563eb"></label><label class="checkbox-line"><input id="newActive" type="checkbox" checked> Empleado activo</label><button id="userSubmit" class="primary full" type="submit">Crear usuario</button></form>
   </div></div>
 
 
