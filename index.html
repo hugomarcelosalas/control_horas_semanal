@@ -39,7 +39,7 @@
           <div><h2>Administración</h2><p>Gestión de empleados, bloqueos y configuración de la lista semanal.</p></div>
           <div class="admin-actions"><button id="addUserBtn" class="primary">+ Crear usuario</button><button id="dashboardBtn" class="ghost">📈 Dashboard general</button><button id="balancesBtn" class="ghost">💰 Balances</button></div>
         </div>
-        <div id="employeeButtons" class="employee-buttons"></div><div class="admin-subsection"><h3>Empleados no activos</h3><div id="inactiveEmployees" class="inactive-employees"></div></div><div class="admin-subsection import-box"><h3>Importar datos de Notion</h3><p>Selecciona un empleado activo y sube el ZIP o CSV exportado de Notion. Se importan horas diarias y lista semanal.</p><input id="notionImportFile" type="file" accept=".zip,.csv"><button id="importNotionBtn" class="ghost" type="button">📥 Importar Notion</button></div>
+        <div id="employeeButtons" class="employee-buttons"></div><div class="admin-subsection"><div class="subsection-head"><h3>Empleados no activos</h3><button id="toggleInactiveEmployees" class="small-btn hidden" type="button">Ver no activos</button></div><div id="inactiveEmployees" class="inactive-employees hidden"></div></div><div class="admin-subsection import-box"><h3>Importar datos de Notion</h3><p>Selecciona un empleado activo y sube el ZIP o CSV exportado de Notion. Se importan horas diarias y lista semanal.</p><input id="notionImportFile" type="file" accept=".zip,.csv"><button id="importNotionBtn" class="ghost" type="button">📥 Importar Notion</button></div>
       </section>
 
       <section id="balancesPanel" class="panel hidden">
@@ -56,11 +56,11 @@
           <button id="closeDashboard" class="ghost">Cerrar dashboard</button>
         </div>
         <div class="dashboard-toolbar">
-          <label>Mes<input id="dashboardMonth" type="month"></label><label>Año<input id="dashboardYear" type="number" min="2020" max="2100"></label>
+          <button id="dashboardPrevPeriod" class="icon-btn" type="button" title="Periodo anterior">‹</button><label>Mes<input id="dashboardMonth" type="month"></label><label>Año<input id="dashboardYear" type="number" min="2020" max="2100"></label><button id="dashboardNextPeriod" class="icon-btn" type="button" title="Periodo siguiente">›</button>
         </div>
         <div class="dashboard-filters">
           <div><strong>Empleados a mostrar</strong><div id="dashboardEmployeeFilters" class="dashboard-employee-filters"></div></div>
-          <button id="dashboardAllEmployees" type="button" class="ghost">Todos</button>
+          <div class="dashboard-filter-actions"><button id="dashboardActiveEmployees" type="button" class="ghost">Activos</button><button id="dashboardAllEmployees" type="button" class="ghost">Todos</button></div>
         </div>
         <div class="dashboard-comparison">
           <div><strong>Comparar periodos</strong>
