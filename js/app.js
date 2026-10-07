@@ -316,6 +316,7 @@ function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<te
 function normalizeNotionHeader(v){return String(v??'').replace(/^\uFEFF/,'').trim().toLowerCase()}
 function parseCsv(text){const rows=csvRows(text),head=(rows.shift()||[]).map(normalizeNotionHeader);return rows.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]??'').trim()])))}
 function notionField(row,...names){for(const name of names){const k=normalizeNotionHeader(name);if(Object.prototype.hasOwnProperty.call(row,k))return row[k]??''}return ''}
+function normalizePersonName(v){return String(v??'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/\\s+/g,' ').trim().toLowerCase()}
 function notionDateTime(v){const raw=String(v||'').trim();let m=raw.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);if(m)return{date:m[3]+'-'+pad(m[2])+'-'+pad(m[1]),time:pad(m[4])+':'+m[5]};m=raw.match(/(\d{1,2})\s+de\s+([a-záéíóú]+)\s+de\s+(\d{4})\s+(\d{1,2}):(\d{2})/i);if(!m)return null;const mo=monthsEs[m[2].toLowerCase()];return mo==null?null:{date:m[3]+'-'+pad(mo+1)+'-'+pad(m[1]),time:pad(m[4])+':'+m[5]}}
 function notionDateRange(v){const parts=String(v||'').split('→');if(parts.length<2)return null;const a=parseSpanishDate(parts[0].trim()),b=parseSpanishDate(parts[1].trim());return a&&b?{start:a,end:b}:null}
 function numNotion(v){if(v==null||String(v).trim()==='')return 0;const s=String(v).trim().replace(/\./g,'').replace(',','.');return Number(s)||0}
@@ -327,7 +328,7 @@ async function importNotionFile(file){if(!isAdmin())return alert('Solo el admin 
  ensureUserData(target);let days=0,weekly=0,vacationsImported=0;const seenDaily=new Set(),seenWeekly=new Set();
  for(const f of files){const rows=parseCsv(f.text);for(const row of rows){
    const entryRaw=notionField(row,'entrada'),exitRaw=notionField(row,'salida'),obs=notionField(row,'observaciones'),staff=notionField(row,'staff');
-   if(staff&&selectedEmployee.name&&staff.trim().toLowerCase()!==selectedEmployee.name.trim().toLowerCase())continue;
+   if(staff&&selectedEmployee.name&&normalizePersonName(staff)!==normalizePersonName(selectedEmployee.name))continue;
    const weeklyDate=notionField(row,'fecha');
    if(weeklyDate&&notionField(row,'contrato')!==''){
      const range=parseWeeklyRange(weeklyDate);if(!range)continue;
