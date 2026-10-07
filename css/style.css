@@ -37,3 +37,18 @@
 .chart-legend span{display:flex;align-items:center;gap:5px}
 .legend-box{width:10px;height:10px;border-radius:2px;display:inline-block}
 .vacation-legend{background:#5b8def}
+
+/* Filtros y comparador del dashboard */
+.dashboard-filters{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:14px 20px 0}
+.dashboard-employee-filters{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.dashboard-filter-chip{cursor:pointer}
+.dashboard-filter-chip input{position:absolute;opacity:0;pointer-events:none}
+.dashboard-filter-chip span{display:inline-flex;align-items:center;padding:6px 10px;border:2px solid #dce2e9;border-radius:999px;background:#fff;font-size:12px;font-weight:700}
+.dashboard-filter-chip input:checked+span{background:#f3f6fa;box-shadow:inset 0 0 0 1px #172033}
+.dashboard-comparison{margin:16px 20px 0;padding:14px;border:1px solid #e1e6ec;border-radius:12px;background:#fafbfc;display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+.dashboard-comparison>div:first-child{display:flex;flex-direction:column;gap:6px}
+.dashboard-comparison select{padding:9px 10px;border:1px solid #d5dbe3;border-radius:8px;background:#fff}
+.dashboard-comparison label{margin:0}
+.dashboard-comparison .comparison-result{width:100%;padding-top:8px}
+.comparison-result .chart-legend{margin-top:4px}
+@media(max-width:700px){.dashboard-filters{align-items:flex-start;flex-direction:column}.dashboard-comparison{align-items:stretch;flex-direction:column}.dashboard-comparison label,.dashboard-comparison select,.dashboard-comparison button{width:100%}}
