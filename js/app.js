@@ -328,7 +328,7 @@ async function importNotionFile(file){if(!isAdmin())return alert('Solo el admin 
  ensureUserData(target);let days=0,weekly=0,vacationsImported=0;const seenDaily=new Set(),seenWeekly=new Set();
  for(const f of files){const rows=parseCsv(f.text);for(const row of rows){
    const entryRaw=notionField(row,'entrada'),exitRaw=notionField(row,'salida'),obs=notionField(row,'observaciones'),staff=notionField(row,'staff');
-   if(staff&&selectedEmployee.name&&normalizePersonName(staff)!==normalizePersonName(selectedEmployee.name))continue;
+   // El empleado ya se selecciona en la pantalla de importación. No filtramos por Staff para no perder históricos cuando Notion usa un nombre distinto o con apellidos.
    const weeklyDate=notionField(row,'fecha');
    if(weeklyDate&&notionField(row,'contrato')!==''){
      const range=parseWeeklyRange(weeklyDate);if(!range)continue;
