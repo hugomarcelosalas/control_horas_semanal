@@ -10,7 +10,23 @@ function dateKey(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.ge
 function parseKey(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)}
 function fmtDate(k){return parseKey(k).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"})}
 function fmtLong(k){return parseKey(k).toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
-function minutesFromTime(t){if(!t)return 0;const [h,m]=t.split(":").map(Number);return h*60+m}
+function normalizeTimeValue(v){
+ const raw=String(v??"").trim();
+ if(!raw)return "";
+ let h,m;
+ const colon=raw.match(/^(\d{1,2})\s*[:.]\s*(\d{1,2})$/);
+ if(colon){h=Number(colon[1]);m=Number(colon[2]);}
+ else{
+   const digits=raw.replace(/\D/g,"");
+   if(digits.length===1||digits.length===2){h=Number(digits);m=0}
+   else if(digits.length===3){h=Number(digits.slice(0,1));m=Number(digits.slice(1))}
+   else if(digits.length===4){h=Number(digits.slice(0,2));m=Number(digits.slice(2))}
+   else return null;
+ }
+ if(!Number.isInteger(h)||!Number.isInteger(m)||h<0||h>23||m<0||m>59)return null;
+ return `${pad(h)}:${pad(m)}`;
+}
+function minutesFromTime(t){if(!t)return 0;const normalized=normalizeTimeValue(t);if(!normalized)return 0;const [h,m]=normalized.split(":").map(Number);return h*60+m}
 function workMinutes(r){if(!r)return 0;if((!r.entry||!r.exit)&&r.workedHours!=null)return hoursToMinutes(r.workedHours);if(!r.entry||!r.exit)return 0;let a=minutesFromTime(r.entry),b=minutesFromTime(r.exit);if(b<a)b+=1440;return b-a}
 function fmtMinutes(min){const sign=min<0?"-":"";min=Math.abs(Math.round(min));return `${sign}${Math.floor(min/60)}:${pad(min%60)}`}
 function extraMinutes(r){return Math.round((Number(r?.extraHours)||0)*60)}
@@ -23,9 +39,10 @@ function classBalance(v){return v>0?"positive":v<0?"negative":"neutral"}
 function isAdmin(){return currentUser?.role==="admin"}
 function monthKey(k){return k.slice(0,7)}
 function isPreviousMonth(k){const d=parseKey(k),n=new Date();return d.getFullYear()<n.getFullYear()||(d.getFullYear()===n.getFullYear()&&d.getMonth()<n.getMonth())}
-function isBeforeToday(k){const d=parseKey(k);const n=new Date();n.setHours(0,0,0,0);return d<n}
-function isMonthLocked(k){const mk=monthKey(k);return db.monthLocks?.[mk]!==false && isPreviousMonth(k)}
-function isDayLocked(k){const explicit=userLocks()[k];if(explicit===false)return false;if(explicit===true)return true;return isBeforeToday(k)||isMonthLocked(k)}
+function startOfCurrentWeek(){const n=new Date();n.setHours(0,0,0,0);n.setDate(n.getDate()-((n.getDay()+6)%7));return n}
+function isBeforeCurrentWeek(k){return parseKey(k)<startOfCurrentWeek()}
+function isMonthLocked(k){const mk=monthKey(k);return db.monthLocks?.[mk]===true}
+function isDayLocked(k){const explicit=userLocks()[k];if(explicit===false)return false;if(explicit===true)return true;return isBeforeCurrentWeek(k)}
 function canEditDay(k){return isAdmin()||(!isDayLocked(k))}
 function hoursToMinutes(v){return Math.round((Number(v)||0)*60)}
 function daysInclusive(s,e){return Math.max(1,Math.round((e-s)/86400000)+1)}
@@ -102,16 +119,26 @@ function renderRange(){
  let worked=0;for(let d=new Date(s);d<=e;d.setDate(d.getDate()+1))worked+=totalMinutesForDate(dateKey(d));const balance=worked-(dailyContractMinutes()*daysInclusive(s,e));$("rangeHours").textContent=fmtMinutes(worked);$("rangeBalance").textContent=fmtMinutes(balance);$("rangeBalance").className=classBalance(balance);
 }
 $("rangeStart").onchange=renderRange;$("rangeEnd").onchange=renderRange;
-async function toggleCurrentMonthLock(){if(!isAdmin())return;const mk=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;db.monthLocks=db.monthLocks||{};db.monthLocks[mk]=db.monthLocks[mk]===false?true:false;await saveDB();render()}
+async function toggleCurrentMonthLock(){if(!isAdmin())return;const mk=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;db.monthLocks=db.monthLocks||{};db.monthLocks[mk]=db.monthLocks[mk]===true?false:true;await saveDB();render()}
 document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{activeView=b.dataset.view;render()});
 $("prevMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1);setupRange();render()};$("nextMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()+1);setupRange();render()};
 
 function openDay(k){selectedDate=k;const r=userRecords()[k]||{},manualLocked=!!userLocks()[k],monthLocked=isMonthLocked(k),locked=isDayLocked(k),editable=canEditDay(k);$("modalDate").textContent=fmtLong(k);$("entryTime").value=r.entry||"";$("exitTime").value=r.exit||"";$("extraHours").value=r.extraHours??"";$("comments").value=r.comments||"";$("dayLockNotice").classList.toggle("hidden",!locked);$("dayLockNotice").textContent=monthLocked?"🔒 Este mes está cerrado por defecto porque es anterior al mes actual.":"🔒 Este día está bloqueado por el administrador.";$("dayForm").querySelectorAll("input,textarea").forEach(x=>x.disabled=!editable);$("deleteDay").disabled=!editable;$("deleteDay").textContent=isAdmin()&&locked?"Desbloquea para editar/borrar":"Borrar día";updateWorkedPreview();$("dayModal").classList.remove("hidden")}
 function updateWorkedPreview(){const r={entry:$("entryTime").value,exit:$("exitTime").value};$("workedPreview").value=workMinutes(r)?fmtMinutes(workMinutes(r)):"0:00"}
 $("entryTime").oninput=updateWorkedPreview;$("exitTime").oninput=updateWorkedPreview;$("closeModal").onclick=()=>$("dayModal").classList.add("hidden");$("dayModal").onclick=e=>{if(e.target.id==="dayModal")$("dayModal").classList.add("hidden")};
-$("dayForm").onsubmit=e=>{e.preventDefault();if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}ensureUserData(selectedEmployee.username);const r={entry:$("entryTime").value,exit:$("exitTime").value,extraHours:Number($("extraHours").value)||0,comments:$("comments").value.trim()};if(!r.entry&&!r.exit&&!r.extraHours&&!r.comments)delete db.records[selectedEmployee.username][selectedDate];else db.records[selectedEmployee.username][selectedDate]=r;saveDB();$("dayModal").classList.add("hidden");render()};
+$("dayForm").onsubmit=e=>{
+ e.preventDefault();
+ if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}
+ const entry=normalizeTimeValue($("entryTime").value),exit=normalizeTimeValue($("exitTime").value);
+ if(entry===null||exit===null){alert("Introduce la hora con formato HH:MM. También puedes escribirla sin dos puntos, por ejemplo 1336.");return}
+ $("entryTime").value=entry;$("exitTime").value=exit;
+ ensureUserData(selectedEmployee.username);
+ const r={entry,exit,extraHours:Number($("extraHours").value)||0,comments:$("comments").value.trim()};
+ if(!r.entry&&!r.exit&&!r.extraHours&&!r.comments)delete db.records[selectedEmployee.username][selectedDate];else db.records[selectedEmployee.username][selectedDate]=r;
+ saveDB();$("dayModal").classList.add("hidden");render()
+};
 $("deleteDay").onclick=()=>{if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}if(!confirm("¿Seguro que quieres borrar este registro diario?"))return;delete db.records[selectedEmployee.username][selectedDate];saveDB();$("dayModal").classList.add("hidden");render()};
-function toggleDayLock(k){if(!isAdmin())return;ensureUserData(selectedEmployee.username);db.locks[selectedEmployee.username][k]=!db.locks[selectedEmployee.username][k];saveDB();render()}
+function toggleDayLock(k){if(!isAdmin())return;ensureUserData(selectedEmployee.username);db.locks[selectedEmployee.username][k]=isDayLocked(k)?false:true;saveDB();render()}
 
 function renderWeekly(){const rows=weeklyRows();let h=`<div class="weekly-head"><div><h3>Lista semanal</h3><p>Balance = Esta semana − Contrato + Anterior.</p></div>${isAdmin()?'<button id="addWeeklyBtn" class="primary">+ Añadir línea</button>':""}</div>`;if(!rows.length)h+='<div class="empty-state">No hay líneas semanales todavía.</div>';else h+=`<div class="weekly-list">${rows.map(r=>{const bal=hoursToMinutes(r.worked)-hoursToMinutes(r.contract)+hoursToMinutes(r.previous);return `<div class="weekly-row ${r.locked?"weekly-locked":""}"><div class="weekly-dates"><strong>${fmtDate(r.start)}</strong><span>→</span><strong>${fmtDate(r.end)}</strong>${r.locked?"<span class='lock-pill'>🔒 Bloqueado</span>":""}</div><div><span>Anterior</span><strong>${fmtMinutes(hoursToMinutes(r.previous))}</strong></div><div><span>Contrato</span><strong>${fmtMinutes(hoursToMinutes(r.contract))}</strong></div><div><span>Esta semana</span><strong>${fmtMinutes(hoursToMinutes(r.worked))}</strong></div><div><span>Balance</span><strong class="${classBalance(bal)}">${fmtMinutes(bal)}</strong></div>${isAdmin()?`<div class="weekly-admin"><button class="small-btn edit-weekly" data-id="${r.id}">Editar</button><button class="small-btn lock-weekly" data-id="${r.id}">${r.locked?"🔓 Desbloquear":"🔒 Bloquear"}</button></div>`:""}</div>`}).join("")}</div>`;$("weeklyView").innerHTML=h;if(isAdmin())$("addWeeklyBtn")?.addEventListener("click",()=>openWeekly());document.querySelectorAll(".edit-weekly").forEach(b=>b.onclick=()=>openWeekly(b.dataset.id));document.querySelectorAll(".lock-weekly").forEach(b=>b.onclick=()=>toggleWeeklyLock(b.dataset.id))}
 function openWeekly(id=null){selectedWeeklyId=id;const r=id?weeklyRows().find(x=>x.id===id):{start:"",end:"",previous:0,contract:selectedEmployee.weeklyHours,worked:0,locked:false};$("weeklyModalTitle").textContent=id?"Editar línea semanal":"Nueva línea semanal";$("weeklyStart").value=r.start;$("weeklyEnd").value=r.end;$("weeklyPrevious").value=r.previous??0;$("weeklyContract").value=r.contract??selectedEmployee.weeklyHours;$("weeklyWorked").value=r.worked??0;const locked=r.locked!==false;$("weeklyLockNotice").classList.toggle("hidden",!locked);$("weeklyForm").querySelectorAll("input").forEach(x=>x.disabled=locked&&!isAdmin());$("deleteWeekly").disabled=locked&&!isAdmin();$("weeklyModal").classList.remove("hidden");updateWeeklyPreview()}
