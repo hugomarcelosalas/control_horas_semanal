@@ -71,3 +71,5 @@
   .day-hours{font-size:11px;white-space:nowrap}
   .day-missing{font-size:8px;white-space:normal;word-break:break-word}
 }
+
+.subsection-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.dashboard-filter-actions{display:flex;gap:7px;flex-shrink:0}.dashboard-toolbar{justify-content:flex-start}.dashboard-toolbar .icon-btn{flex:0 0 34px}.dashboard-filter-chip span{opacity:.95}.dashboard-filter-chip input:not(:checked)+span{opacity:.55}
