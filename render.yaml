@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: control-horario
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: control-horario-db
+          property: connectionString
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SESSION_SECRET
+        generateValue: true
+
+databases:
+  - name: control-horario-db
+    plan: free
