@@ -142,17 +142,19 @@ $("exportBalancesPdf").onclick=exportBalancesPdf;
 $("importNotionBtn").onclick=()=>{const f=$("notionImportFile").files[0];if(!f)return alert("Selecciona un ZIP o CSV exportado de Notion.");importNotionFile(f)};
 $("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$("balancesPanel").classList.add("hidden");$("mainPanel").classList.add("hidden");renderDashboard("general")};$("closeDashboard").onclick=()=>{$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden")};$("dashboardMonth").onchange=renderDashboard;$("dashboardYear").onchange=renderDashboard;
 function chartBars(items,users){
- const max=Math.max(1,...items.flatMap(x=>(x.segments||[]).map(seg=>seg.minutes)),...items.map(x=>x.vac||0));
+ const totals=items.map(x=>(x.segments||[]).reduce((sum,seg)=>sum+(Number(seg.minutes)||0),0)+(Number(x.vac)||0));
+ const max=Math.max(1,...totals);
  const legend=(users||[]).map(u=>`<span><i class="legend-box" style="background:${u.color||'#172033'}"></i>${u.name}</span>`).join("");
  const vacationLegend=items.some(x=>x.vac>0)?'<span><i class="legend-box vacation-legend"></i>Vacaciones</span>':"";
- const body=items.map(x=>{
-   const bars=(x.segments||[]).map(seg=>{
-     const h=(seg.minutes/max)*170;
-     return `<div class="mini-bar"><div class="mini-bar-value">${fmtMinutes(seg.minutes)}</div><div class="bar segment-bar" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.color||'#172033'}"></div></div>`;
+ const body=items.map((x,index)=>{
+   const parts=(x.segments||[]).filter(seg=>seg.minutes>0);
+   if(x.vac>0)parts.push({name:"Vacaciones",minutes:x.vac,color:"#000000",vacation:true});
+   const total=totals[index]||0;
+   const stack=parts.map((seg,i)=>{
+     const h=total?(seg.minutes/max)*190:0;
+     return `<div class="bar segment-bar ${seg.vacation?"vacation-bar":""}" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.vacation?"#000000":(seg.color||'#172033')}"></div>`;
    }).join("");
-   const vacH=x.vac?(x.vac/max)*170:0;
-   const vac=x.vac?`<div class="mini-bar"><div class="mini-bar-value">${fmtMinutes(x.vac)}</div><div class="bar vacation-bar" title="Vacaciones: ${fmtMinutes(x.vac)}" style="height:${vacH}px"></div></div>`:"";
-   return `<div class="chart-group"><div class="chart-bars-row">${bars}${vac}</div><small>${x.label}</small></div>`;
+   return `<div class="chart-group"><div class="chart-bars-row"><div class="bar-stack" title="${fmtMinutes(total)}">${stack}</div></div><div class="mini-bar-total">${total?fmtMinutes(total):""}</div><small>${x.label}</small></div>`;
  }).join("");
  return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
 }
