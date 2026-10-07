@@ -31,7 +31,7 @@
     <main class="container">
       <section class="hero">
         <div><p class="eyebrow">ZONA DE CONTROL</p><h1 id="employeeTitle">Mi horario</h1><p id="employeeSubtitle"></p></div>
-        <div id="heroBalanceBox" class="hero-stat"><span>Balance actual</span><strong id="heroBalance">0:00</strong></div>
+        <div class="hero-stats"><div id="heroBalanceBox" class="hero-stat"><span>Balance actual</span><strong id="heroBalance">0:00</strong></div><div class="hero-stat"><span>Horas trabajadas esta semana</span><strong id="heroWeekWorked">0:00</strong><small id="heroWeekRange"></small></div><div class="hero-stat"><span>Horas contrato</span><strong id="heroWeekContract">0:00</strong></div></div>
       </section>
 
       <section id="adminPanel" class="panel hidden">
@@ -39,7 +39,7 @@
           <div><h2>Administración</h2><p>Gestión de empleados, bloqueos y configuración de la lista semanal.</p></div>
           <div class="admin-actions"><button id="addUserBtn" class="primary">+ Crear usuario</button><button id="dashboardBtn" class="ghost">📈 Dashboard general</button><button id="balancesBtn" class="ghost">💰 Balances</button></div>
         </div>
-        <div id="employeeButtons" class="employee-buttons"></div><div class="admin-subsection"><div class="subsection-head"><h3>Empleados no activos</h3><button id="toggleInactiveEmployees" class="small-btn hidden" type="button">Ver no activos</button></div><div id="inactiveEmployees" class="inactive-employees hidden"></div></div><div class="admin-subsection import-box"><h3>Importar datos de Notion</h3><p>Selecciona un empleado activo y sube el ZIP o CSV exportado de Notion. Se importan horas diarias y lista semanal.</p><input id="notionImportFile" type="file" accept=".zip,.csv"><button id="importNotionBtn" class="ghost" type="button">📥 Importar Notion</button></div>
+        <div id="employeeButtons" class="employee-buttons"></div><div class="admin-subsection"><div class="subsection-head"><h3>Empleados no activos</h3><button id="toggleInactiveEmployees" class="small-btn hidden" type="button">Ver no activos</button></div><div id="inactiveEmployees" class="inactive-employees hidden"></div></div><div class="admin-subsection"><div class="subsection-head"><h3>Exportación Excel</h3><div class="admin-actions"><button id="exportEmployeeExcel" class="small-btn" type="button">📗 Excel empleado</button><button id="exportAllExcel" class="small-btn" type="button">📗 Excel todos</button><button id="exportMonthlyExcel" class="small-btn" type="button">📅 Resumen mensual</button><button id="exportAnnualExcel" class="small-btn" type="button">📆 Resumen anual</button></div></div></div><div class="admin-subsection"><div class="subsection-head"><h3>Herramientas de administración</h3><div class="admin-actions"><button id="weekReviewBtn" class="small-btn" type="button">🔎 Revisión de semana</button><button id="auditRefreshBtn" class="small-btn" type="button">📜 Historial de cambios</button></div></div><div id="weekReviewBox" class="review-box hidden"></div><div id="auditHistory" class="audit-history hidden"></div></div><div class="admin-subsection import-box"><h3>Importar datos de Notion</h3><p>Selecciona un empleado activo y sube el ZIP o CSV exportado de Notion. Se importan horas diarias y lista semanal.</p><input id="notionImportFile" type="file" accept=".zip,.csv"><button id="importNotionBtn" class="ghost" type="button">📥 Importar Notion</button></div>
       </section>
 
       <section id="balancesPanel" class="panel hidden">
@@ -90,7 +90,7 @@
           <div class="month-nav"><button id="prevMonth" class="icon-btn">‹</button><strong id="monthLabel"></strong><button id="nextMonth" class="icon-btn">›</button><button id="toggleMonthLock" class="ghost hidden" type="button"></button></div>
         </div>
 
-        <div class="range-box">
+        <div class="range-box"><div class="range-title"><strong>Filtro de fechas personalizado</strong><span>Elige cualquier periodo para consultar horas y balance.</span></div>
           <div><label>Desde<input id="rangeStart" type="date"></label><label>Hasta<input id="rangeEnd" type="date"></label></div>
           <div class="range-result"><span>Horas en el rango</span><strong id="rangeHours">0:00</strong></div>
           <div class="range-result"><span>Balance del rango</span><strong id="rangeBalance">0:00</strong></div>
@@ -142,6 +142,6 @@
     <p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿Eliminar usuario?</h2><p id="confirmText"></p>
     <div class="modal-actions"><button id="cancelConfirm" class="ghost">Cancelar</button><button id="confirmDelete" class="danger">Sí, eliminar</button></div>
   </div></div>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js"></script>
 </body>
 </html>
