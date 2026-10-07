@@ -47,7 +47,8 @@ app.get('/api/state',requireAuth,async(req,res)=>{res.json(publicDb(await getDb(
 app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);const me=req.auth;
   if(me.role!=='admin'){
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
-    for(const key of ['records','locks','weekly','vacations']){
+    if(!same(old.locks,incoming.locks)||!same(old.weekly,incoming.weekly))return res.status(403).json({error:'Solo el admin puede modificar bloqueos y la lista semanal'});
+    for(const key of ['records','vacations']){
       for(const username of Object.keys(incoming[key]||{})) if(username!==me.username && !same(old[key]?.[username]||{},incoming[key]?.[username]||{})) return res.status(403).json({error:'No tienes permiso para modificar otros empleados'});
     }
   }
