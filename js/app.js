@@ -205,11 +205,23 @@ function chartBars(items,users){
    const total=totals[index]||0;
    const stack=parts.map((seg,i)=>{
      const h=total?(seg.minutes/max)*190:0;
-     return `<div class="bar segment-bar ${seg.vacation?"vacation-bar":""}" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.vacation?"#000000":(seg.color||'#172033')}"></div>`;
+     const tip=`${seg.name}: ${fmtMinutes(seg.minutes)}`;
+     return `<div class="bar segment-bar ${seg.vacation?"vacation-bar":""}" tabindex="0" aria-label="${tip}" data-chart-tooltip="${tip}" style="height:${h}px;background:${seg.vacation?"#000000":(seg.color||'#172033')}"></div>`;
    }).join("");
-   return `<div class="chart-group"><div class="chart-bars-row"><div class="bar-stack" title="${fmtMinutes(total)}">${stack}</div></div><div class="mini-bar-total">${total?fmtMinutes(total):""}</div><small>${x.label}</small></div>`;
+   return `<div class="chart-group"><div class="chart-bars-row"><div class="bar-stack" title="Total: ${fmtMinutes(total)}">${stack}</div></div><div class="mini-bar-total">${total?fmtMinutes(total):""}</div><small>${x.label}</small></div>`;
  }).join("");
- return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
+ return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart chart-with-tooltip">${body}<div class="chart-tooltip hidden" aria-live="polite"></div></div>`;
+}
+function setupChartTooltips(){
+ document.querySelectorAll(".chart-with-tooltip").forEach(chart=>{
+   const tip=chart.querySelector(".chart-tooltip");
+   chart.querySelectorAll("[data-chart-tooltip]").forEach(bar=>{
+     const show=()=>{tip.textContent=bar.dataset.chartTooltip;tip.classList.remove("hidden");const br=bar.getBoundingClientRect(),cr=chart.getBoundingClientRect();tip.style.left=Math.max(4,Math.min(cr.width-190,br.left-cr.left+br.width/2-95))+"px";tip.style.top=Math.max(4,br.top-cr.top-38)+"px"};
+     bar.addEventListener("mouseenter",show);bar.addEventListener("focus",show);
+     bar.addEventListener("mouseleave",()=>tip.classList.add("hidden"));bar.addEventListener("blur",()=>tip.classList.add("hidden"));
+     bar.addEventListener("click",show);
+   });
+ });
 }
 function dashboardUsers(mode){
  const all=(mode==="general"?db.users.filter(u=>u.role==="employee"):[selectedEmployee]).filter(Boolean);
@@ -287,7 +299,7 @@ function renderDashboard(mode="employee"){
  }).filter(x=>x.segments.length||x.vac);
  $("barChart").innerHTML=chartBars(dayItems,users);
  $("weeklyBarChart").innerHTML=chartBars(weekly,users);
- $("monthlyBarChart").innerHTML=chartBars(monthly,users);
+ $("monthlyBarChart").innerHTML=chartBars(monthly,users);setupChartTooltips();
  renderDashboardComparison(users);
 }
 function startOfWeek(d){
@@ -318,7 +330,7 @@ function renderDashboardComparison(users){
  if(!a||!b)return;
  const first=comparisonData(users,type,a),second=comparisonData(users,type,b);
  const chart=chartBars([first,second],users);
- $("comparisonResult").innerHTML=chart;
+ $("comparisonResult").innerHTML=chart;setupChartTooltips();
 }
 function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++;}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}if(cell!==''||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row)}return rows}
 function normalizeNotionHeader(v){return String(v??'').replace(/^\uFEFF/,'').trim().toLowerCase()}
