@@ -147,10 +147,10 @@ function chartBars(items,users){
    const total=(x.segments||[]).reduce((a,b)=>a+b.minutes,0)+(x.vac||0);
    const stack=(x.segments||[]).filter(seg=>seg.minutes>0).map(seg=>{
      const h=(seg.minutes/max)*170;
-     return \`<div class="bar segment-bar" title="\${seg.name}: \${fmtMinutes(seg.minutes)}" style="height:\${h}px;background:\${seg.color||'#172033'}"></div>\`;
+     return `<div class="bar segment-bar" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.color||'#172033'}"></div>`;
    }).join("");
    const vacH=x.vac?(x.vac/max)*170:0;
-   return \`<div class="bar-item"><div class="bar-value">\${total?fmtMinutes(total):""}</div><div class="bar-stack">\${stack}\${x.vac?\`<div class="bar vacation-bar" title="Vacaciones: \${fmtMinutes(x.vac)}" style="height:\${vacH}px"></div>\`:""}</div><small>\${x.label}</small></div>\`;
+   return `<div class="bar-item"><div class="bar-value">${total?fmtMinutes(total):""}</div><div class="bar-stack">${stack}${x.vac?`<div class="bar vacation-bar" title="Vacaciones: ${fmtMinutes(x.vac)}" style="height:${vacH}px"></div>`:""}</div><small>${x.label}</small></div>`;
  }).join("");
 }
 function dashboardUsers(mode){return (mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean)}
@@ -160,23 +160,23 @@ function dashboardDaySegments(users,k){
 function renderDashboard(mode="employee"){
  if(!isAdmin())return;
  const label=$("dashboardEmployeeLabel");
- if(label)label.textContent=mode==="general"?"Resumen general de todos los empleados":\`\${selectedEmployee?.name||"Empleado"} · horas trabajadas y vacaciones\`;
- const val=$("dashboardMonth").value||\`\${currentDate.getFullYear()}-\${pad(currentDate.getMonth()+1)}\`;
+ if(label)label.textContent=mode==="general"?"Resumen general de todos los empleados":`${selectedEmployee?.name||"Empleado"} · horas trabajadas y vacaciones`;
+ const val=$("dashboardMonth").value||`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;
  $("dashboardMonth").value=val;
  const [y,m]=val.split("-").map(Number),days=new Date(y,m,0).getDate(),users=dashboardUsers(mode);
- let h=\`<div class="dash-grid">\${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>\`<div class="weekday">\${x}</div>\`).join("")}\`;
+ let h=`<div class="dash-grid">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>`<div class="weekday">${x}</div>`).join("")}`;
  const first=new Date(y,m-1,1),startDay=(first.getDay()+6)%7;
  for(let i=0;i<startDay;i++)h+='<div class="dash-day empty"></div>';
  for(let d=1;d<=days;d++){
-   const k=\`\${y}-\${pad(m)}-\${pad(d)}\`;
+   const k=`${y}-${pad(m)}-${pad(d)}`;
    const segs=dashboardDaySegments(users,k);
    const vac=users.reduce((a,u)=>a+dashboardMetricsForUser(u,k).vac,0);
    const mins=segs.reduce((a,b)=>a+b.minutes,0);
-   h+=\`<div class="dash-day"><strong>\${d}</strong><span>\${mins||vac?fmtMinutes(mins+vac):""}</span>\${segs.length?'<div class="dash-day-colors">'+segs.map(z=>\`<i title="\${z.name}: \${fmtMinutes(z.minutes)}" style="background:\${z.color}"></i>\`).join("")+'</div>':""}\${vac?\`<small>🏖 \${fmtMinutes(vac)}</small>\`:""}</div>\`;
+   h+=`<div class="dash-day"><strong>${d}</strong><span>${mins||vac?fmtMinutes(mins+vac):""}</span>${segs.length?'<div class="dash-day-colors">'+segs.map(z=>`<i title="${z.name}: ${fmtMinutes(z.minutes)}" style="background:${z.color}"></i>`).join("")+'</div>':""}${vac?`<small>🏖 ${fmtMinutes(vac)}</small>`:""}</div>`;
  }
  $("dashboardCalendar").innerHTML=h+"</div>";
  const dayItems=Array.from({length:days},(_,i)=>{
-   const k=\`\${y}-\${pad(m)}-\${pad(i+1)}\`,segs=dashboardDaySegments(users,k);
+   const k=`${y}-${pad(m)}-${pad(i+1)}`,segs=dashboardDaySegments(users,k);
    const vac=users.reduce((a,u)=>a+dashboardMetricsForUser(u,k).vac,0);
    return {label:i+1,segments:segs,vac};
  });
@@ -188,13 +188,13 @@ function renderDashboard(mode="employee"){
      users.forEach(u=>{const q=dashboardMetricsForUser(u,k);if(q.work)totals[u.username]=(totals[u.username]||0)+q.work;vac+=q.vac});
    }
    const segments=users.map(u=>({username:u.username,name:u.name,color:u.color||'#172033',minutes:totals[u.username]||0})).filter(x=>x.minutes>0);
-   if(segments.length||vac)weekly.push({label:\`\${pad(s.getDate())}/\${pad(s.getMonth()+1)}\`,segments,vac});
+   if(segments.length||vac)weekly.push({label:`${pad(s.getDate())}/${pad(s.getMonth()+1)}`,segments,vac});
    d.setDate(d.getDate()+7);
  }
  const monthly=Array.from({length:12},(_,i)=>{
    const totals={};let vac=0,md=new Date(y,i+1,0).getDate();
    for(let dd=1;dd<=md;dd++){
-     const k=\`\${y}-\${pad(i+1)}-\${pad(dd)}\`;
+     const k=`${y}-${pad(i+1)}-${pad(dd)}`;
      users.forEach(u=>{const q=dashboardMetricsForUser(u,k);if(q.work)totals[u.username]=(totals[u.username]||0)+q.work;vac+=q.vac});
    }
    const segments=users.map(u=>({username:u.username,name:u.name,color:u.color||'#172033',minutes:totals[u.username]||0})).filter(x=>x.minutes>0);
