@@ -52,3 +52,6 @@
 .dashboard-comparison .comparison-result{width:100%;padding-top:8px}
 .comparison-result .chart-legend{margin-top:4px}
 @media(max-width:700px){.dashboard-filters{align-items:flex-start;flex-direction:column}.dashboard-comparison{align-items:stretch;flex-direction:column}.dashboard-comparison label,.dashboard-comparison select,.dashboard-comparison button{width:100%}}
+
+/* Entrada manual de horas en móvil */
+#entryTime,#exitTime{font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:.03em}
