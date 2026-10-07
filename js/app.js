@@ -87,8 +87,16 @@ function renderEmployeeButtons(){
  document.querySelectorAll('[data-dashboard-user]').forEach(b=>b.onclick=e=>{e.stopPropagation();selectedEmployee=db.users.find(u=>u.username===b.dataset.dashboardUser)||selectedEmployee;$("balancesPanel").classList.add('hidden');$("dashboardPanel").classList.remove('hidden');$("mainPanel").classList.add('hidden');renderDashboard('employee')});
  document.querySelectorAll('[data-delete-user]').forEach(b=>b.onclick=e=>{e.stopPropagation();deleteUserWithDoubleConfirmation(b.dataset.deleteUser)});
 }
-function renderInactiveEmployees(){if(!isAdmin())return;const all=db.users.filter(u=>u.role==='employee');const box=$("inactiveEmployees");if(!box)return;box.innerHTML=all.filter(u=>u.active===false).map(u=>`<div class="inactive-row"><span>${u.name} <small>@${u.username}</small></span><button class="small-btn reactivate-user" data-reactivate="${u.username}">Activar</button></div>`).join('')||'<span class="muted">No hay empleados inactivos.</span>';document.querySelectorAll('[data-reactivate]').forEach(b=>b.onclick=async()=>{const u=db.users.find(x=>x.username===b.dataset.reactivate);if(!u)return;const out=await api(`/api/admin/user/${encodeURIComponent(u.username)}`,{method:'PUT',body:JSON.stringify({name:u.name,weeklyHours:u.weeklyHours,active:true})});db=out;renderEmployeeButtons();renderInactiveEmployees();});}
-
+function renderInactiveEmployees(){
+ if(!isAdmin())return;
+ const all=db.users.filter(u=>u.role==="employee"),box=$("inactiveEmployees"),btn=$("toggleInactiveEmployees");
+ if(!box)return;
+ const inactive=all.filter(u=>u.active===false);
+ box.innerHTML=inactive.map(u=>`<div class="inactive-row"><span>${u.name} <small>@${u.username}</small></span><button class="small-btn reactivate-user" data-reactivate="${u.username}">Activar</button></div>`).join("")||'<span class="muted">No hay empleados inactivos.</span>';
+ box.classList.toggle("hidden",!inactiveEmployeesVisible);
+ if(btn){btn.classList.toggle("hidden",!inactive.length);btn.textContent=inactiveEmployeesVisible?"Ocultar no activos":"Ver no activos";}
+ document.querySelectorAll("[data-reactivate]").forEach(b=>b.onclick=async()=>{const u=db.users.find(x=>x.username===b.dataset.reactivate);if(!u)return;const out=await api(`/api/admin/user/${encodeURIComponent(u.username)}`,{method:"PUT",body:JSON.stringify({name:u.name,weeklyHours:u.weeklyHours,active:true})});db=out;renderEmployeeButtons();renderInactiveEmployees();});
+}
 function renderCalendar(){
  const y=currentDate.getFullYear(),m=currentDate.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),start=(first.getDay()+6)%7,recs=userRecords(),locks=userLocks();
  let h=`<div class="calendar">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>`<div class="weekday">${x}</div>`).join("")}`;
