@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
-let currentUser=null,selectedEmployee=null,currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null;
+let currentUser=null,selectedEmployee=null,currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=[];
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
 
@@ -158,7 +158,23 @@ function chartBars(items,users){
  }).join("");
  return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
 }
-function dashboardUsers(mode){return (mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean)}
+function dashboardUsers(mode){
+ const all=(mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean);
+ if(mode!=="general")return all;
+ if(!selectedDashboardEmployees.length)return all;
+ return all.filter(u=>selectedDashboardEmployees.includes(u.username));
+}
+function renderDashboardEmployeeFilters(){
+ const box=$("dashboardEmployeeFilters");if(!box)return;
+ const employees=db.users.filter(u=>u.role==="employee"&&u.active!==false);
+ if(!selectedDashboardEmployees.length)selectedDashboardEmployees=employees.map(u=>u.username);
+ box.innerHTML=employees.map(u=>`<label class="dashboard-filter-chip"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}">${u.name}</span></label>`).join("");
+ box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
+   selectedDashboardEmployees=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
+   renderDashboard("general");
+ });
+ $("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);renderDashboard("general")};
+}
 function dashboardMetricsForUser(user,k){
  const record=(db.records?.[user.username]||{})[k]||{};
  return {work:totalMinutes(record),vac:vacationMinutesForUser(user,k)};
@@ -174,6 +190,7 @@ function dashboardDaySegments(users,k){
 }
 function renderDashboard(mode="employee"){
  if(!isAdmin())return;
+ renderDashboardEmployeeFilters();
  const label=$("dashboardEmployeeLabel");
  if(label)label.textContent=mode==="general"?"Resumen general de todos los empleados":`${selectedEmployee?.name||"Empleado"} · horas trabajadas y vacaciones`;
  const val=$("dashboardMonth").value||`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;
@@ -218,6 +235,37 @@ function renderDashboard(mode="employee"){
  $("barChart").innerHTML=chartBars(dayItems,users);
  $("weeklyBarChart").innerHTML=chartBars(weekly,users);
  $("monthlyBarChart").innerHTML=chartBars(monthly,users);
+ renderDashboardComparison(users);
+}
+function startOfWeek(d){
+ const x=new Date(d);x.setHours(0,0,0,0);x.setDate(x.getDate()-((x.getDay()+6)%7));return x;
+}
+function comparisonPeriod(type,value){
+ if(type==="month"){
+   const [y,m]=String(value||"").split("-").map(Number);if(!y||!m)return null;
+   return {start:new Date(y,m-1,1),end:new Date(y,m,0)};
+ }
+ const d=parseKey(String(value||""));if(isNaN(d))return null;
+ const start=startOfWeek(d),end=new Date(start);end.setDate(end.getDate()+6);return {start,end};
+}
+function comparisonData(users,type,value){
+ const p=comparisonPeriod(type,value);if(!p)return {label:"—",segments:[],vac:0};
+ const totals={},vac=0;
+ let vacationTotal=0;
+ for(let d=new Date(p.start);d<=p.end;d.setDate(d.getDate()+1)){
+   const k=dateKey(d);
+   users.forEach(u=>{const q=dashboardMetricsForUser(u,k);if(q.work)totals[u.username]=(totals[u.username]||0)+q.work;vacationTotal+=q.vac});
+ }
+ const segments=users.map(u=>({username:u.username,name:u.name,color:u.color||"#172033",minutes:totals[u.username]||0})).filter(x=>x.minutes>0);
+ const label=type==="month"?p.start.toLocaleDateString("es-ES",{month:"long",year:"numeric"}):`Semana ${fmtDate(dateKey(p.start))} → ${fmtDate(dateKey(p.end))}`;
+ return {label,segments,vac:vacationTotal};
+}
+function renderDashboardComparison(users){
+ const type=$("comparisonType")?.value||"week",a=$("comparisonA")?.value,b=$("comparisonB")?.value;
+ if(!a||!b)return;
+ const first=comparisonData(users,type,a),second=comparisonData(users,type,b);
+ const chart=chartBars([first,second],users);
+ $("comparisonResult").innerHTML=chart;
 }
 function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++;}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}if(cell!==''||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row)}return rows}
 function parseCsv(text){const rows=csvRows(text),head=(rows.shift()||[]).map(x=>x.trim());return rows.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])))}
@@ -229,4 +277,18 @@ function parseWeeklyRange(s){const parts=String(s||'').split('→');if(parts.len
 async function importNotionFile(file){if(!isAdmin())return alert('Solo el admin puede importar datos.');const target=selectedEmployee?.username;if(!target)return alert('Selecciona primero un empleado.');let files=[];if(file.name.toLowerCase().endsWith('.zip')){if(!window.JSZip)return alert('No se pudo cargar el lector ZIP. Recarga la página e inténtalo de nuevo.');const z=await JSZip.loadAsync(file);for(const [name,obj] of Object.entries(z.files)){if(!obj.dir&&name.toLowerCase().endsWith('.csv'))files.push({name,text:await obj.async('text')})}}else{files=[{name:file.name,text:await file.text()}]}
  ensureUserData(target);let hours=0,weekly=0;for(const f of files){const rows=parseCsv(f.text),headers=Object.keys(rows[0]||{}).map(x=>x.toLowerCase());if(headers.includes('entrada')&&headers.includes('salida')){for(const row of rows){const staff=row['Staff']||row['staff'];if(staff&&staff.trim().toLowerCase()!==selectedEmployee.name.trim().toLowerCase())continue;const dt=notionDateTime(row['Entrada']||row['entrada']);if(!dt)continue;const key=dt.date;const ex=numNotion(row['hs extras']||row['Hs extras']);const worked=numNotion(row['Horas']||row['horas']);db.records[target][key]={...(db.records[target][key]||{}),entry:dt.time,exit:(notionDateTime(row['Salida']||row['salida'])||{}).time||'',extraHours:ex,workedHours:worked,comments:row['Observaciones']||row['observaciones']||''};hours++}}else if(headers.includes('fecha')&&headers.includes('contrato')){for(const row of rows){const range=parseWeeklyRange(row['Fecha']||row['fecha']);if(!range)continue;const exists=(db.weekly[target]||[]).find(x=>x.start===range.start&&x.end===range.end);const item={id:exists?.id||('w_'+Date.now()+'_'+Math.random().toString(36).slice(2)),start:range.start,end:range.end,previous:numNotion(row['Anterior']||row['anterior']),contract:numNotion(row['Contrato']||row['contrato']),worked:numNotion(row['Esta semana']||row['esta semana']),locked:true};if(exists)Object.assign(exists,item);else db.weekly[target].push(item);weekly++}}}
  await saveDB();alert(`Importación completada para ${selectedEmployee.name}: ${hours} días y ${weekly} líneas semanales.`);render();}
-setupRange();$("dashboardMonth").value=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;$("dashboardYear").value=currentDate.getFullYear();
+setupRange();
+$("dashboardMonth").value=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;$("dashboardYear").value=currentDate.getFullYear();
+function setupDashboardComparisonDefaults(){
+ const now=new Date(),thisWeek=startOfWeek(now),prevWeek=new Date(thisWeek);prevWeek.setDate(prevWeek.getDate()-7);
+ const thisMonth=`${now.getFullYear()}-${pad(now.getMonth()+1)}`,prevMonthDate=new Date(now.getFullYear(),now.getMonth()-1,1),prevMonth=`${prevMonthDate.getFullYear()}-${pad(prevMonthDate.getMonth()+1)}`;
+ $("comparisonType").value="week";$("comparisonA").value=dateKey(thisWeek);$("comparisonB").value=dateKey(prevWeek);
+ $("comparisonType").onchange=()=>{
+   const type=$("comparisonType").value;
+   if(type==="month"){$("comparisonA").type="month";$("comparisonB").type="month";$("comparisonA").value=thisMonth;$("comparisonB").value=prevMonth}
+   else {$("comparisonA").type="date";$("comparisonB").type="date";$("comparisonA").value=dateKey(thisWeek);$("comparisonB").value=dateKey(prevWeek)}
+   renderDashboard("general");
+ };
+ $("comparisonRefresh").onclick=()=>renderDashboard("general");
+}
+setupDashboardComparisonDefaults();
