@@ -2,9 +2,11 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const { Pool } = require('pg');
+const { google } = require('googleapis');
+const { Readable } = require('stream');
 
 const app = express();
-app.use(express.json({limit:'5mb'}));
+app.use(express.json({limit:'15mb'}));
 app.use(express.static(__dirname));
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? {rejectUnauthorized:false} : false });
@@ -27,11 +29,22 @@ async function init(){
     const password=process.env.ADMIN_PASSWORD;
     if(!password) throw new Error('ADMIN_PASSWORD is required on first startup');
     const users=DEFAULT_USERS.map(u=>({...u,passwordHash:u.username==='admin'?bcrypt.hashSync(password,12):bcrypt.hashSync(u.username,12)}));
-    const db={users,records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},monthLocks:{},auditLog:[],version:8};
+    const db={users,records:{},locks:{},weekly:{},vacations:{},payrolls:[],balanceVisibility:{},monthLocks:{},auditLog:[],version:8};
     for(const u of users){db.records[u.username]={};db.locks[u.username]={};db.weekly[u.username]=[];db.vacations[u.username]=[];}
     await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[db]);
   }
 }
+function driveConfig(){
+  const folderId=process.env.GOOGLE_DRIVE_FOLDER_ID;
+  const clientId=process.env.GOOGLE_CLIENT_ID;
+  const clientSecret=process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken=process.env.GOOGLE_REFRESH_TOKEN;
+  if(!folderId||!clientId||!clientSecret||!refreshToken) throw new Error('Faltan las variables de Google Drive');
+  const auth=new google.auth.OAuth2(clientId,clientSecret);
+  auth.setCredentials({refresh_token:refreshToken});
+  return {drive:google.drive({version:'v3',auth}),folderId};
+}
+function ensurePayrolls(db){db.payrolls=db.payrolls||[];return db.payrolls}
 async function getDb(){const r=await pool.query('SELECT data FROM app_state WHERE id=1');return r.rows[0].data}
 async function putDb(db){await pool.query('UPDATE app_state SET data=$1,updated_at=now() WHERE id=1',[db])}
 function publicDb(db){return {...db,users:db.users.map(({passwordHash,...u})=>u)} }
@@ -62,6 +75,12 @@ app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), i
 app.post('/api/admin/user',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const db=await getDb(),{name,username,password,weeklyHours,active,color}=req.body;const u=String(username||'').trim().toLowerCase();if(!name||!u||!password)return res.status(400).json({error:'Faltan datos'});if(db.users.some(x=>x.username===u))return res.status(409).json({error:'Ese usuario ya existe'});db.users.push({username:u,name:String(name).trim(),role:'employee',weeklyHours:Number(weeklyHours)||40,active:active!==false,color:String(color||'#2563eb'),passwordHash:bcrypt.hashSync(String(password),12)});db.records[u]={};db.locks[u]={};db.weekly[u]=[];db.vacations[u]=[];db.balanceVisibility[u]=true;await putDb(db);res.json(publicDb(db));}catch(e){res.status(500).json({error:e.message})}});
 app.put('/api/admin/user/:username',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const db=await getDb(),u=db.users.find(x=>x.username===req.params.username);if(!u||u.role==='admin')return res.status(404).json({error:'Empleado no encontrado'});u.name=String(req.body.name||u.name).trim();u.weeklyHours=Number(req.body.weeklyHours)||40;u.active=req.body.active!==false;u.color=String(req.body.color||u.color||'#2563eb');if(req.body.password)u.passwordHash=bcrypt.hashSync(String(req.body.password),12);await putDb(db);res.json(publicDb(db));}catch(e){res.status(500).json({error:e.message})}});
 app.delete('/api/admin/user/:username',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const db=await getDb(),u=db.users.find(x=>x.username===req.params.username);if(!u||u.role==='admin')return res.status(404).json({error:'Empleado no encontrado'});db.users=db.users.filter(x=>x.username!==u.username);delete db.records[u.username];delete db.locks[u.username];delete db.weekly[u.username];delete db.vacations[u.username];delete db.balanceVisibility[u.username];await putDb(db);res.json(publicDb(db));}catch(e){res.status(500).json({error:e.message})}});
+
+
+app.get('/api/payrolls',requireAuth,async(req,res)=>{try{const db=await getDb();const all=ensurePayrolls(db);const rows=req.auth.role==='admin'?all:all.filter(x=>x.username===req.auth.username);res.json(rows.map(({driveFileId,...x})=>({...x,driveFileId:undefined})));}catch(e){res.status(500).json({error:e.message})}});
+app.post('/api/admin/payroll',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const {username,month,filename,mimeType,dataBase64}=req.body;const db=await getDb();const u=db.users.find(x=>x.username===username&&x.role==='employee');if(!u)return res.status(404).json({error:'Empleado no encontrado'});if(!/^\\d{4}-\\d{2}$/.test(String(month||'')))return res.status(400).json({error:'Mes no válido'});if(!filename||!dataBase64)return res.status(400).json({error:'Falta el PDF'});if(!String(filename).toLowerCase().endsWith('.pdf'))return res.status(400).json({error:'Solo se admiten PDF'});const {drive,folderId}=driveConfig();const safeName=String(filename).replace(/[\\/:*?"<>|]/g,'_');const meta={name:u.name+' - Nómina '+month+' - '+safeName,parents:[folderId],description:'Nómina de '+u.name+' ('+month+')'};const media={mimeType:'application/pdf',body:Readable.from(Buffer.from(String(dataBase64),'base64'))};const up=await drive.files.create({requestBody:meta,media,fields:'id,name,webViewLink'});ensurePayrolls(db).push({id:crypto.randomUUID(),username:u.username,employeeName:u.name,month:String(month),filename:safeName,driveFileId:up.data.id,createdAt:new Date().toISOString()});await putDb(db);res.json({ok:true,payroll:ensurePayrolls(db).at(-1)});}catch(e){console.error(e);res.status(500).json({error:e.message})}});
+app.get('/api/payroll/:id',requireAuth,async(req,res)=>{try{const db=await getDb();const p=ensurePayrolls(db).find(x=>x.id===req.params.id);if(!p)return res.status(404).json({error:'Nómina no encontrada'});if(req.auth.role!=='admin'&&p.username!==req.auth.username)return res.status(403).json({error:'No tienes permiso para ver esta nómina'});const {drive}=driveConfig();const meta=await drive.files.get({fileId:p.driveFileId,fields:'name,mimeType'});res.setHeader('Content-Type','application/pdf');res.setHeader('Content-Disposition','inline; filename="'+String(p.filename).replace(/"/g,'')+'"');const file=await drive.files.get({fileId:p.driveFileId}, {responseType:'stream'});file.data.pipe(res);}catch(e){console.error(e);res.status(500).json({error:'No se pudo abrir la nómina'})}});
+app.delete('/api/admin/payroll/:id',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});try{const db=await getDb();const idx=ensurePayrolls(db).findIndex(x=>x.id===req.params.id);if(idx<0)return res.status(404).json({error:'Nómina no encontrada'});const p=db.payrolls[idx];const {drive}=driveConfig();try{await drive.files.delete({fileId:p.driveFileId});}catch(e){if(e.code!==404)throw e}db.payrolls.splice(idx,1);await putDb(db);res.json({ok:true});}catch(e){res.status(500).json({error:e.message})}});
 
 app.get('*',(req,res)=>res.sendFile(require('path').join(__dirname,'index.html')));
 init().then(()=>app.listen(process.env.PORT||10000,'0.0.0.0',()=>console.log('Control horario running'))).catch(e=>{console.error(e);process.exit(1)});
