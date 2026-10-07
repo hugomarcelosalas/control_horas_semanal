@@ -125,7 +125,17 @@ $("prevMonth").onclick=()=>{currentDate.setMonth(currentDate.getMonth()-1);setup
 
 function openDay(k){selectedDate=k;const r=userRecords()[k]||{},manualLocked=!!userLocks()[k],monthLocked=isMonthLocked(k),locked=isDayLocked(k),editable=canEditDay(k);$("modalDate").textContent=fmtLong(k);$("entryTime").value=r.entry||"";$("exitTime").value=r.exit||"";$("extraHours").value=r.extraHours??"";$("comments").value=r.comments||"";$("dayLockNotice").classList.toggle("hidden",!locked);$("dayLockNotice").textContent=monthLocked?"🔒 Este mes está cerrado por defecto porque es anterior al mes actual.":"🔒 Este día está bloqueado por el administrador.";$("dayForm").querySelectorAll("input,textarea").forEach(x=>x.disabled=!editable);$("deleteDay").disabled=!editable;$("deleteDay").textContent=isAdmin()&&locked?"Desbloquea para editar/borrar":"Borrar día";updateWorkedPreview();$("dayModal").classList.remove("hidden")}
 function updateWorkedPreview(){const r={entry:$("entryTime").value,exit:$("exitTime").value};$("workedPreview").value=workMinutes(r)?fmtMinutes(workMinutes(r)):"0:00"}
-$("entryTime").oninput=updateWorkedPreview;$("exitTime").oninput=updateWorkedPreview;$("closeModal").onclick=()=>$("dayModal").classList.add("hidden");$("dayModal").onclick=e=>{if(e.target.id==="dayModal")$("dayModal").classList.add("hidden")};
+function setupManualTimeInputs(){
+ ["entryTime","exitTime"].forEach(id=>{
+   const input=$(id);if(!input)return;
+   input.addEventListener("input",()=>{
+     const digits=input.value.replace(/\D/g,"").slice(0,4);
+     input.value=digits.length===4?`${digits.slice(0,2)}:${digits.slice(2)}`:digits;
+     updateWorkedPreview();
+   });
+ });
+}
+$("entryTime").oninput=updateWorkedPreview;$("exitTime").oninput=updateWorkedPreview;setupManualTimeInputs();$("closeModal").onclick=()=>$("dayModal").classList.add("hidden");$("dayModal").onclick=e=>{if(e.target.id==="dayModal")$("dayModal").classList.add("hidden")};
 $("dayForm").onsubmit=e=>{
  e.preventDefault();
  if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}
