@@ -55,3 +55,19 @@
 
 /* Entrada manual de horas en móvil */
 #entryTime,#exitTime{font-size:16px;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+
+/* Calendario móvil: las 7 columnas deben caber completas, incluido domingo */
+.calendar{min-width:0;width:100%}
+.calendar>*{min-width:0}
+@media(max-width:760px){
+  .view{padding-left:6px;padding-right:6px}
+  .calendar{width:100%;table-layout:fixed}
+  .weekday{min-width:0;padding:8px 2px;font-size:10px;overflow:hidden}
+  .day{min-width:0;width:auto;min-height:90px;padding:5px 3px;overflow:hidden}
+  .day-top{min-width:0}
+  .day-number{width:24px;height:24px;flex:0 0 24px;font-size:11px}
+  .day-lock{width:25px;height:25px;flex:0 0 25px}
+  .day-data{min-width:0;font-size:8px;line-height:1.35;overflow:hidden}
+  .day-hours{font-size:11px;white-space:nowrap}
+  .day-missing{font-size:8px;white-space:normal;word-break:break-word}
+}
