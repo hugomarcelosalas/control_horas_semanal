@@ -43,7 +43,7 @@ function setupRange(){const y=currentDate.getFullYear(),m=currentDate.getMonth()
 function render(){
  if(!selectedEmployee)return;ensureUserData(selectedEmployee.username);
  $("employeeTitle").textContent=selectedEmployee.name;$("employeeSubtitle").textContent=`Jornada contratada: ${selectedEmployee.weeklyHours} horas semanales`;
- $("heroBalance").textContent=fmtMinutes(calculateBalanceToDate());$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
+ $("heroBalance").textContent=fmtMinutes(isAdmin()?sumCurrentEmployeeBalances():calculateBalanceToDate());$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
  renderEmployeeButtons();renderInactiveEmployees();renderRange();
  ["calendar","list","balance","weekly","vacations"].forEach(v=>$(v+"View").classList.toggle("hidden",activeView!==v));
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===activeView));
@@ -51,9 +51,10 @@ function render(){
  const ml=$("toggleMonthLock");if(ml){const key=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}-01`,prev=isPreviousMonth(key),locked=isMonthLocked(key);ml.classList.toggle("hidden",!isAdmin()||!prev);ml.textContent=locked?"🔓 Abrir mes":"🔒 Cerrar mes";ml.onclick=toggleCurrentMonthLock;}
 }
 function latestWeeklyBalance(u){const rows=(db.weekly[u.username]||[]).slice().sort((a,b)=>a.end.localeCompare(b.end)||a.start.localeCompare(b.start));if(!rows.length)return null;const r=rows[rows.length-1];return {balance:hoursToMinutes(r.worked)-hoursToMinutes(r.contract)+hoursToMinutes(r.previous),start:r.start,end:r.end};}
+function sumCurrentEmployeeBalances(){return db.users.filter(u=>u.role==='employee').reduce((sum,u)=>{const last=latestWeeklyBalance(u);return sum+(last?last.balance:0)},0);}
 function renderEmployeeButtons(){
  const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
- $("employeeButtons").innerHTML=employees.map(u=>{const last=latestWeeklyBalance(u);const bal=last?fmtMinutes(last.balance):'—';const shown=db.balanceVisibility[u.username]!==false;return `<div class="employee-chip ${shown?'':'balance-hidden'}"><button class="employee-name ${u.username===selectedEmployee.username?'active':''}" data-user="${u.username}">${u.name}</button><span class="employee-balance ${last?classBalance(last.balance):''}" title="Última semana: ${last?fmtDate(last.start)+' → '+fmtDate(last.end):'sin lista semanal'}">${bal}</span><span class="employee-chip-actions"><button class="employee-edit" data-edit-user="${u.username}" title="Editar empleado" aria-label="Editar empleado">✎</button><button class="employee-dashboard" data-dashboard-user="${u.username}" title="Ver dashboard del empleado" aria-label="Ver dashboard del empleado">📊</button><button class="employee-delete" data-delete-user="${u.username}" title="Eliminar empleado" aria-label="Eliminar empleado">×</button></span></div>`}).join("")||"<span class='muted'>No hay empleados activos.</span>";
+ $("employeeButtons").innerHTML=employees.map(u=>{const last=latestWeeklyBalance(u);const bal=last?fmtMinutes(last.balance):'—';const shown=db.balanceVisibility[u.username]!==false;return `<div class="employee-chip ${shown?'':'balance-hidden'}"><button class="employee-name ${u.username===selectedEmployee.username?'active':''}" style="color:${u.color||'#2563eb'};border-color:${u.color||'#2563eb'}" data-user="${u.username}">${u.name}</button><span class="employee-balance ${last?classBalance(last.balance):''}" title="Última semana: ${last?fmtDate(last.start)+' → '+fmtDate(last.end):'sin lista semanal'}">${bal}</span><span class="employee-chip-actions"><button class="employee-edit" data-edit-user="${u.username}" title="Editar empleado" aria-label="Editar empleado">✎</button><button class="employee-dashboard" data-dashboard-user="${u.username}" title="Ver dashboard del empleado" aria-label="Ver dashboard del empleado">📊</button><button class="employee-delete" data-delete-user="${u.username}" title="Eliminar empleado" aria-label="Eliminar empleado">×</button></span></div>`}).join("")||"<span class='muted'>No hay empleados activos.</span>";
  document.querySelectorAll('[data-user]').forEach(b=>b.onclick=e=>{selectedEmployee=db.users.find(u=>u.username===b.dataset.user)||selectedEmployee;render()});
  document.querySelectorAll('[data-edit-user]').forEach(b=>b.onclick=e=>{e.stopPropagation();openUserModal(b.dataset.editUser)});
  document.querySelectorAll('[data-dashboard-user]').forEach(b=>b.onclick=e=>{e.stopPropagation();selectedEmployee=db.users.find(u=>u.username===b.dataset.dashboardUser)||selectedEmployee;$("balancesPanel").classList.add('hidden');$("dashboardPanel").classList.remove('hidden');$("mainPanel").classList.add('hidden');renderDashboard('employee')});
@@ -125,9 +126,9 @@ $('vacationStart').oninput=updateVacationPreview;$('vacationEnd').oninput=update
 $('vacationForm').onsubmit=e=>{e.preventDefault();ensureUserData(selectedEmployee.username);const start=$('vacationStart').value,end=$('vacationEnd').value;if(!start||!end||end<start){alert('Revisa el rango de vacaciones.');return}const arr=db.vacations[selectedEmployee.username];const row={id:selectedVacationId||('v_'+Date.now()),start,end};const i=arr.findIndex(x=>x.id===row.id);if(i>=0)arr[i]=row;else arr.push(row);saveDB();$('vacationModal').classList.add('hidden');render()};
 function deleteVacation(id){if(!confirm("¿Eliminar este periodo de vacaciones?"))return;db.vacations[selectedEmployee.username]=(db.vacations[selectedEmployee.username]||[]).filter(x=>x.id!==id);saveDB();render()}
 
-function openUserModal(username=null){editingUsername=username;const u=username?db.users.find(x=>x.username===username):null;$("userModalTitle").textContent=u?"Editar usuario":"Crear usuario";$("userSubmit").textContent=u?"Guardar cambios":"Crear usuario";$("newName").value=u?.name||"";$("newUsername").value=u?.username||"";$("newPassword").value="";$("newPassword").placeholder=u?"Dejar vacío para mantener la contraseña":"Contraseña";$("newPassword").required=!u;$("newWeeklyHours").value=u?.weeklyHours??40;$("newActive").checked=u?u.active!==false:true;$("newUsername").disabled=!!u;$("userModal").classList.remove("hidden")}
+function openUserModal(username=null){editingUsername=username;const u=username?db.users.find(x=>x.username===username):null;$("userModalTitle").textContent=u?"Editar usuario":"Crear usuario";$("userSubmit").textContent=u?"Guardar cambios":"Crear usuario";$("newName").value=u?.name||"";$("newUsername").value=u?.username||"";$("newPassword").value="";$("newPassword").placeholder=u?"Dejar vacío para mantener la contraseña":"Contraseña";$("newPassword").required=!u;$("newWeeklyHours").value=u?.weeklyHours??40;$("newColor").value=u?.color||"#2563eb";$("newActive").checked=u?u.active!==false:true;$("newUsername").disabled=!!u;$("userModal").classList.remove("hidden")}
 $("addUserBtn").onclick=()=>openUserModal();$("closeUserModal").onclick=()=>$('userModal').classList.add('hidden');$("userModal").onclick=e=>{if(e.target.id==="userModal")$("userModal").classList.add("hidden")};
-$("userForm").onsubmit=async e=>{e.preventDefault();const name=$("newName").value.trim(),username=$("newUsername").value.trim().toLowerCase(),password=$("newPassword").value,weeklyHours=Number($("newWeeklyHours").value)||40,active=$("newActive").checked;if(!name||!username||(!editingUsername&&!password))return;try{let out;if(editingUsername)out=await api(`/api/admin/user/${encodeURIComponent(editingUsername)}`,{method:'PUT',body:JSON.stringify({name,password,weeklyHours,active})});else out=await api('/api/admin/user',{method:'POST',body:JSON.stringify({name,username,password,weeklyHours,active})});db=out;if(selectedEmployee.username===editingUsername)selectedEmployee=db.users.find(x=>x.username===editingUsername)||selectedEmployee;if(!editingUsername)selectedEmployee=db.users.find(x=>x.username===username)||selectedEmployee;$("userForm").reset();$("newWeeklyHours").value=40;$("userModal").classList.add("hidden");render()}catch(err){alert(err.message)}};
+$("userForm").onsubmit=async e=>{e.preventDefault();const name=$("newName").value.trim(),username=$("newUsername").value.trim().toLowerCase(),password=$("newPassword").value,weeklyHours=Number($("newWeeklyHours").value)||40,active=$("newActive").checked,color=$("newColor").value||"#2563eb";if(!name||!username||(!editingUsername&&!password))return;try{let out;if(editingUsername)out=await api(`/api/admin/user/${encodeURIComponent(editingUsername)}`,{method:'PUT',body:JSON.stringify({name,password,weeklyHours,active,color})});else out=await api('/api/admin/user',{method:'POST',body:JSON.stringify({name,username,password,weeklyHours,active,color})});db=out;if(selectedEmployee.username===editingUsername)selectedEmployee=db.users.find(x=>x.username===editingUsername)||selectedEmployee;if(!editingUsername)selectedEmployee=db.users.find(x=>x.username===username)||selectedEmployee;$("userForm").reset();$("newWeeklyHours").value=40;$("userModal").classList.add("hidden");render()}catch(err){alert(err.message)}};
 function deleteUserWithDoubleConfirmation(username){const u=db.users.find(x=>x.username===username);if(!u||u.role==="admin")return;pendingDeleteUser=username;$("confirmTitle").textContent="Primera confirmación";$("confirmText").textContent=`Vas a eliminar a ${u.name} (@${u.username}) y todos sus registros. Pulsa "Continuar" para la segunda confirmación.`;$("confirmDelete").textContent="Continuar";$("confirmModal").classList.remove("hidden")}
 $("cancelConfirm").onclick=()=>{$("confirmModal").classList.add("hidden");pendingDeleteUser=null};$("confirmDelete").onclick=async()=>{if(!pendingDeleteUser)return;const u=db.users.find(x=>x.username===pendingDeleteUser);if(!u)return;if($("confirmDelete").textContent==="Continuar"){$("confirmTitle").textContent="Segunda confirmación";$("confirmText").textContent=`CONFIRMA POR SEGUNDA VEZ: eliminar definitivamente a ${u.name}. Esta acción no se puede deshacer.`;$("confirmDelete").textContent="Sí, eliminar definitivamente";return}try{db=await api(`/api/admin/user/${encodeURIComponent(pendingDeleteUser)}`,{method:'DELETE'});if(selectedEmployee.username===pendingDeleteUser)selectedEmployee=db.users.find(x=>x.role==='employee')||db.users.find(x=>x.role==='admin');$("confirmModal").classList.add("hidden");pendingDeleteUser=null;render()}catch(err){alert(err.message)}};
 
@@ -138,13 +139,69 @@ $("exportBalancesPdf").onclick=exportBalancesPdf;
 
 $("importNotionBtn").onclick=()=>{const f=$("notionImportFile").files[0];if(!f)return alert("Selecciona un ZIP o CSV exportado de Notion.");importNotionFile(f)};
 $("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$("balancesPanel").classList.add("hidden");$("mainPanel").classList.add("hidden");renderDashboard("general")};$("closeDashboard").onclick=()=>{$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden")};$("dashboardMonth").onchange=renderDashboard;$("dashboardYear").onchange=renderDashboard;
-function chartBars(items,mode="hours"){const max=Math.max(1,...items.map(x=>x.work)),vacMax=Math.max(0,...items.map(x=>x.vac));const scale=Math.max(max+vacMax,1);return items.map(x=>{const workH=Math.max(0,(x.work/scale)*170),vacH=x.vac?(x.vac/scale)*170:0;return `<div class="bar-item"><div class="bar-value">${x.work||x.vac?fmtMinutes(x.work+x.vac):""}</div><div class="bar-stack"><div class="bar work-bar" style="height:${Math.max(x.work?3:0,workH)}px"></div>${x.vac?`<div class="bar vacation-bar" style="height:${Math.max(3,vacH)}px"></div>`:""}</div><small>${x.label}</small></div>`}).join("")}
-function getDayItems(y,m){const days=new Date(y,m,0).getDate();return Array.from({length:days},(_,i)=>{const k=`${y}-${pad(m)}-${pad(i+1)}`,r=userRecords()[k]||{};return {label:i+1,work:totalMinutes(r),vac:vacationMinutesForDate(k)}})}
-function getWeeklyItems(y){const items=[];let d=new Date(y,0,1);while(d.getDay()!==1)d.setDate(d.getDate()-1);for(let i=0;i<53;i++){const s=new Date(d);const e=new Date(d);e.setDate(e.getDate()+6);if(s.getFullYear()>y&&s.getMonth()>0)break;let work=0,vac=0;for(let x=new Date(s);x<=e;x.setDate(x.getDate()+1)){const k=dateKey(x);if(parseKey(k).getFullYear()===y){work+=totalMinutes(userRecords()[k]||{});vac+=vacationMinutesForDate(k)}}if(work||vac||s.getFullYear()===y)items.push({label:`${pad(s.getDate())}/${pad(s.getMonth()+1)}`,work,vac});d.setDate(d.getDate()+7)}return items.slice(0,53)}
-function getMonthlyItems(y){return Array.from({length:12},(_,i)=>{const m=i+1,days=new Date(y,m,0).getDate();let work=0,vac=0;for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`;work+=totalMinutes(userRecords()[k]||{});vac+=vacationMinutesForDate(k)}return {label:new Date(y,i,1).toLocaleDateString("es-ES",{month:"short"}).replace(".",""),work,vac}})}
-function dashboardMetricsForUser(u,k){const r=(db.records[u.username]||{})[k]||{};const v=(db.vacations[u.username]||[]).find(x=>k>=x.start&&k<=x.end);return {work:totalMinutes(r),vac:v&&isWeekday(parseKey(k))?dailyContractMinutes():0}}
-function renderDashboard(mode="employee"){if(!isAdmin())return;const label=$("dashboardEmployeeLabel");if(label)label.textContent=mode==="general"?"Resumen general de todos los empleados":`${selectedEmployee?.name||"Empleado"} · horas trabajadas y vacaciones`;const val=$("dashboardMonth").value||`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`;$("dashboardMonth").value=val;const [y,m]=val.split("-").map(Number),days=new Date(y,m,0).getDate();let h=`<div class="dash-grid">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>`<div class="weekday">${x}</div>`).join("")}`,first=new Date(y,m-1,1),start=(first.getDay()+6)%7;for(let i=0;i<start;i++)h+='<div class="dash-day empty"></div>';for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`;let mins=0,vac=0;const users=mode==="general"?db.users.filter(u=>u.role==="employee"):[selectedEmployee];users.forEach(u=>{const z=dashboardMetricsForUser(u,k);mins+=z.work;vac+=z.vac});h+=`<div class="dash-day ${vac?"vacation-day":""}"><strong>${d}</strong><span>${mins||vac?fmtMinutes(mins+vac):""}</span>${vac?`<small>🏖 ${fmtMinutes(vac)}</small>`:""}</div>`}$("dashboardCalendar").innerHTML=h+`</div>`;const users=mode==="general"?db.users.filter(u=>u.role==="employee"):[selectedEmployee];const dayItems=Array.from({length:days},(_,i)=>{const k=`${y}-${pad(m)}-${pad(i+1)}`,z={work:0,vac:0};users.forEach(u=>{const q=dashboardMetricsForUser(u,k);z.work+=q.work;z.vac+=q.vac});return {label:i+1,...z}});const weekly=[];let d=new Date(y,0,1);while(d.getDay()!==1)d.setDate(d.getDate()-1);for(let i=0;i<53;i++){const s=new Date(d),e=new Date(d);e.setDate(e.getDate()+6);let work=0,vac=0;for(let x=new Date(s);x<=e;x.setDate(x.getDate()+1)){const k=dateKey(x);if(parseKey(k).getFullYear()!==y)continue;users.forEach(u=>{const q=dashboardMetricsForUser(u,k);work+=q.work;vac+=q.vac})}if(work||vac)weekly.push({label:`${pad(s.getDate())}/${pad(s.getMonth()+1)}`,work,vac});d.setDate(d.getDate()+7)}const monthly=Array.from({length:12},(_,i)=>{let work=0,vac=0,md=new Date(y,i+1,0).getDate();for(let dd=1;dd<=md;dd++){const k=`${y}-${pad(i+1)}-${pad(dd)}`;users.forEach(u=>{const q=dashboardMetricsForUser(u,k);work+=q.work;vac+=q.vac})}return {label:new Date(y,i,1).toLocaleDateString("es-ES",{month:"short"}).replace(".",""),work,vac}}).filter(x=>x.work||x.vac);$("barChart").innerHTML=chartBars(dayItems);$("weeklyBarChart").innerHTML=chartBars(weekly);$("monthlyBarChart").innerHTML=chartBars(monthly)}
-
+function chartBars(items,users){
+ const max=Math.max(1,...items.map(x=>(x.segments||[]).reduce((a,b)=>a+b.minutes,0)+(x.vac||0)));
+ return items.map(x=>{
+   const total=(x.segments||[]).reduce((a,b)=>a+b.minutes,0)+(x.vac||0);
+   const stack=(x.segments||[]).filter(seg=>seg.minutes>0).map(seg=>{
+     const h=(seg.minutes/max)*170;
+     return \`<div class="bar segment-bar" title="\${seg.name}: \${fmtMinutes(seg.minutes)}" style="height:\${h}px;background:\${seg.color||'#172033'}"></div>\`;
+   }).join("");
+   const vacH=x.vac?(x.vac/max)*170:0;
+   return \`<div class="bar-item"><div class="bar-value">\${total?fmtMinutes(total):""}</div><div class="bar-stack">\${stack}\${x.vac?\`<div class="bar vacation-bar" title="Vacaciones: \${fmtMinutes(x.vac)}" style="height:\${vacH}px"></div>\`:""}</div><small>\${x.label}</small></div>\`;
+ }).join("");
+}
+function dashboardUsers(mode){return (mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean)}
+function dashboardDaySegments(users,k){
+ return users.map(u=>{const q=dashboardMetricsForUser(u,k);return {username:u.username,name:u.name,color:u.color||'#172033',minutes:q.work}}).filter(x=>x.minutes>0);
+}
+function renderDashboard(mode="employee"){
+ if(!isAdmin())return;
+ const label=$("dashboardEmployeeLabel");
+ if(label)label.textContent=mode==="general"?"Resumen general de todos los empleados":\`\${selectedEmployee?.name||"Empleado"} · horas trabajadas y vacaciones\`;
+ const val=$("dashboardMonth").value||\`\${currentDate.getFullYear()}-\${pad(currentDate.getMonth()+1)}\`;
+ $("dashboardMonth").value=val;
+ const [y,m]=val.split("-").map(Number),days=new Date(y,m,0).getDate(),users=dashboardUsers(mode);
+ let h=\`<div class="dash-grid">\${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>\`<div class="weekday">\${x}</div>\`).join("")}\`;
+ const first=new Date(y,m-1,1),startDay=(first.getDay()+6)%7;
+ for(let i=0;i<startDay;i++)h+='<div class="dash-day empty"></div>';
+ for(let d=1;d<=days;d++){
+   const k=\`\${y}-\${pad(m)}-\${pad(d)}\`;
+   const segs=dashboardDaySegments(users,k);
+   const vac=users.reduce((a,u)=>a+dashboardMetricsForUser(u,k).vac,0);
+   const mins=segs.reduce((a,b)=>a+b.minutes,0);
+   h+=\`<div class="dash-day"><strong>\${d}</strong><span>\${mins||vac?fmtMinutes(mins+vac):""}</span>\${segs.length?'<div class="dash-day-colors">'+segs.map(z=>\`<i title="\${z.name}: \${fmtMinutes(z.minutes)}" style="background:\${z.color}"></i>\`).join("")+'</div>':""}\${vac?\`<small>🏖 \${fmtMinutes(vac)}</small>\`:""}</div>\`;
+ }
+ $("dashboardCalendar").innerHTML=h+"</div>";
+ const dayItems=Array.from({length:days},(_,i)=>{
+   const k=\`\${y}-\${pad(m)}-\${pad(i+1)}\`,segs=dashboardDaySegments(users,k);
+   const vac=users.reduce((a,u)=>a+dashboardMetricsForUser(u,k).vac,0);
+   return {label:i+1,segments:segs,vac};
+ });
+ const weekly=[];let d=new Date(y,0,1);while(d.getDay()!==1)d.setDate(d.getDate()-1);
+ for(let i=0;i<53;i++){
+   const s=d,e=new Date(d);e.setDate(e.getDate()+6);const totals={};let vac=0;
+   for(let x=new Date(s);x<=e;x.setDate(x.getDate()+1)){
+     const k=dateKey(x);if(parseKey(k).getFullYear()!==y)continue;
+     users.forEach(u=>{const q=dashboardMetricsForUser(u,k);if(q.work)totals[u.username]=(totals[u.username]||0)+q.work;vac+=q.vac});
+   }
+   const segments=users.map(u=>({username:u.username,name:u.name,color:u.color||'#172033',minutes:totals[u.username]||0})).filter(x=>x.minutes>0);
+   if(segments.length||vac)weekly.push({label:\`\${pad(s.getDate())}/\${pad(s.getMonth()+1)}\`,segments,vac});
+   d.setDate(d.getDate()+7);
+ }
+ const monthly=Array.from({length:12},(_,i)=>{
+   const totals={};let vac=0,md=new Date(y,i+1,0).getDate();
+   for(let dd=1;dd<=md;dd++){
+     const k=\`\${y}-\${pad(i+1)}-\${pad(dd)}\`;
+     users.forEach(u=>{const q=dashboardMetricsForUser(u,k);if(q.work)totals[u.username]=(totals[u.username]||0)+q.work;vac+=q.vac});
+   }
+   const segments=users.map(u=>({username:u.username,name:u.name,color:u.color||'#172033',minutes:totals[u.username]||0})).filter(x=>x.minutes>0);
+   return {label:new Date(y,i,1).toLocaleDateString("es-ES",{month:"short"}).replace(".",""),segments,vac};
+ }).filter(x=>x.segments.length||x.vac);
+ $("barChart").innerHTML=chartBars(dayItems,users);
+ $("weeklyBarChart").innerHTML=chartBars(weekly,users);
+ $("monthlyBarChart").innerHTML=chartBars(monthly,users);
+}
 function csvRows(text){const rows=[];let row=[],cell='',q=false;for(let i=0;i<text.length;i++){const c=text[i];if(c==='"'){if(q&&text[i+1]==='"'){cell+='"';i++;}else q=!q}else if(c===','&&!q){row.push(cell);cell=''}else if((c==='\n'||c==='\r')&&!q){if(c==='\r'&&text[i+1]==='\n')i++;row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row);row=[];cell=''}else cell+=c}if(cell!==''||row.length){row.push(cell);if(row.some(x=>x.trim()!==''))rows.push(row)}return rows}
 function parseCsv(text){const rows=csvRows(text),head=(rows.shift()||[]).map(x=>x.trim());return rows.map(r=>Object.fromEntries(head.map((h,i)=>[h,(r[i]||'').trim()])))}
 function notionDateTime(v){const m=String(v||'').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})/);return m?{date:`${m[3]}-${pad(m[2])}-${pad(m[1])}`,time:`${pad(m[4])}:${m[5]}`}:null}
