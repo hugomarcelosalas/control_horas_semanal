@@ -142,16 +142,19 @@ $("exportBalancesPdf").onclick=exportBalancesPdf;
 $("importNotionBtn").onclick=()=>{const f=$("notionImportFile").files[0];if(!f)return alert("Selecciona un ZIP o CSV exportado de Notion.");importNotionFile(f)};
 $("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$("balancesPanel").classList.add("hidden");$("mainPanel").classList.add("hidden");renderDashboard("general")};$("closeDashboard").onclick=()=>{$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden")};$("dashboardMonth").onchange=renderDashboard;$("dashboardYear").onchange=renderDashboard;
 function chartBars(items,users){
- const max=Math.max(1,...items.map(x=>(x.segments||[]).reduce((a,b)=>a+b.minutes,0)+(x.vac||0)));
- return items.map(x=>{
-   const total=(x.segments||[]).reduce((a,b)=>a+b.minutes,0)+(x.vac||0);
-   const stack=(x.segments||[]).filter(seg=>seg.minutes>0).map(seg=>{
+ const max=Math.max(1,...items.flatMap(x=>(x.segments||[]).map(seg=>seg.minutes)),...items.map(x=>x.vac||0));
+ const legend=(users||[]).map(u=>`<span><i class="legend-box" style="background:${u.color||'#172033'}"></i>${u.name}</span>`).join("");
+ const vacationLegend=items.some(x=>x.vac>0)?'<span><i class="legend-box vacation-legend"></i>Vacaciones</span>':"";
+ const body=items.map(x=>{
+   const bars=(x.segments||[]).map(seg=>{
      const h=(seg.minutes/max)*170;
-     return `<div class="bar segment-bar" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.color||'#172033'}"></div>`;
+     return `<div class="mini-bar"><div class="mini-bar-value">${fmtMinutes(seg.minutes)}</div><div class="bar segment-bar" title="${seg.name}: ${fmtMinutes(seg.minutes)}" style="height:${h}px;background:${seg.color||'#172033'}"></div></div>`;
    }).join("");
    const vacH=x.vac?(x.vac/max)*170:0;
-   return `<div class="bar-item"><div class="bar-value">${total?fmtMinutes(total):""}</div><div class="bar-stack">${stack}${x.vac?`<div class="bar vacation-bar" title="Vacaciones: ${fmtMinutes(x.vac)}" style="height:${vacH}px"></div>`:""}</div><small>${x.label}</small></div>`;
+   const vac=x.vac?`<div class="mini-bar"><div class="mini-bar-value">${fmtMinutes(x.vac)}</div><div class="bar vacation-bar" title="Vacaciones: ${fmtMinutes(x.vac)}" style="height:${vacH}px"></div></div>`:"";
+   return `<div class="chart-group"><div class="chart-bars-row">${bars}${vac}</div><small>${x.label}</small></div>`;
  }).join("");
+ return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
 }
 function dashboardUsers(mode){return (mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean)}
 function dashboardDaySegments(users,k){
