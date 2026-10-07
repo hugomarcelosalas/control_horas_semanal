@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id);
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
-let currentUser=null,selectedEmployee=null,currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=[];
+let currentUser=null,selectedEmployee=null,currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
 
@@ -185,7 +185,7 @@ function exportBalancesPdf(){const selected=db.users.filter(u=>u.role==='employe
 $("exportBalancesPdf").onclick=exportBalancesPdf;
 
 $("importNotionBtn").onclick=()=>{const f=$("notionImportFile").files[0];if(!f)return alert("Selecciona un ZIP o CSV exportado de Notion.");importNotionFile(f)};
-$("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$("balancesPanel").classList.add("hidden");$("mainPanel").classList.add("hidden");renderDashboard("general")};$("closeDashboard").onclick=()=>{$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden")};$("dashboardMonth").onchange=renderDashboard;$("dashboardYear").onchange=renderDashboard;
+$("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$("balancesPanel").classList.add("hidden");$("mainPanel").classList.add("hidden");renderDashboard("general")};$("closeDashboard").onclick=()=>{$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden")};function shiftDashboardPeriod(delta){const v=$("dashboardMonth").value;if(!v)return;const [y,m]=v.split("-").map(Number),d=new Date(y,m-1+delta,1);$("dashboardMonth").value=`${d.getFullYear()}-${pad(d.getMonth()+1)}`;$("dashboardYear").value=d.getFullYear();renderDashboard("general")} $("dashboardMonth").onchange=()=>{$("dashboardYear").value=Number($("dashboardMonth").value.split("-")[0]);renderDashboard("general")};$("dashboardYear").onchange=()=>{const v=$("dashboardMonth").value||`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}`,m=v.split("-")[1];$("dashboardMonth").value=`${$("dashboardYear").value}-${m}`;renderDashboard("general")};$("dashboardPrevPeriod").onclick=()=>shiftDashboardPeriod(-1);$("dashboardNextPeriod").onclick=()=>shiftDashboardPeriod(1);$("toggleInactiveEmployees").onclick=()=>{inactiveEmployeesVisible=!inactiveEmployeesVisible;renderInactiveEmployees()};
 function chartBars(items,users){
  const totals=items.map(x=>(x.segments||[]).reduce((sum,seg)=>sum+(Number(seg.minutes)||0),0)+(Number(x.vac)||0));
  const max=Math.max(1,...totals);
@@ -204,21 +204,21 @@ function chartBars(items,users){
  return `<div class="chart-legend">${legend}${vacationLegend}</div><div class="grouped-bar-chart">${body}</div>`;
 }
 function dashboardUsers(mode){
- const all=(mode==="general"?db.users.filter(u=>u.role==="employee"&&u.active!==false):[selectedEmployee]).filter(Boolean);
+ const all=(mode==="general"?db.users.filter(u=>u.role==="employee"):[selectedEmployee]).filter(Boolean);
  if(mode!=="general")return all;
- if(!selectedDashboardEmployees.length)return all;
+ if(!selectedDashboardEmployees?.length)return [];
  return all.filter(u=>selectedDashboardEmployees.includes(u.username));
 }
 function renderDashboardEmployeeFilters(){
  const box=$("dashboardEmployeeFilters");if(!box)return;
- const employees=db.users.filter(u=>u.role==="employee"&&u.active!==false);
- if(!selectedDashboardEmployees.length)selectedDashboardEmployees=employees.map(u=>u.username);
- box.innerHTML=employees.map(u=>`<label class="dashboard-filter-chip"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}">${u.name}</span></label>`).join("");
+ const employees=db.users.filter(u=>u.role==="employee");
+ if(selectedDashboardEmployees===null)selectedDashboardEmployees=employees.filter(u=>u.active!==false).map(u=>u.username);
+ box.innerHTML=employees.map(u=>`<label class="dashboard-filter-chip"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}">${u.name}${u.active===false?" · no activo":""}</span></label>`).join("");
  box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
    selectedDashboardEmployees=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
    renderDashboard("general");
  });
- $("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);renderDashboard("general")};
+ $("dashboardActiveEmployees").onclick=()=>{selectedDashboardEmployees=employees.filter(u=>u.active!==false).map(u=>u.username);renderDashboard("general")};$("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);renderDashboard("general")};
 }
 function dashboardMetricsForUser(user,k){
  const record=(db.records?.[user.username]||{})[k]||{};
