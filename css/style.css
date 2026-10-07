@@ -73,3 +73,5 @@
 }
 
 .subsection-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.dashboard-filter-actions{display:flex;gap:7px;flex-shrink:0}.dashboard-toolbar{justify-content:flex-start}.dashboard-toolbar .icon-btn{flex:0 0 34px}.dashboard-filter-chip span{opacity:.95}.dashboard-filter-chip input:not(:checked)+span{opacity:.55}
+
+.chart-with-tooltip{position:relative}.chart-tooltip{position:absolute;z-index:10;pointer-events:none;background:#172033;color:#fff;border-radius:7px;padding:7px 10px;font-size:11px;font-weight:700;white-space:nowrap;box-shadow:0 5px 18px #17203333}.segment-bar{cursor:pointer;outline:none}.segment-bar:focus{box-shadow:0 0 0 2px #fff,0 0 0 4px #172033}.chart-tooltip.hidden{display:none!important}
