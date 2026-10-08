@@ -15,7 +15,10 @@ const COLORES_OPCIONES = [
 ];
 
 const TablaHorario = () => {
-  const [pestanaActiva, setPestanaActiva] = useState('admin'); 
+  const parentUser = window.parent && window.parent.__CONTROL_HORARIO_USER__ ? window.parent.__CONTROL_HORARIO_USER__ : {role:'employee'};
+  const isAdmin = parentUser.role === 'admin';
+  const [datosServidorCargados, setDatosServidorCargados] = useState(false);
+  const [pestanaActiva, setPestanaActiva] = useState(isAdmin ? 'admin' : 'visualizacion'); 
   const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles'); 
 
   const [fechaInicio, setFechaInicio] = useState('');
