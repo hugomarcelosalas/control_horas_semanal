@@ -88,3 +88,9 @@
 
 /* Generador de horarios integrado */
 .generator-frame-wrap{width:100%;background:#fff;padding:0;min-height:85vh}.generator-frame-wrap iframe{display:block;width:100%;height:85vh;min-height:760px;border:0;background:#fff}@media(max-width:760px){.generator-frame-wrap iframe{height:88vh;min-height:700px}}
+
+.section-tabs{max-width:1280px;margin:18px auto 0;padding:0 22px;display:flex;gap:6px;flex-wrap:wrap}
+.section-tab{border:1px solid #dbe2ea;background:#fff;color:#687386;padding:10px 16px;border-radius:10px 10px 0 0;cursor:pointer;font-weight:750;font-size:13px}
+.section-tab:hover{background:#f5f8fc;color:#172033}
+.section-tab.active{background:#172033;color:#fff;border-color:#172033;box-shadow:0 2px 0 #172033}
+@media(max-width:760px){.section-tabs{padding:0 12px;margin-top:12px;overflow-x:auto;flex-wrap:nowrap}.section-tab{white-space:nowrap;padding:9px 12px}}
