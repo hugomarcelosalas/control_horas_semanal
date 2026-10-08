@@ -184,6 +184,7 @@ useEffect(() => {
   };
 
   const actualizarDia = (isoFecha, cambios) => {
+    if(!isAdmin) return;
     setDiasSemana(prev => prev.map(d => d.isoFecha === isoFecha ? { ...d, ...cambios } : d));
   };
 
@@ -250,6 +251,7 @@ useEffect(() => {
   };
 
   const borrarYReiniciar = () => {
+    if(!isAdmin) return;
     const opcion = window.prompt(
       "¿Qué deseas hacer?\n1: Reiniciar todo (borrar empleados, turnos y eventos)\n2: Solo cambiar fecha (mantener empleados, turnos y eventos)",
       "1"
@@ -509,6 +511,7 @@ useEffect(() => {
 
   const abrirModalNuevoEmpleado = () => {
     if(!isAdmin) return;
+    if(!isAdmin) return;
     setIdEmpPlantillaEdit(null);
     setNombreEmpPlantilla('');
     setHorasEmpPlantilla('');
@@ -518,6 +521,7 @@ useEffect(() => {
 
   const abrirModalEditarEmpleado = (emp) => {
     if(!isAdmin) return;
+    if(!isAdmin) return;
     setIdEmpPlantillaEdit(emp.id);
     setNombreEmpPlantilla(emp.nombre);
     setHorasEmpPlantilla(emp.horasContratadas);
@@ -526,6 +530,7 @@ useEffect(() => {
   };
 
   const guardarEmpleadoPlantilla = (e) => {
+    if(!isAdmin) return;
     e.preventDefault();
     if (!nombreEmpPlantilla.trim()) return;
     registrarHistorial();
@@ -549,6 +554,7 @@ useEffect(() => {
   };
 
   const eliminarEmpleadoPlantilla = (id) => {
+    if(!isAdmin) return;
     registrarHistorial();
     setEmpleados(empleados.filter(emp => String(emp.id) !== String(id)));
     setTurnos(turnos.filter(t => String(t.empleadoId) !== String(id)));
@@ -556,6 +562,7 @@ useEffect(() => {
   };
 
   const abrirModalNuevoTurno = () => {
+    if(!isAdmin) return;
     if(!isAdmin) return;
     setIdTurnoEdit(null);
     setTurnoEmpId(empleados.length > 0 ? String(empleados[0].id) : '');
@@ -570,6 +577,7 @@ useEffect(() => {
 
   const abrirModalEditarTurno = (turno) => {
     if(!isAdmin) return;
+    if(!isAdmin) return;
     setIdTurnoEdit(turno.id);
     setTurnoEmpId(String(turno.empleadoId));
     setTurnoFecha(turno.fecha);
@@ -582,6 +590,7 @@ useEffect(() => {
   };
 
   const guardarTurno = (e) => {
+    if(!isAdmin) return;
     e.preventDefault();
     if (!turnoEmpId) {
       alert("Por favor selecciona un empleado.");
@@ -615,9 +624,11 @@ useEffect(() => {
     setMostrarModalTurno(false);
   };
 
-  const prepararDuplicarTurno = () => { setIdTurnoEdit(null); };
+  const prepararDuplicarTurno = () => {
+    if(!isAdmin) return; setIdTurnoEdit(null); };
 
   const eliminarTurno = () => {
+    if(!isAdmin) return;
     if (idTurnoEdit) {
       registrarHistorial();
       setTurnos(turnos.filter(t => t.id !== idTurnoEdit));
@@ -626,6 +637,7 @@ useEffect(() => {
   };
 
   const abrirModalNuevoCumple = () => {
+    if(!isAdmin) return;
     if(!isAdmin) return;
     setIdCumpleEdit(null);
     setCumpleCantNinos('');
@@ -638,6 +650,7 @@ useEffect(() => {
   };
 
   const abrirModalEditarCumple = (c) => {
+    if(!isAdmin) return;
     if(!isAdmin) return;
     setIdCumpleEdit(c.id);
     setCumpleFecha(c.fecha);
@@ -655,6 +668,7 @@ useEffect(() => {
   };
 
   const guardarCumple = (e) => {
+    if(!isAdmin) return;
     e.preventDefault();
     if (!cumpleFecha) return;
     registrarHistorial();
@@ -693,9 +707,11 @@ useEffect(() => {
     setMostrarModalCumple(false);
   };
 
-  const prepararDuplicarCumple = () => { setIdCumpleEdit(null); };
+  const prepararDuplicarCumple = () => {
+    if(!isAdmin) return; setIdCumpleEdit(null); };
 
   const eliminarCumple = () => {
+    if(!isAdmin) return;
     if (idCumpleEdit) {
       registrarHistorial();
       setCumples(cumples.filter(c => c.id !== idCumpleEdit));
