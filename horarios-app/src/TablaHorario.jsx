@@ -755,12 +755,12 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
       <h2>HORARIO SEMANAL</h2>
 
       <div className="pestanas-navegacion">
-        <button
+        {isAdmin && <button
           className={`btn-pestana ${pestanaActiva === 'admin' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('admin')}
         >
           🛠️ Pestaña Administrador
-        </button>
+        </button>}
         <button
           className={`btn-pestana ${pestanaActiva === 'visualizacion' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('visualizacion')}
@@ -993,13 +993,13 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  <button
+                  {isAdmin && <button
                     onClick={() => setPestanaActiva('admin')}
                     className="btn-gris"
                     title="Volver al administrador para editar turnos y eventos"
                   >
                     ✏️ Volver a Admin
-                  </button>
+                  </button>}
                   <button 
                     onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'landscape')} 
                     className="btn-exportar"
