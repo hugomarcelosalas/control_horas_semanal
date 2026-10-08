@@ -9,6 +9,9 @@ function pad(n){return String(n).padStart(2,"0")}
 function dateKey(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
 function parseKey(k){const [y,m,d]=k.split("-").map(Number);return new Date(y,m-1,d)}
 function fmtDate(k){return parseKey(k).toLocaleDateString("es-ES",{day:"2-digit",month:"2-digit",year:"numeric"})}
+function weekRangeForDate(d){const x=new Date(d);const day=x.getDay()||7;const start=new Date(x);start.setDate(x.getDate()-day+1);const end=new Date(start);end.setDate(start.getDate()+6);return {start:dateKey(start),end:dateKey(end)}}
+async function loadPlannedSummary(){const el=$("heroWeekPlanned"),diff=$("heroWeekDifference");if(!el||!selectedEmployee?.username||!authToken)return;const r=weekRangeForDate(new Date());try{const data=await api('/api/horarios/summary?username='+encodeURIComponent(selectedEmployee.username)+'&start='+r.start+'&end='+r.end);el.textContent=fmtMinutes(data.plannedMinutes||0);const worked=weekWorkedMinutes();const delta=(data.plannedMinutes||0)-worked;if(diff)diff.textContent=(delta>=0?'+':'')+fmtMinutes(delta)+' previstas − trabajadas';}catch(e){el.textContent='0:00';if(diff)diff.textContent='Sin cuadrante'}}
+
 function fmtLong(k){return parseKey(k).toLocaleDateString("es-ES",{weekday:"long",day:"numeric",month:"long",year:"numeric"})}
 function normalizeTimeValue(v){
  const raw=String(v??"").trim();
@@ -72,6 +75,7 @@ $("logoutBtn").onclick=async()=>{try{await api('/api/logout',{method:'POST'})}ca
 function setupRange(){const y=currentDate.getFullYear(),m=currentDate.getMonth();$("rangeStart").value=dateKey(new Date(y,m,1));$("rangeEnd").value=dateKey(new Date(y,m+1,0))}
 function renderSelectedEmployeeDailyChart(){const box=$("selectedEmployeeDailyChart");if(!box||!selectedEmployee)return;const y=currentDate.getFullYear(),m=currentDate.getMonth()+1,days=new Date(y,m,0).getDate(),u=selectedEmployee,items=[];for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`,q=dashboardMetricsForUser(u,k);items.push({label:String(d),segments:q.work>0?[{name:u.name,color:u.color||"#172033",minutes:q.work}]:[],vac:q.vac})}const workedDays=items.filter(x=>x.segments.length).length;box.innerHTML='<div class="selected-chart-head"><div><h3>Horas trabajadas por día</h3><p>'+u.name+' · '+workedDays+' día(s) con horas en '+currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"})+'</p></div></div>'+chartBars(items,[u]);setupChartTooltips()}
 function render(){
+  loadPlannedSummary();
  if(!selectedEmployee)return;ensureUserData(selectedEmployee.username);
  $("employeeTitle").textContent=selectedEmployee.name;$("employeeSubtitle").textContent=`Jornada contratada: ${selectedEmployee.weeklyHours} horas semanales`;
  $("heroBalance").textContent=fmtMinutes(isAdmin()?sumCurrentEmployeeBalances():calculateBalanceToDate());renderEmployeeTopSummary();$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
