@@ -16,9 +16,9 @@ const COLORES_OPCIONES = [
 
 const TablaHorario = () => {
   const parentUser = window.parent && window.parent.__CONTROL_HORARIO_USER__ ? window.parent.__CONTROL_HORARIO_USER__ : {role:'employee'};
-  const isAdmin = parentUser.role === 'admin';
+  const [isAdmin, setIsAdmin] = useState(parentUser.role === 'admin');
   const [datosServidorCargados, setDatosServidorCargados] = useState(false);
-  const [pestanaActiva, setPestanaActiva] = useState(isAdmin ? 'admin' : 'visualizacion'); 
+  const [pestanaActiva, setPestanaActiva] = useState(parentUser.role === 'admin' ? 'admin' : 'visualizacion'); 
   const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles'); 
 
   const [fechaInicio, setFechaInicio] = useState('');
@@ -90,10 +90,27 @@ useEffect(() => {
       setTurnos(Array.isArray(h.turnos)?h.turnos:[]);
       setCumples(Array.isArray(h.cumples)?h.cumples:[]);
       setEmpleados(Array.isArray(data.employees)?data.employees:[]);
+      const serverIsAdmin = data.user?.role === 'admin';
+      setIsAdmin(serverIsAdmin);
+      setPestanaActiva(serverIsAdmin ? 'admin' : 'visualizacion');
       setDatosServidorCargados(true);
     })
     .catch(err => { console.error(err); setDatosServidorCargados(true); });
   return () => { activo=false; };
+}, []);
+
+useEffect(() => {
+  const syncRole = () => {
+    const role = window.parent && window.parent.__CONTROL_HORARIO_USER__?.role;
+    if(role) {
+      const admin = role === 'admin';
+      setIsAdmin(admin);
+      if(!admin) setPestanaActiva('visualizacion');
+    }
+  };
+  window.addEventListener('control-horario-auth', syncRole);
+  syncRole();
+  return () => window.removeEventListener('control-horario-auth', syncRole);
 }, []);
 
 useEffect(() => {
