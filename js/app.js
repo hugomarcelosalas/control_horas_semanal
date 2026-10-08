@@ -429,7 +429,7 @@ function showSection(sectionId){
 }
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.section-tab');
-  if(tab){e.preventDefault();const s=tab.dataset.section;if((s!=='mainPanel')&&!isAdmin())return;showSection(s);return}
+  if(tab){e.preventDefault();const s=tab.dataset.section;if((s==='dashboardPanel'||s==='balancesPanel')&&!isAdmin())return;showSection(s);return}
   if(e.target.closest('#horariosBtn')){e.preventDefault();showSection('horariosPanel')}
   else if(e.target.closest('#dashboardBtn')){e.preventDefault();showSection('dashboardPanel')}
   else if(e.target.closest('#balancesBtn')){e.preventDefault();showSection('balancesPanel')}
