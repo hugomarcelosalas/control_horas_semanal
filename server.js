@@ -9,7 +9,9 @@ const app = express();
 app.use(express.json({limit:'15mb'}));
 app.use(express.static(__dirname));
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, ssl: process.env.DATABASE_URL ? {rejectUnauthorized:false} : false });
+const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: {rejectUnauthorized:false} }) : null;
+const TEST_MODE = process.env.TEST_MODE === '1';
+let memoryDb = null;
 const sessions = new Map();
 const DEFAULT_USERS = [
   {username:'admin',name:'Administrador',role:'admin',weeklyHours:40},
@@ -21,17 +23,24 @@ const DEFAULT_USERS = [
   {username:'aitana',name:'Aitana',role:'employee',weeklyHours:40,active:true,color:'#0891b2'}
 ];
 
+function createInitialDb(password){
+  const users=DEFAULT_USERS.map(u=>({...u,passwordHash:u.username==='admin'?bcrypt.hashSync(password,12):bcrypt.hashSync(u.username,12)}));
+  const db={users,records:{},locks:{},weekly:{},vacations:{},payrolls:[],balanceVisibility:{},monthLocks:{},auditLog:[],version:8};
+  for(const u of users){db.records[u.username]={};db.locks[u.username]={};db.weekly[u.username]=[];db.vacations[u.username]=[];}
+  return db;
+}
 async function init(){
+  if(TEST_MODE && !process.env.DATABASE_URL){
+    memoryDb=createInitialDb(process.env.ADMIN_PASSWORD||'pruebas');
+    return;
+  }
   if(!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
   await pool.query(`CREATE TABLE IF NOT EXISTS app_state (id integer primary key, data jsonb not null, updated_at timestamptz not null default now())`);
   const r=await pool.query('SELECT id FROM app_state WHERE id=1');
   if(!r.rowCount){
     const password=process.env.ADMIN_PASSWORD;
     if(!password) throw new Error('ADMIN_PASSWORD is required on first startup');
-    const users=DEFAULT_USERS.map(u=>({...u,passwordHash:u.username==='admin'?bcrypt.hashSync(password,12):bcrypt.hashSync(u.username,12)}));
-    const db={users,records:{},locks:{},weekly:{},vacations:{},payrolls:[],balanceVisibility:{},monthLocks:{},auditLog:[],version:8};
-    for(const u of users){db.records[u.username]={};db.locks[u.username]={};db.weekly[u.username]=[];db.vacations[u.username]=[];}
-    await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[db]);
+    await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[createInitialDb(password)]);
   }
 }
 function driveConfig(){
@@ -45,12 +54,12 @@ function driveConfig(){
   return {drive:google.drive({version:'v3',auth}),folderId};
 }
 function ensurePayrolls(db){db.payrolls=db.payrolls||[];return db.payrolls}
-async function getDb(){const r=await pool.query('SELECT data FROM app_state WHERE id=1');return r.rows[0].data}
-async function putDb(db){await pool.query('UPDATE app_state SET data=$1,updated_at=now() WHERE id=1',[db])}
-function publicDb(db){return {...db,users:db.users.map(({passwordHash,...u})=>u)} }
+async function getDb(){if(TEST_MODE && !process.env.DATABASE_URL)return memoryDb;const r=await pool.query('SELECT data FROM app_state WHERE id=1');return r.rows[0].data}
+async function putDb(db){if(TEST_MODE && !process.env.DATABASE_URL){memoryDb=db;return}await pool.query('UPDATE app_state SET data=$1,updated_at=now() WHERE id=1',[db])}
+function publicDb(db){return {...db,users:db.users.map(({passwordHash,...u})=>u),payrolls:(db.payrolls||[]).map(({driveFileId,...p})=>p)} }
 function tokenUser(req){const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'');return token?sessions.get(token):null}
 function requireAuth(req,res,next){const u=tokenUser(req);if(!u)return res.status(401).json({error:'No autorizado'});req.auth=u;next()}
-function sanitizeIncoming(db){db.version=8;db.records=db.records||{};db.locks=db.locks||{};db.weekly=db.weekly||{};db.vacations=db.vacations||{};db.balanceVisibility=db.balanceVisibility||{};db.monthLocks=db.monthLocks||{};db.users=(db.users||[]).map(u=>({...u,active:u.role==='admin'?true:u.active!==false}));return db}
+function sanitizeIncoming(db){db.version=8;db.records=db.records||{};db.locks=db.locks||{};db.weekly=db.weekly||{};db.vacations=db.vacations||{};db.balanceVisibility=db.balanceVisibility||{};db.monthLocks=db.monthLocks||{};delete db.payrolls;db.users=(db.users||[]).map(u=>({...u,active:u.role==='admin'?true:u.active!==false}));return db}
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
 function publicUsers(users){return users.map(({passwordHash,...u})=>u)}
 function auditChanges(old,incoming,actor){const out=[],now=new Date().toISOString(),actorName=actor?.name||actor?.username||'Administrador',add=message=>out.push({at:now,actorName,message});for(const u of incoming.users||[]){const o=(old.users||[]).find(x=>x.username===u.username);if(!o)add('Creó al empleado '+u.name);else if(JSON.stringify({...o,passwordHash:undefined})!==JSON.stringify({...u,passwordHash:undefined}))add('Actualizó al empleado '+u.name)}for(const u of old.users||[]){if(!(incoming.users||[]).some(x=>x.username===u.username))add('Eliminó al empleado '+u.name)}for(const type of ['records','weekly','vacations','locks']){const users=new Set([...Object.keys(old[type]||{}),...Object.keys(incoming[type]||{})]);for(const username of users){const a=old[type]?.[username]||{},b=incoming[type]?.[username]||{};if(JSON.stringify(a)!==JSON.stringify(b)){const name=(incoming.users||old.users||[]).find(x=>x.username===username)?.name||username;add('Modificó '+type+' de '+name)}}}return out}
@@ -59,7 +68,7 @@ app.post('/api/login',async(req,res)=>{try{const username=String(req.body.userna
 app.post('/api/logout',requireAuth,(req,res)=>{for(const [t,u] of sessions)if(u.username===req.auth.username)sessions.delete(t);res.json({ok:true})});
 app.get('/api/state',requireAuth,async(req,res)=>{res.json(publicDb(await getDb()))});
 app.get('/api/audit',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});const db=await getDb();res.json((db.auditLog||[]).slice().reverse())});
-app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);const me=req.auth;
+app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);incoming.payrolls=old.payrolls||[];const me=req.auth;
   if(me.role!=='admin'){
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
     if(!same(old.locks,incoming.locks)||!same(old.weekly,incoming.weekly))return res.status(403).json({error:'Solo el admin puede modificar bloqueos y la lista semanal'});
