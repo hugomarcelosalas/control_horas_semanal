@@ -66,8 +66,8 @@ function renderLastBackupLabel(){const el=$("lastBackupLabel");if(!el)return;con
 function setupBackupControls(){if(!isAdmin())return;const panel=$("adminPanel");if(!panel)return;let box=$("backupTools");if(!box){box=document.createElement("div");box.id="backupTools";box.className="backup-tools";box.innerHTML='<div><strong>💾 Copias de seguridad</strong><p class="muted">Guarda una copia completa antes de migrar el servidor o hacer cambios importantes.</p><div id="lastBackupLabel" class="muted"></div></div><div class="backup-actions"><button type="button" class="small-btn" id="exportBackupBtn">⬇️ Crear backup</button><label class="small-btn" for="restoreBackupFile">↩️ Restaurar copia</label><input id="restoreBackupFile" type="file" accept=".json,application/json" hidden></div>';panel.appendChild(box)}$("exportBackupBtn").onclick=()=>{makeBackup();renderLastBackupLabel()};renderLastBackupLabel();$("restoreBackupFile").onchange=e=>{const file=e.target.files?.[0];if(file)restoreBackup(file)}}
 
 
-$("loginForm").addEventListener("submit",async e=>{e.preventDefault();const u=$("username").value.trim().toLowerCase(),p=$("password").value;try{const r=await api('/api/login',{method:'POST',body:JSON.stringify({username:u,password:p})});authToken=r.token;currentUser=r.user;db=r.db;selectedEmployee=currentUser.role==="admin"?(db.users.find(x=>x.role==="employee"&&x.active!==false)||db.users.find(x=>x.role==="employee")||currentUser):currentUser;$("loginError").classList.add("hidden");$("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("currentUser").textContent=`${currentUser.name}${currentUser.role==="admin"?" · Administrador":""}`;$("adminPanel").classList.toggle("hidden",!isAdmin());setupBackupControls();setupExcelAndReview();loadAuditHistory();setupPayrollUI();$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden");setupRange();render();}catch(err){$("loginError").textContent=err.message;$("loginError").classList.remove("hidden")}});
-$("logoutBtn").onclick=async()=>{try{await api('/api/logout',{method:'POST'})}catch(e){}authToken=null;currentUser=null;db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};$("app").classList.add("hidden");$("loginScreen").classList.remove("hidden");$("password").value=""}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();const u=$("username").value.trim().toLowerCase(),p=$("password").value;try{const r=await api('/api/login',{method:'POST',body:JSON.stringify({username:u,password:p})});authToken=r.token;currentUser=r.user;window.__CONTROL_HORARIO_TOKEN__=authToken;window.__CONTROL_HORARIO_USER__=currentUser;db=r.db;selectedEmployee=currentUser.role==="admin"?(db.users.find(x=>x.role==="employee"&&x.active!==false)||db.users.find(x=>x.role==="employee")||currentUser):currentUser;$("loginError").classList.add("hidden");$("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("currentUser").textContent=`${currentUser.name}${currentUser.role==="admin"?" · Administrador":""}`;$("adminPanel").classList.toggle("hidden",!isAdmin());setupBackupControls();setupExcelAndReview();loadAuditHistory();setupPayrollUI();$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden");setupRange();render();}catch(err){$("loginError").textContent=err.message;$("loginError").classList.remove("hidden")}});
+$("logoutBtn").onclick=async()=>{try{await api('/api/logout',{method:'POST'})}catch(e){}authToken=null;currentUser=null;window.__CONTROL_HORARIO_TOKEN__=null;window.__CONTROL_HORARIO_USER__=null;db={users:[],records:{},locks:{},weekly:{},vacations:{},horarios:{},balanceVisibility:{},version:8};$("app").classList.add("hidden");$("loginScreen").classList.remove("hidden");$("password").value=""}
 
 function setupRange(){const y=currentDate.getFullYear(),m=currentDate.getMonth();$("rangeStart").value=dateKey(new Date(y,m,1));$("rangeEnd").value=dateKey(new Date(y,m+1,0))}
 function renderSelectedEmployeeDailyChart(){const box=$("selectedEmployeeDailyChart");if(!box||!selectedEmployee)return;const y=currentDate.getFullYear(),m=currentDate.getMonth()+1,days=new Date(y,m,0).getDate(),u=selectedEmployee,items=[];for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`,q=dashboardMetricsForUser(u,k);items.push({label:String(d),segments:q.work>0?[{name:u.name,color:u.color||"#172033",minutes:q.work}]:[],vac:q.vac})}const workedDays=items.filter(x=>x.segments.length).length;box.innerHTML='<div class="selected-chart-head"><div><h3>Horas trabajadas por día</h3><p>'+u.name+' · '+workedDays+' día(s) con horas en '+currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"})+'</p></div></div>'+chartBars(items,[u]);setupChartTooltips()}
@@ -416,37 +416,6 @@ function setupPayrollUI(){
 async function uploadPayroll(){const username=$("payrollEmployee")?.value,month=$("payrollMonth")?.value,file=$("payrollFile")?.files?.[0],status=$("payrollUploadStatus");if(!username||!month||!file)return alert("Selecciona empleado, mes y PDF.");if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf"))return alert("El archivo debe ser un PDF.");if(file.size>8*1024*1024)return alert("El PDF no puede superar 8 MB.");if(status)status.textContent="Subiendo PDF a Google Drive…";try{const dataBase64=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(",")[1]||"");fr.onerror=reject;fr.readAsDataURL(file)});await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,month,filename:file.name,mimeType:"application/pdf",dataBase64})});if(status)status.textContent="Nómina guardada correctamente.";$("payrollFile").value="";selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;loadPayrolls();}catch(e){if(status)status.textContent="";alert(e.message)}}
 
 
-
-// Navegación principal por pestañas
-function showSection(sectionId){
-  const sections=['mainPanel','dashboardPanel','balancesPanel','horariosPanel'];
-  sections.forEach(id=>{const el=$(id);if(el)el.classList.toggle('hidden',id!==sectionId)});
-  document.querySelectorAll('.section-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.section===sectionId));
-  if(sectionId==='dashboardPanel' && isAdmin()) renderDashboard('general');
-  if(sectionId==='mainPanel') document.querySelector('.section-tab[data-section="mainPanel"]')?.focus({preventScroll:true});
-  const target=$(sectionId); if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
-}
-function setupMainSectionTabs(){
-  document.addEventListener('click',e=>{
-    const tab=e.target.closest('.section-tab');
-    if(tab){
-      e.preventDefault();
-      const section=tab.dataset.section;
-      if((section==='dashboardPanel'||section==='balancesPanel'||section==='horariosPanel')&&!isAdmin())return;
-      showSection(section);
-      return;
-    }
-    const horarios=e.target.closest('#horariosBtn');
-    if(horarios){e.preventDefault();showSection('horariosPanel');}
-    const dash=e.target.closest('#dashboardBtn');
-    if(dash){e.preventDefault();showSection('dashboardPanel');}
-    const balances=e.target.closest('#balancesBtn');
-    if(balances){e.preventDefault();showSection('balancesPanel');}
-    const closeH=e.target.closest('#closeHorarios');
-    if(closeH){e.preventDefault();showSection('mainPanel');}
-  });
-}
-setupMainSectionTabs();
 
 function showSection(sectionId){
   ['mainPanel','dashboardPanel','balancesPanel','horariosPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
