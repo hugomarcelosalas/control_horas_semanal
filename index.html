@@ -28,7 +28,14 @@
       <div class="user-area"><span id="currentUser"></span><button id="logoutBtn" class="ghost">Cerrar sesión</button></div>
     </header>
 
-    <main class="container">
+    <nav id="sectionTabs" class="section-tabs" aria-label="Secciones principales">
+  <button type="button" class="section-tab active" data-section="mainPanel">⏱️ Control horario</button>
+  <button type="button" class="section-tab admin-tab" data-section="dashboardPanel">📈 Dashboard</button>
+  <button type="button" class="section-tab admin-tab" data-section="balancesPanel">💰 Balances</button>
+  <button type="button" class="section-tab admin-tab" data-section="horariosPanel">📅 Horarios</button>
+</nav>
+
+      <main class="container">
       <section class="hero">
         <div><p class="eyebrow">ZONA DE CONTROL</p><h1 id="employeeTitle">Mi horario</h1><p id="employeeSubtitle"></p></div>
         <div class="hero-stats"><div id="heroBalanceBox" class="hero-stat"><span>Balance actual</span><strong id="heroBalance">0:00</strong></div><div class="hero-stat"><span>Horas trabajadas esta semana</span><strong id="heroWeekWorked">0:00</strong><small id="heroWeekRange"></small></div><div class="hero-stat"><span>Horas contrato</span><strong id="heroWeekContract">0:00</strong></div></div>
