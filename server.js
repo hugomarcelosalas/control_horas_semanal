@@ -70,7 +70,7 @@ app.post('/api/login',async(req,res)=>{try{const username=String(req.body.userna
 app.post('/api/logout',requireAuth,(req,res)=>{for(const [t,u] of sessions)if(u.username===req.auth.username)sessions.delete(t);res.json({ok:true})});
 app.get('/api/state',requireAuth,async(req,res)=>{res.json(publicDb(await getDb()))});
 app.get('/api/audit',requireAuth,async(req,res)=>{if(req.auth.role!=='admin')return res.status(403).json({error:'Solo admin'});const db=await getDb();res.json((db.auditLog||[]).slice().reverse())});
-app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);incoming.payrolls=old.payrolls||[];const me=req.auth;
+app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), incoming=sanitizeIncoming(req.body);incoming.payrolls=old.payrolls||[];incoming.horarios=old.horarios||incoming.horarios;const me=req.auth;
   if(me.role!=='admin'){
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
     if(!same(old.locks,incoming.locks)||!same(old.weekly,incoming.weekly))return res.status(403).json({error:'Solo el admin puede modificar bloqueos y la lista semanal'});
