@@ -1,0 +1,593 @@
+/* Estilos para las pestañas de navegación */
+.pestanas-navegacion {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.sub-pestañas {
+  margin-top: 10px;
+  border-bottom: 1px dashed #cbd5e0;
+}
+
+.btn-pestana {
+  background-color: #edf2f7;
+  color: #4a5568;
+  border: 1px solid #cbd5e0;
+  padding: 10px 16px;
+  font-size: 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: all 0.2s ease;
+}
+
+.btn-pestana.activa {
+  background-color: #3182ce;
+  color: white;
+  border-color: #2b6cb0;
+}
+
+.seccion-pestana {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Contenedor responsivo con scroll horizontal optimizado para móviles */
+.tabla-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-top: 10px;
+  background: #ffffff;
+}
+
+/* Clase clave para forzar la expansión completa en el PDF sin recortes de scroll */
+.area-impresion-completa {
+  width: 100% !important;
+  height: auto !important;
+  overflow: visible !important;
+  background-color: #ffffff !important;
+}
+
+/* Estilos de la tabla con ancho mínimo para forzar el scroll horizontal limpio */
+.tabla-horarios {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1100px; 
+}
+
+/* Fija la primera columna (Días / Fecha / Horas) a la izquierda en todo momento */
+.tabla-horarios th.columna-dia-fijo,
+.tabla-horarios td.celda-dia-nombre {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background-color: #ffffff;
+  border-right: 2px solid #cbd5e0;
+  width: 110px;
+  min-width: 110px;
+  max-width: 110px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+/* Esquina superior izquierda fija con mayor prioridad de capa */
+.tabla-horarios th.columna-dia-fijo {
+  z-index: 4;
+  background-color: #f7fafc;
+}
+
+/* Cabeceras de las horas con ancho fijo para evitar que se compriman */
+.tabla-horarios th.cabecera-hora {
+  min-width: 50px;
+  width: 50px;
+  font-size: 11px;
+  text-align: center;
+  background-color: #f7fafc;
+  padding: 6px 2px;
+  white-space: nowrap;
+}
+
+/* Línea divisoria inferior gruesa para separar visualmente los días completos */
+.tabla-horarios tr.fila-horario.ultimo-carril-dia td {
+  border-bottom: 3px solid #2d3748 !important;
+}
+
+/* Celdas generales y bloques de turnos */
+.tabla-horarios td, .tabla-horarios th {
+  border: 1px solid #e2e8f0;
+  height: 35px;
+}
+
+.celda-emp-vacia {
+  background-color: #ffffff;
+  min-width: 50px;
+  width: 50px;
+}
+
+.celda-bloque-activo {
+  border: 1px solid #cbd5e0;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  padding: 4px 1px;
+  text-align: center;
+}
+
+.celda-bloque-activo:hover {
+  opacity: 0.85;
+}
+
+.texto-bloque-celda {
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.celda-cumple-activo {
+  border: 1px solid #111111;
+  background-color: #111111 !important;
+  color: white !important;
+}
+
+/* Estilos generales de la interfaz */
+.contenedor-horarios {
+  padding: 15px;
+  font-family: sans-serif;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.acciones-superiores {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.grupo-botones-izquierda, .grupo-botones-derecha {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-primario { background-color: #3182ce; color: white; }
+.btn-secundario { background-color: #38a169; color: white; }
+.btn-terciario { background-color: #805ad5; color: white; }
+.btn-cumple { background-color: #d69e2e; color: white; }
+.btn-jpg { background-color: #319795; color: white; }
+.btn-exportar { background-color: #dd6b20; color: white; }
+.btn-cancelar { background-color: #e53e3e; color: white; }
+.btn-gris { background-color: #718096; color: white; }
+
+.contenedor-horas-empleados {
+  margin-bottom: 20px;
+  background: #f7fafc;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.grid-horas-empleados {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 5px;
+}
+
+.tarjeta-emp-horas {
+  display: flex;
+  align-items: center;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  background: white;
+  overflow: hidden;
+}
+
+.chip-empleado {
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.cuadro-horas-blanco, .cuadro-dif-valor {
+  padding: 4px 6px;
+  font-size: 11px;
+  background: #fff;
+  border-left: 1px solid #e2e8f0;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 10px;
+}
+
+.modal-contenido {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-sizing: border-box;
+}
+
+.modal-contenido label {
+  display: block;
+  margin-top: 10px;
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.modal-contenido input, .modal-contenido select {
+  width: 100%;
+  padding: 6px;
+  box-sizing: border-box;
+  margin-bottom: 6px;
+}
+
+.horas-grid {
+  display: flex;
+  gap: 10px;
+}
+
+.modal-acciones {
+  display: flex;
+  gap: 6px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+/* Separador visual entre el grupo de monitores y el grupo de kiosko */
+.tabla-horarios tr.separador-monitor-kiosko td {
+  border-bottom: 3px solid #000000 !important;
+}
+
+
+/* Ajustes de legibilidad y separación del cuadrante */
+.tabla-horarios td, .tabla-horarios th { border-color: transparent; }
+.tabla-horarios .texto-bloque-celda { font-size: 20px; line-height: 1.3; white-space: normal; }
+.tabla-horarios .texto-bloque-celda small { font-size: 17px; }
+.tabla-horarios .cabecera-hora { border-bottom: 1px solid #bbb; }
+.tabla-horarios tr.ultimo-carril-dia td { border-bottom: 5px solid #000 !important; }
+.tabla-horarios tr.separador-monitor-kiosko td { border-bottom: 3px solid #000 !important; }
+.modal-contenido label { font-size: 16px; }
+.modal-contenido input, .modal-contenido select { font-size: 16px; }
+
+
+/* Separación visual entre turnos y eventos, sin cuadrícula interior */
+.tabla-horarios tr.fila-separacion-turnos-eventos td {
+  height: 14px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+}
+
+/* Separador de día más marcado que el separador Monitor/Kiosko */
+.tabla-horarios tr.ultimo-carril-dia td {
+  border-bottom: 6px solid #000 !important;
+}
+
+/* Mayor legibilidad de las franjas horarias */
+.tabla-horarios .cabecera-hora {
+  font-size: 13px;
+  font-weight: 700;
+}
+
+
+/* Ajustes de legibilidad unificados para Administrador y ambas vistas */
+.tabla-horarios .texto-bloque-celda {
+  font-size: 20px;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tabla-horarios .texto-bloque-celda small {
+  font-size: 17px;
+  line-height: 1.25;
+}
+.tabla-horarios th,
+.tabla-horarios td {
+  border-color: transparent;
+}
+.tabla-horarios .cabecera-hora {
+  font-size: 13px;
+  font-weight: 700;
+}
+.tabla-horarios tr.ultimo-carril-dia td {
+  border-bottom: 6px solid #000 !important;
+}
+.tabla-horarios tr.separador-monitor-kiosko td {
+  border-bottom: 4px solid #000 !important;
+}
+.tabla-horarios tr.fila-separacion-turnos-eventos td {
+  height: 14px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+}
+.tabla-horarios .columna-dia-fijo,
+.tabla-horarios .celda-dia-nombre {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* Cuadrícula visible en todas las vistas */
+.tabla-horarios,
+.tabla-horarios th,
+.tabla-horarios td {
+  border: 1px solid #cbd5e0 !important;
+  border-collapse: collapse;
+}
+
+/* Controles por día: fondo pastel y clima */
+.controles-dia {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+  min-width: 92px;
+}
+.controles-dia select {
+  width: 100%;
+  max-width: 145px;
+  padding: 3px 4px;
+  font-size: 12px;
+  border: 1px solid #cbd5e0;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+}
+.tabla-horarios .texto-bloque-celda {
+  font-size: 20px !important;
+  line-height: 1.3;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.tabla-horarios .texto-bloque-celda small {
+  font-size: 17px !important;
+}
+.tabla-horarios tr.fila-separacion-turnos-eventos td {
+  border-left: 0 !important;
+  border-right: 0 !important;
+}
+/* Texto más legible en la Vista 2 */
+.tabla-horarios td.celda-bloque-activo span {
+  font-size: 16px !important;
+  font-weight: 600;
+}
+
+
+/* Cuadrícula visible en todas las celdas del horario */
+.tabla-horarios th,
+.tabla-horarios td {
+  border: 1px solid #cbd5e0 !important;
+}
+.tabla-horarios tr.fila-separacion-turnos-eventos td {
+  border: 0 !important;
+}
+.selector-clima-wrap { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.imagen-clima { display: block; width: 54px; height: 42px; filter: drop-shadow(0 2px 1px rgba(0,0,0,.12)); }
+.controles-dia select { max-width: 130px; }
+
+
+/* Cabecera diaria clara y selectores en una fila independiente */
+.datos-cabecera-dia {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 5px 2px; line-height: 1.15;
+}
+.nombre-dia-grande { font-size: 21px !important; font-weight: 800; }
+.fecha-dia-grande { font-size: 16px !important; font-weight: 600; }
+.ninos-dia-grande { font-size: 17px !important; font-weight: 700; }
+.clima-dia-grande { display: flex; justify-content: center; align-items: center; min-height: 42px; }
+.clima-dia-grande .imagen-clima { width: 62px; height: 48px; }
+.fila-selectores-dia {
+  display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center;
+  align-items: center; gap: 6px; margin: 7px auto 0; padding-top: 6px;
+  border-top: 1px dashed #cbd5e0;
+}
+.fila-selectores-dia select { width: auto; max-width: 135px; font-size: 11px; }
+@media print { .fila-selectores-dia { display: none !important; } }
+
+
+.selectores-color-bloques { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; }
+.selectores-color-bloques label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; font-weight: 600; color: #334155; }
+.selectores-color-bloques select { min-width: 125px; }
+
+
+/* Selectores de color independientes para cada franja horaria */
+.selectores-color-bloques {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 10px;
+}
+.selector-bloque-color {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 5px;
+  padding: 6px 8px;
+  border: 1px solid #d5dbe3;
+  border-radius: 6px;
+  background: #f8fafc;
+  min-width: 125px;
+}
+.selector-bloque-color strong {
+  font-size: 13px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+.selector-bloque-color select {
+  width: 100%;
+  max-width: 150px;
+}
+
+
+/* Checks y marcas de turno: asterisco = si es necesario; estrella = encargado */
+.turno-opciones-marcadores { display: flex; flex-wrap: wrap; gap: 18px; margin: 12px 0; align-items: center; }
+.turno-opciones-marcadores label { display: inline-flex; align-items: center; gap: 7px; font-weight: 600; cursor: pointer; }
+.turno-opciones-marcadores input[type="checkbox"] { width: 18px; height: 18px; }
+.marcadores-turno { display: inline-flex; gap: 5px; margin-left: 6px; color: #111; font-size: 1.15em; font-weight: 800; }
+
+
+.leyenda-marcadores {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  flex-wrap: wrap;
+  margin: 8px 0 4px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.leyenda-marcadores span { display: inline-flex; align-items: center; gap: 6px; }
+.marcadores-turno { display: inline-flex; gap: 5px; margin-left: 6px; font-size: 1.15em; vertical-align: middle; }
+
+/* Espacio en blanco entre Monitor y Kiosko, igual que entre Kiosko y Eventos */
+.tabla-horarios tr.separador-monitor-kiosko + tr.fila-separacion-turnos-eventos td,
+.tabla-horarios tr.fila-separacion-monitor-kiosko td {
+  height: 14px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+}
+/* En Vista 2, el carril vacío funciona como columna separadora */
+.tabla-horarios td.celda-separacion-monitor-kiosko {
+  min-width: 22px !important;
+  width: 22px !important;
+  max-width: 22px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+
+
+/* ===== CAMBIOS FINALES DE HOY ===== */
+/* Cuadrícula visible en todas las vistas */
+.tabla-horarios, .tabla-horarios th, .tabla-horarios td {
+  border: 1px solid #cbd5e0 !important;
+  border-collapse: collapse;
+}
+
+/* Cabecera diaria: día / fecha / niños / clima */
+.datos-cabecera-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 6px 2px;
+  line-height: 1.1;
+}
+.nombre-dia-grande { font-size: 21px !important; font-weight: 800; }
+.fecha-dia-grande { font-size: 16px !important; font-weight: 600; }
+.ninos-dia-grande { font-size: 17px !important; font-weight: 800; }
+.clima-dia-grande { display:flex; justify-content:center; align-items:center; min-height:48px; }
+.clima-dia-grande .imagen-clima { width:62px; height:48px; }
+
+/* Selectores fuera de la cabecera exportable */
+.fila-selectores-dia {
+  display:flex; flex-direction:row; flex-wrap:wrap; justify-content:center; align-items:flex-start;
+  gap:8px; margin:7px auto 0; padding-top:6px; border-top:1px dashed #cbd5e0;
+}
+.selectores-color-bloques { display:flex; flex-wrap:wrap; justify-content:center; align-items:stretch; gap:10px; }
+.selector-bloque-color {
+  display:flex; flex-direction:column; align-items:center; gap:5px; padding:6px 8px;
+  border:1px solid #d5dbe3; border-radius:6px; background:#f8fafc; min-width:125px;
+}
+.selector-bloque-color strong { font-size:13px; line-height:1.25; white-space:nowrap; }
+.selector-bloque-color select { width:100%; max-width:150px; }
+.selector-clima-wrap { display:flex; flex-direction:column; align-items:center; gap:3px; }
+.imagen-clima { display:block; width:54px; height:42px; filter:drop-shadow(0 2px 1px rgba(0,0,0,.12)); }
+.fila-selectores-dia select { width:auto; max-width:135px; font-size:11px; }
+
+/* Texto grande en Vista 1, Vista 2 y Administrador */
+.tabla-horarios .texto-bloque-celda { font-size:20px !important; line-height:1.3; white-space:normal; overflow-wrap:anywhere; }
+.tabla-horarios .texto-bloque-celda small { font-size:17px !important; line-height:1.25; }
+.tabla-horarios td.celda-bloque-activo span { font-size:16px !important; font-weight:600; }
+.tabla-horarios .cabecera-hora { font-size:13px; font-weight:700; }
+.tabla-horarios .columna-dia-fijo, .tabla-horarios .celda-dia-nombre { font-size:16px; font-weight:700; }
+
+/* Leyenda de marcas */
+.leyenda-marcadores { display:flex; align-items:center; gap:22px; flex-wrap:wrap; margin:8px 0 4px; font-size:17px; font-weight:700; }
+.marcadores-turno { display:inline-flex; gap:5px; margin-left:6px; font-size:1.15em; vertical-align:middle; }
+.turno-opciones-marcadores { display:flex; flex-wrap:wrap; gap:18px; margin:12px 0; align-items:center; }
+.turno-opciones-marcadores label { display:inline-flex; align-items:center; gap:7px; font-weight:600; cursor:pointer; }
+.turno-opciones-marcadores input[type=checkbox] { width:18px; height:18px; }
+
+/* Separadores reales: fila vacía Monitor/Kiosko y fila vacía Kiosko/Eventos */
+.tabla-horarios tr.fila-separacion-monitor-kiosko td,
+.tabla-horarios tr.fila-separacion-turnos-eventos td {
+  height:14px !important; padding:0 !important; background:#fff !important; border:0 !important;
+}
+/* La línea negra ya no se usa como separador Monitor/Kiosko */
+.tabla-horarios tr.separador-monitor-kiosko td { border:0 !important; height:14px !important; padding:0 !important; background:#fff !important; }
+
+/* Exportación: ocultar selectores */
+@media print { .fila-selectores-dia { display:none !important; } }
+
+
+/* SEPARADOR MONITOR / KIOSKO — espacio blanco real en TODAS las vistas */
+.tabla-horarios tr.separador-monitor-kiosko td,
+.tabla-horarios tr.fila-separacion-monitor-kiosko td {
+  height: 24px !important;
+  min-height: 24px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+}
+.tabla-horarios td.celda-separacion-monitor-kiosko {
+  min-width: 28px !important;
+  width: 28px !important;
+  max-width: 28px !important;
+  padding: 0 !important;
+  background: #fff !important;
+  border: 0 !important;
+}
+.marcadores-turno {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  font-size: 28px;
+  line-height: 0.9;
+  z-index: 5;
+}
+
+.marcadores-turno span {
+  font-size: 40px;
+  line-height: 4
+}
+.celda-bloque-activo {
+  position: relative;
+}
