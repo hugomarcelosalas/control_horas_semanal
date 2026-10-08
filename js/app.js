@@ -414,3 +414,23 @@ function setupPayrollUI(){
   loadPayrolls();
 }
 async function uploadPayroll(){const username=$("payrollEmployee")?.value,month=$("payrollMonth")?.value,file=$("payrollFile")?.files?.[0],status=$("payrollUploadStatus");if(!username||!month||!file)return alert("Selecciona empleado, mes y PDF.");if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf"))return alert("El archivo debe ser un PDF.");if(file.size>8*1024*1024)return alert("El PDF no puede superar 8 MB.");if(status)status.textContent="Subiendo PDF a Google Drive…";try{const dataBase64=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(",")[1]||"");fr.onerror=reject;fr.readAsDataURL(file)});await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,month,filename:file.name,mimeType:"application/pdf",dataBase64})});if(status)status.textContent="Nómina guardada correctamente.";$("payrollFile").value="";selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;loadPayrolls();}catch(e){if(status)status.textContent="";alert(e.message)}}
+
+
+// Integración inicial del generador de horarios
+function setupHorariosPanel(){
+  const btn=$('horariosBtn'), panel=$('horariosPanel'), close=$('closeHorarios');
+  if(!btn||!panel)return;
+  btn.addEventListener('click',()=>{
+    $('mainPanel')?.classList.add('hidden');
+    $('dashboardPanel')?.classList.add('hidden');
+    $('balancesPanel')?.classList.add('hidden');
+    panel.classList.remove('hidden');
+    panel.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+  close?.addEventListener('click',()=>{
+    panel.classList.add('hidden');
+    $('mainPanel')?.classList.remove('hidden');
+  });
+}
+
+document.addEventListener('DOMContentLoaded',()=>setupHorariosPanel());
