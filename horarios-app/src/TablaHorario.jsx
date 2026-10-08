@@ -770,19 +770,18 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
       </div>
 
       {!semanaGenerada ? (
-        <form onSubmit={iniciarCuadrante} className="formulario-inicio">
-          <label htmlFor="fecha-inicio">
-            <strong>¿En qué fecha inicia la semana?</strong>
-          </label>
-          <input
-            id="fecha-inicio"
-            type="date"
-            value={fechaInicio}
-            onChange={(e) => setFechaInicio(e.target.value)}
-            required
-          />
-          <button type="submit" className="btn-primario">Comenzar Cuadrante</button>
-        </form>
+        isAdmin ? (
+          <form onSubmit={iniciarCuadrante} className="formulario-inicio">
+            <label htmlFor="fecha-inicio"><strong>¿En qué fecha inicia la semana?</strong></label>
+            <input id="fecha-inicio" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} required />
+            <button type="submit" className="btn-primario">Comenzar Cuadrante</button>
+          </form>
+        ) : (
+          <div className="visor-sin-cuadrante">
+            <strong>📅 No hay un cuadrante publicado todavía.</strong>
+            <span>Cuando el administrador lo publique, podrás verlo aquí.</span>
+          </div>
+        )
       ) : (
         <>
           {/* ================= PESTAÑA 1: ADMINISTRADOR ================= */}
