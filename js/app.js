@@ -447,3 +447,18 @@ function setupMainSectionTabs(){
   });
 }
 setupMainSectionTabs();
+
+function showSection(sectionId){
+  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
+  if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');
+  $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.addEventListener('click',e=>{
+  const tab=e.target.closest('.section-tab');
+  if(tab){e.preventDefault();const s=tab.dataset.section;if((s!=='mainPanel')&&!isAdmin())return;showSection(s);return}
+  if(e.target.closest('#horariosBtn')){e.preventDefault();showSection('horariosPanel')}
+  else if(e.target.closest('#dashboardBtn')){e.preventDefault();showSection('dashboardPanel')}
+  else if(e.target.closest('#balancesBtn')){e.preventDefault();showSection('balancesPanel')}
+  else if(e.target.closest('#closeHorarios')){e.preventDefault();showSection('mainPanel')}
+});
