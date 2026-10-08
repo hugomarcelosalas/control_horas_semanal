@@ -416,21 +416,34 @@ function setupPayrollUI(){
 async function uploadPayroll(){const username=$("payrollEmployee")?.value,month=$("payrollMonth")?.value,file=$("payrollFile")?.files?.[0],status=$("payrollUploadStatus");if(!username||!month||!file)return alert("Selecciona empleado, mes y PDF.");if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf"))return alert("El archivo debe ser un PDF.");if(file.size>8*1024*1024)return alert("El PDF no puede superar 8 MB.");if(status)status.textContent="Subiendo PDF a Google Drive…";try{const dataBase64=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(",")[1]||"");fr.onerror=reject;fr.readAsDataURL(file)});await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,month,filename:file.name,mimeType:"application/pdf",dataBase64})});if(status)status.textContent="Nómina guardada correctamente.";$("payrollFile").value="";selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;loadPayrolls();}catch(e){if(status)status.textContent="";alert(e.message)}}
 
 
-// Integración inicial del generador de horarios
-function setupHorariosPanel(){
-  const btn=$('horariosBtn'), panel=$('horariosPanel'), close=$('closeHorarios');
-  if(!btn||!panel)return;
-  btn.addEventListener('click',()=>{
-    $('mainPanel')?.classList.add('hidden');
-    $('dashboardPanel')?.classList.add('hidden');
-    $('balancesPanel')?.classList.add('hidden');
-    panel.classList.remove('hidden');
-    panel.scrollIntoView({behavior:'smooth',block:'start'});
-  });
-  close?.addEventListener('click',()=>{
-    panel.classList.add('hidden');
-    $('mainPanel')?.classList.remove('hidden');
+
+// Navegación principal por pestañas
+function showSection(sectionId){
+  const sections=['mainPanel','dashboardPanel','balancesPanel','horariosPanel'];
+  sections.forEach(id=>{const el=$(id);if(el)el.classList.toggle('hidden',id!==sectionId)});
+  document.querySelectorAll('.section-tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.section===sectionId));
+  if(sectionId==='dashboardPanel' && isAdmin()) renderDashboard('general');
+  if(sectionId==='mainPanel') document.querySelector('.section-tab[data-section="mainPanel"]')?.focus({preventScroll:true});
+  const target=$(sectionId); if(target) target.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function setupMainSectionTabs(){
+  document.addEventListener('click',e=>{
+    const tab=e.target.closest('.section-tab');
+    if(tab){
+      e.preventDefault();
+      const section=tab.dataset.section;
+      if((section==='dashboardPanel'||section==='balancesPanel'||section==='horariosPanel')&&!isAdmin())return;
+      showSection(section);
+      return;
+    }
+    const horarios=e.target.closest('#horariosBtn');
+    if(horarios){e.preventDefault();showSection('horariosPanel');}
+    const dash=e.target.closest('#dashboardBtn');
+    if(dash){e.preventDefault();showSection('dashboardPanel');}
+    const balances=e.target.closest('#balancesBtn');
+    if(balances){e.preventDefault();showSection('balancesPanel');}
+    const closeH=e.target.closest('#closeHorarios');
+    if(closeH){e.preventDefault();showSection('mainPanel');}
   });
 }
-
-document.addEventListener('DOMContentLoaded',()=>setupHorariosPanel());
+setupMainSectionTabs();
