@@ -1170,7 +1170,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                 colSpan={numCarriles}
                                 style={{ textAlign: 'center', borderLeft: '2px solid #cbd5e0' }}
                               >
-                                {datosCabeceraDia(dia)}{controlesDia(dia)}
+                                {datosCabeceraDia(dia)}{isAdmin && controlesDia(dia)}
                               </th>
                             );
                           })}
