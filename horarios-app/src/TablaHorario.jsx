@@ -103,7 +103,7 @@ useEffect(() => {
       const role = data.user?.role || (window.parent && window.parent.__CONTROL_HORARIO_USER__?.role);
       if (data.user) {
         setUsuarioActual(data.user);
-        if (data.user.username) setEmpleadoVistaMia(data.user.username);
+        if (data.user.username) setEmpleadoVistaMia(data.user.role === 'admin' ? (data.employees?.[0]?.id || '') : data.user.username);
       }
       const admin = role === 'admin';
       setIsAdmin(admin);
