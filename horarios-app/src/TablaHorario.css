@@ -654,3 +654,21 @@ button {
   .capacidad-dia { width: 118px; padding: 5px; }
   .capacidad-parque-config { align-items:flex-start; }
 }
+
+
+/* La celda completa del día representa la ocupación del parque */
+.tabla-horarios .celda-dia-ocupacion {
+  color: #172033 !important;
+  background-clip: padding-box;
+  transition: background-color .3s ease;
+}
+.tabla-horarios .celda-dia-ocupacion .datos-cabecera-dia {
+  min-height: 100%;
+}
+.tabla-horarios .ocupacion-dia-texto {
+  display: block;
+  font-size: 12px !important;
+  line-height: 1.2;
+  font-weight: 800;
+  color: #263238;
+}
