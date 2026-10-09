@@ -24,6 +24,7 @@ const TablaHorario = () => {
   const [fechaInicio, setFechaInicio] = useState('');
   const [semanaGenerada, setSemanaGenerada] = useState(false);
   const [diasSemana, setDiasSemana] = useState([]);
+  const [capacidadParque, setCapacidadParque] = useState(150);
 
   // Empleados actualizados con los nuevos nombres y colores RGB convertidos a Hex
   const EMPLEADOS_INICIALES = [
@@ -90,6 +91,7 @@ useEffect(() => {
       if (!activo) return;
       const h = data.horarios || {};
       setFechaInicio(h.fechaInicio || '');
+      setCapacidadParque(Math.max(1, Number(h.capacidadParque) || 150));
       setSemanaGenerada(Boolean(h.semanaGenerada));
       setDiasSemana(Array.isArray(h.diasSemana) ? h.diasSemana : []);
       setTurnos(Array.isArray(h.turnos) ? h.turnos : []);
@@ -130,11 +132,11 @@ useEffect(() => {
     fetch('/api/horarios/state', {
       method:'PUT',
       headers:{'Content-Type':'application/json',...(token?{Authorization:'Bearer '+token}:{})},
-      body:JSON.stringify({fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples})
+      body:JSON.stringify({fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples,capacidadParque:Number(capacidadParque)||150})
     }).catch(err => console.error('No se pudo guardar el cuadrante',err));
   }, 500);
   return () => clearTimeout(timer);
-}, [datosServidorCargados,isAdmin,fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples]);
+}, [datosServidorCargados,isAdmin,fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples,capacidadParque]);
 
   const registrarHistorial = () => {
     const estadoActual = {
@@ -252,10 +254,19 @@ useEffect(() => {
 
   const datosCabeceraDia = (dia, mostrarFecha = true, abreviarNinos = false) => {
     const ninos = cumples.filter(c => c.fecha === dia.isoFecha).reduce((n, c) => n + (Number(c.cantNinos) || 0), 0);
+    const capacidad = Math.max(1, Number(capacidadParque) || 150);
+    const porcentaje = Math.min(100, Math.round(ninos / capacidad * 100));
+    const excedido = ninos > capacidad;
     return (
       <div className="datos-cabecera-dia">
         <strong className="nombre-dia-grande">{dia.nombre}</strong>
-        <span className="ninos-dia-grande">{abreviarNinos ? `${ninos} k` : `${ninos} niños`}</span>
+        <span className="fecha-dia-grande">{dia.fecha || (dia.isoFecha ? new Date(dia.isoFecha+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'numeric'}) : '')}</span>
+        <span className="ninos-dia-grande">{abreviarNinos ? ninos+' k' : ninos+' niños'}</span>
+        <div className="capacidad-dia" role="img" aria-label={ninos+' de '+capacidad+' niños, '+porcentaje+'% de capacidad'}>
+          <div className="capacidad-dia-cabecera"><span>Capacidad</span><strong>{ninos}/{capacidad}</strong></div>
+          <div className="capacidad-barra"><div className={'capacidad-barra-relleno '+(excedido ? 'excedida' : porcentaje >= 85 ? 'alta' : '')} style={{width:porcentaje+'%'}} /></div>
+          <small>{excedido ? 'Superada en '+(ninos-capacidad) : porcentaje+'% ocupación'}</small>
+        </div>
         {dia.clima && <span className="clima-dia-grande">{imagenClima(dia.clima)}</span>}
       </div>
     );
@@ -862,6 +873,11 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
               </div>
 
               <div className="contenedor-horas-empleados">
+                {isAdmin && <div className="capacidad-parque-config">
+                  <label htmlFor="capacidadParque">🎟️ Capacidad del parque</label>
+                  <input id="capacidadParque" type="number" min="1" step="1" value={capacidadParque} onChange={e => setCapacidadParque(Math.max(1, Number(e.target.value) || 1))} />
+                  <span>Se conserva hasta que la cambies manualmente.</span>
+                </div>}
                 <span className="titulo-chips">Plantilla y Horas Semanales Asignadas:</span>
                 <div className="grid-horas-empleados">
                   {empleados.map(emp => {
