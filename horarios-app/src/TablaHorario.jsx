@@ -964,15 +964,15 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                         <td
                                           key={`elem_${dia.clave}_${idxCarril}_${hora}`}
                                           colSpan={spanCol}
-                                          className={`celda-bloque-activo celda-click ${esCumple ? 'celda-cumple-activo' : ''}`}
+                                          className={`celda-bloque-activo ${isAdmin ? 'celda-click' : ''} ${esCumple ? 'celda-cumple-activo' : ''}`}
                                           style={{ backgroundColor: elementoActivo.color }}
-                                          onClick={() => {
+                                          onClick={isAdmin ? () => {
                                             if (esCumple) {
                                               abrirModalEditarCumple(elementoActivo.objetoOriginal);
                                             } else {
                                               abrirModalEditarTurno(elementoActivo.objetoOriginal);
                                             }
-                                          }}
+                                          } : undefined}
                                         >
                                           <div className="texto-bloque-celda">
                                             {elementoActivo.tipo === 'turno' ? (
@@ -1225,9 +1225,9 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                       <td
                                         key={`inv_elem_${dia.clave}_${idxCarril}_${hora}`}
                                         rowSpan={spanFila}
-                                        className={`celda-bloque-activo ${esCumple ? 'celda-cumple-activo' : ''}`}
-                                        onClick={() => esCumple ? abrirModalEditarCumple(elementoActivo.objetoOriginal) : abrirModalEditarTurno(elementoActivo.objetoOriginal)}
-                                        title="Pulsa para editar este turno o evento"
+                                        className={`celda-bloque-activo ${isAdmin ? 'celda-click' : ''} ${esCumple ? 'celda-cumple-activo' : ''}`}
+                                        onClick={isAdmin ? () => esCumple ? abrirModalEditarCumple(elementoActivo.objetoOriginal) : abrirModalEditarTurno(elementoActivo.objetoOriginal) : undefined}
+                                        title={isAdmin ? 'Pulsa para editar este turno o evento' : undefined}
                                         style={{ 
                                           backgroundColor: elementoActivo.color,
                                           borderLeft: esBordeDia ? '2px solid #cbd5e0' : '1px solid #e2e8f0',
