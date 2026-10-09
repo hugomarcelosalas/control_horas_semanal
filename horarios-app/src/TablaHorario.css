@@ -672,3 +672,54 @@ button {
   font-weight: 800;
   color: #263238;
 }
+
+
+/* Pestañas de vistas del horario */
+.selector-layout-detallada {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 14px;
+}
+.vista-simple-semanal {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+.dia-simple-card {
+  padding: 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 5px rgba(15,23,42,.06);
+}
+.dia-simple-card h3 {
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #e2e8f0;
+  font-size: 18px;
+  text-transform: capitalize;
+}
+.dia-simple-card h3 small { display: block; margin-top: 3px; color: #64748b; font-size: 13px; }
+.dia-simple-card ul { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.dia-simple-card li { display: flex; align-items: center; gap: 8px; font-weight: 650; }
+.punto-empleado { display: inline-block; flex: 0 0 11px; width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
+.sin-turnos-dia { color: #64748b; font-size: 13px; margin: 0; }
+.vista-mia-semanal { margin-top: 14px; }
+.vista-mia-semanal > h3 { margin: 12px 0; }
+.selector-empleado-mio { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-weight: 700; }
+.selector-empleado-mio select { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font: inherit; }
+.dias-mios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.dia-mio-card { border: 1px solid #cbd5e1; border-radius: 9px; padding: 12px; }
+.dia-mio-card h4 { text-transform: capitalize; margin: 0 0 4px; }
+.dia-mio-card > strong { color: #64748b; font-size: 13px; }
+.dia-mio-card p { margin: 8px 0 0; font-weight: 700; }
+.dia-mio-card p small { display: block; font-weight: 500; color: #475569; }
+.dia-mio-card.trabaja { background: #dcfce7; border-color: #86efac; }
+.dia-mio-card.libre { background: #f8fafc; color: #64748b; }
+@media (max-width: 600px) {
+  .vista-simple-semanal { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .dia-simple-card { padding: 10px; }
+  .dias-mios-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
