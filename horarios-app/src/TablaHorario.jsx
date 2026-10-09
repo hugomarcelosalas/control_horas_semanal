@@ -78,25 +78,35 @@ const [empleados, setEmpleados] = useState(EMPLEADOS_INICIALES);
 
 useEffect(() => {
   let activo = true;
-  const token = window.parent && window.parent.__CONTROL_HORARIO_TOKEN__;
-  fetch('/api/horarios/state', {headers: token ? {Authorization: 'Bearer '+token} : {}})
-    .then(r => { if(!r.ok) throw new Error('No se pudo cargar el cuadrante'); return r.json(); })
-    .then(data => {
-      if(!activo) return;
-      const h=data.horarios||{};
-      if(h.fechaInicio) setFechaInicio(h.fechaInicio);
+  let cargando = false;
+  const cargarCuadrante = async () => {
+    const token = window.parent && window.parent.__CONTROL_HORARIO_TOKEN__;
+    if (!token || cargando) return;
+    cargando = true;
+    try {
+      const response = await fetch('/api/horarios/state', {headers:{Authorization:'Bearer '+token}});
+      if (!response.ok) throw new Error('No se pudo cargar el cuadrante ('+response.status+')');
+      const data = await response.json();
+      if (!activo) return;
+      const h = data.horarios || {};
+      setFechaInicio(h.fechaInicio || '');
       setSemanaGenerada(Boolean(h.semanaGenerada));
-      setDiasSemana(Array.isArray(h.diasSemana)?h.diasSemana:[]);
-      setTurnos(Array.isArray(h.turnos)?h.turnos:[]);
-      setCumples(Array.isArray(h.cumples)?h.cumples:[]);
-      setEmpleados(Array.isArray(data.employees)?data.employees:[]);
-      const serverIsAdmin = data.user?.role === 'admin';
-      setIsAdmin(serverIsAdmin);
-      setPestanaActiva(serverIsAdmin ? 'admin' : 'visualizacion');
+      setDiasSemana(Array.isArray(h.diasSemana) ? h.diasSemana : []);
+      setTurnos(Array.isArray(h.turnos) ? h.turnos : []);
+      setCumples(Array.isArray(h.cumples) ? h.cumples : []);
+      setEmpleados(Array.isArray(data.employees) ? data.employees : []);
+      const role = data.user?.role || (window.parent && window.parent.__CONTROL_HORARIO_USER__?.role);
+      const admin = role === 'admin';
+      setIsAdmin(admin);
+      setPestanaActiva(admin ? 'admin' : 'visualizacion');
       setDatosServidorCargados(true);
-    })
-    .catch(err => { console.error(err); setDatosServidorCargados(true); });
-  return () => { activo=false; };
+    } catch (err) { console.error('Error cargando el cuadrante:', err); }
+    finally { cargando = false; }
+  };
+  const onAuth = () => { cargarCuadrante(); };
+  window.addEventListener('control-horario-auth', onAuth);
+  cargarCuadrante();
+  return () => { activo = false; window.removeEventListener('control-horario-auth', onAuth); };
 }, []);
 
 useEffect(() => {
@@ -206,6 +216,7 @@ useEffect(() => {
   };
 
   const controlesDia = (dia) => {
+    if (!isAdmin) return null;
     const colores = dia.coloresBloques || {};
     const opcionesColor = <>
       <option value="#ffffff">Blanco</option>
@@ -938,7 +949,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                       rowSpan={filasADibujar.length}
                                     >
                                       {datosCabeceraDia(dia)}
-                                      {controlesDia(dia)}
+                                      {isAdmin && controlesDia(dia)}
                                     </td>
                                   )}
 
@@ -1095,7 +1106,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                   <tr key={`v1_${dia.clave}_${idxCarril}`} className={`fila-horario ${carril.length === 0 ? 'fila-separacion-turnos-eventos' : ''} ${esUltimoCarril ? 'ultimo-carril-dia' : ''} ${esSeparadorMonitor ? 'separador-monitor-kiosko' : ''}`}>
                                     {esPrimerCarril && (
                                       <td className="celda-dia-nombre" rowSpan={filasFinales.length}>
-                                        {datosCabeceraDia(dia, true, true)}{controlesDia(dia)}
+                                        {datosCabeceraDia(dia, true, true)}{isAdmin && controlesDia(dia)}
                                       </td>
                                     )}
                                     {franjasHorarias.map((hora, indexHora) => {
