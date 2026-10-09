@@ -252,21 +252,36 @@ useEffect(() => {
     );
   };
 
-  const datosCabeceraDia = (dia, mostrarFecha = true, abreviarNinos = false) => {
+  const obtenerOcupacionDia = (dia) => {
     const ninos = cumples.filter(c => c.fecha === dia.isoFecha).reduce((n, c) => n + (Number(c.cantNinos) || 0), 0);
     const capacidad = Math.max(1, Number(capacidadParque) || 150);
-    const porcentaje = Math.min(100, Math.round(ninos / capacidad * 100));
+    return { ninos, capacidad, porcentaje: ninos / capacidad };
+  };
+
+  const estiloCeldaOcupacionDia = (dia) => {
+    const { porcentaje } = obtenerOcupacionDia(dia);
+    const limitar = (v) => Math.max(0, Math.min(255, Math.round(v)));
+    const mezclar = (a, b, t) => {
+      const hex = (h) => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+      const ca = hex(a), cb = hex(b);
+      return '#' + ca.map((v,i) => limitar(v + (cb[i] - v) * t).toString(16).padStart(2,'0')).join('');
+    };
+    if (porcentaje > 1) return { backgroundColor: '#ef7777', transition: 'background-color .3s ease' };
+    const color = porcentaje <= 0.5
+      ? mezclar('#b7efc5', '#ffe082', porcentaje * 2)
+      : mezclar('#ffe082', '#f28b82', (porcentaje - 0.5) * 2);
+    return { backgroundColor: color, transition: 'background-color .3s ease' };
+  };
+
+  const datosCabeceraDia = (dia, mostrarFecha = true, abreviarNinos = false) => {
+    const { ninos, capacidad, porcentaje } = obtenerOcupacionDia(dia);
     const excedido = ninos > capacidad;
     return (
       <div className="datos-cabecera-dia">
         <strong className="nombre-dia-grande">{dia.nombre}</strong>
         <span className="fecha-dia-grande">{dia.fecha || (dia.isoFecha ? new Date(dia.isoFecha+'T12:00:00').toLocaleDateString('es-ES',{day:'numeric',month:'numeric'}) : '')}</span>
         <span className="ninos-dia-grande">{abreviarNinos ? ninos+' k' : ninos+' niños'}</span>
-        <div className="capacidad-dia" role="img" aria-label={ninos+' de '+capacidad+' niños, '+porcentaje+'% de capacidad'}>
-          <div className="capacidad-dia-cabecera"><span>Capacidad</span><strong>{ninos}/{capacidad}</strong></div>
-          <div className="capacidad-barra"><div className={'capacidad-barra-relleno '+(excedido ? 'excedida' : porcentaje >= 85 ? 'alta' : '')} style={{width:porcentaje+'%'}} /></div>
-          <small>{excedido ? 'Superada en '+(ninos-capacidad) : porcentaje+'% ocupación'}</small>
-        </div>
+        <small className="ocupacion-dia-texto">{ninos}/{capacidad} niños · {excedido ? 'superada en '+(ninos-capacidad) : Math.round(porcentaje*100)+'% ocupado'}</small>
         {dia.clima && <span className="clima-dia-grande">{imagenClima(dia.clima)}</span>}
       </div>
     );
@@ -961,8 +976,9 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                 <tr key={`${dia.clave}_carril_${idxCarril}`} className={`fila-horario ${carril.length === 0 ? 'fila-separacion-turnos-eventos' : ''} ${esUltimoCarrilDelDia ? 'ultimo-carril-dia' : ''} ${esSeparadorMonitorAdmin ? 'separador-monitor-kiosko' : ''}`}>
                                   {esPrimerCarrilDelDia && (
                                     <td 
-                                      className="celda-dia-nombre" 
+                                      className="celda-dia-nombre celda-dia-ocupacion" 
                                       rowSpan={filasADibujar.length}
+                                      style={estiloCeldaOcupacionDia(dia)}
                                     >
                                       {datosCabeceraDia(dia)}
                                       {isAdmin && controlesDia(dia)}
@@ -1121,7 +1137,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                 return (
                                   <tr key={`v1_${dia.clave}_${idxCarril}`} className={`fila-horario ${carril.length === 0 ? 'fila-separacion-turnos-eventos' : ''} ${esUltimoCarril ? 'ultimo-carril-dia' : ''} ${esSeparadorMonitor ? 'separador-monitor-kiosko' : ''}`}>
                                     {esPrimerCarril && (
-                                      <td className="celda-dia-nombre" rowSpan={filasFinales.length}>
+                                      <td className="celda-dia-nombre celda-dia-ocupacion" rowSpan={filasFinales.length} style={estiloCeldaOcupacionDia(dia)}>
                                         {datosCabeceraDia(dia, true, true)}{isAdmin && controlesDia(dia)}
                                       </td>
                                     )}
@@ -1193,9 +1209,9 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                             return (
                               <th 
                                 key={`inv_th_${dia.clave}`} 
-                                className="cabecera-hora" 
+                                className="cabecera-hora celda-dia-ocupacion" 
                                 colSpan={numCarriles}
-                                style={{ textAlign: 'center', borderLeft: '2px solid #cbd5e0' }}
+                                style={{ ...estiloCeldaOcupacionDia(dia), textAlign: 'center', borderLeft: '2px solid #cbd5e0' }}
                               >
                                 {datosCabeceraDia(dia)}{isAdmin && controlesDia(dia)}
                               </th>
