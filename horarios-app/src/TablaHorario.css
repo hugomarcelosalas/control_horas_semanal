@@ -591,3 +591,66 @@ button {
 .celda-bloque-activo {
   position: relative;
 }
+
+/* Capacidad del parque y ocupación diaria */
+.capacidad-parque-config {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background: #fff;
+}
+.capacidad-parque-config label { font-weight: 800; color: #172033; }
+.capacidad-parque-config input {
+  width: 92px;
+  padding: 7px 9px;
+  border: 1px solid #94a3b8;
+  border-radius: 7px;
+  font: inherit;
+  font-weight: 800;
+}
+.capacidad-parque-config span { color: #64748b; font-size: 12px; }
+.capacidad-dia {
+  width: min(100%, 150px);
+  margin: 3px auto 5px;
+  padding: 7px;
+  border-radius: 9px;
+  background: #f1f5f9;
+  box-sizing: border-box;
+}
+.capacidad-dia-cabecera {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  color: #334155;
+  font-size: 11px;
+}
+.capacidad-dia-cabecera strong { font-size: 13px; color: #0f172a; }
+.capacidad-barra {
+  width: 100%;
+  height: 12px;
+  margin: 5px 0 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #dbe4ee;
+  box-shadow: inset 0 1px 2px rgba(15,23,42,.12);
+}
+.capacidad-barra-relleno {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#34d399,#059669);
+  transition: width .25s ease;
+}
+.capacidad-barra-relleno.alta { background: linear-gradient(90deg,#facc15,#f97316); }
+.capacidad-barra-relleno.excedida { background: linear-gradient(90deg,#fb7185,#dc2626); }
+.capacidad-dia small { display: block; font-size: 10px; font-weight: 700; color: #475569; text-align: center; }
+.fecha-dia-grande { display:block; font-size:15px!important; font-weight:800; color:#475569; }
+@media (max-width: 760px) {
+  .capacidad-dia { width: 118px; padding: 5px; }
+  .capacidad-parque-config { align-items:flex-start; }
+}
