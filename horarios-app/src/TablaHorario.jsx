@@ -19,7 +19,10 @@ const TablaHorario = () => {
   const [isAdmin, setIsAdmin] = useState(parentUser.role === 'admin');
   const [datosServidorCargados, setDatosServidorCargados] = useState(false);
   const [pestanaActiva, setPestanaActiva] = useState(parentUser.role === 'admin' ? 'admin' : 'visualizacion'); 
-  const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles'); 
+  const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles');
+  const [subVista, setSubVista] = useState('detallada');
+  const [usuarioActual, setUsuarioActual] = useState(parentUser);
+  const [empleadoVistaMia, setEmpleadoVistaMia] = useState(parentUser.username || '');
 
   const [fechaInicio, setFechaInicio] = useState('');
   const [semanaGenerada, setSemanaGenerada] = useState(false);
@@ -98,6 +101,10 @@ useEffect(() => {
       setCumples(Array.isArray(h.cumples) ? h.cumples : []);
       setEmpleados(Array.isArray(data.employees) ? data.employees : []);
       const role = data.user?.role || (window.parent && window.parent.__CONTROL_HORARIO_USER__?.role);
+      if (data.user) {
+        setUsuarioActual(data.user);
+        if (data.user.username) setEmpleadoVistaMia(data.user.username);
+      }
       const admin = role === 'admin';
       setIsAdmin(admin);
       setPestanaActiva(admin ? 'admin' : 'visualizacion');
@@ -829,13 +836,13 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
           className={`btn-pestana ${pestanaActiva === 'admin' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('admin')}
         >
-          🛠️ Pestaña Administrador
+          🛠️ Administrador
         </button>}
         <button
           className={`btn-pestana ${pestanaActiva === 'visualizacion' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('visualizacion')}
         >
-          👁️ Pestaña Visualización
+          👁️ Vistas
         </button>
       </div>
 
@@ -1052,19 +1059,10 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
           {pestanaActiva === 'visualizacion' && (
             <div className="seccion-pestana">
               <div className="pestanas-navegacion sub-pestañas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '5px' }}>
-                  <button
-                    className={`btn-pestana ${vistaVisualizacion === 'carriles' ? 'activa' : ''}`}
-                    onClick={() => setVistaVisualizacion('carriles')}
-                  >
-                    📊 Vista 1: Horario Completo (Carriles)
-                  </button>
-                  <button
-                    className={`btn-pestana ${vistaVisualizacion === 'inversa' ? 'activa' : ''}`}
-                    onClick={() => setVistaVisualizacion('inversa')}
-                  >
-                    🔄 Vista 2: Horas en Filas y Días/Carriles en Columnas
-                  </button>
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  <button className={`btn-pestana ${subVista === 'detallada' ? 'activa' : ''}`} onClick={() => setSubVista('detallada')}>📊 Vista detallada</button>
+                  <button className={`btn-pestana ${subVista === 'simple' ? 'activa' : ''}`} onClick={() => setSubVista('simple')}>📋 Vista simple</button>
+                  <button className={`btn-pestana ${subVista === 'mia' ? 'activa' : ''}`} onClick={() => setSubVista('mia')}>🙋 Vista mía</button>
                 </div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1090,6 +1088,11 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                 </div>
               </div>
 
+              {subVista === 'detallada' && <>
+              <div className="selector-layout-detallada">
+                <button className={`btn-pestana ${vistaVisualizacion === 'carriles' ? 'activa' : ''}`} onClick={() => setVistaVisualizacion('carriles')}>Horario completo (carriles)</button>
+                <button className={`btn-pestana ${vistaVisualizacion === 'inversa' ? 'activa' : ''}`} onClick={() => setVistaVisualizacion('inversa')}>Horas en filas y días en columnas</button>
+              </div>
               {/* Vista 1 */}
               {vistaVisualizacion === 'carriles' && (
                 <div ref={vistaHorizontalRef} className="area-impresion">
@@ -1326,6 +1329,58 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                   </div>
                 </div>
               )}
+              </>}
+              {subVista === 'simple' && (
+                <div className="vista-simple-semanal">
+                  {diasSemana.map(dia => {
+                    const turnosDia = turnos.filter(t => t.fecha === dia.isoFecha);
+                    const ids = [...new Set(turnosDia.map(t => String(t.empleadoId)))];
+                    const empleadosDia = ids.map(id => empleados.find(emp => String(emp.id) === id)).filter(Boolean);
+                    return (
+                      <section className="dia-simple-card" key={dia.clave}>
+                        <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
+                        {empleadosDia.length
+                          ? <ul>{empleadosDia.map(emp => <li key={emp.id}><span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />{emp.nombre}</li>)}</ul>
+                          : <p className="sin-turnos-dia">Sin empleados asignados</p>}
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+              {subVista === 'mia' && (() => {
+                const usuario = usuarioActual || {};
+                const usuarioEsAdmin = isAdmin;
+                const miEmpleado = usuarioEsAdmin
+                  ? empleados.find(emp => String(emp.id) === String(empleadoVistaMia) || String(emp.username) === String(empleadoVistaMia))
+                  : empleados.find(emp => String(emp.id) === String(usuario.username) || String(emp.username) === String(usuario.username) || String(emp.nombre || '').toLowerCase() === String(usuario.name || '').toLowerCase());
+                const misTurnos = miEmpleado ? turnos.filter(t => String(t.empleadoId) === String(miEmpleado.id) || String(t.empleadoId) === String(miEmpleado.username)) : [];
+                return (
+                  <div className="vista-mia-semanal">
+                    {usuarioEsAdmin && <label className="selector-empleado-mio">Ver horario de:
+                      <select value={empleadoVistaMia} onChange={e => setEmpleadoVistaMia(e.target.value)}>
+                        {empleados.map(emp => <option key={emp.id} value={emp.id}>{emp.nombre}</option>)}
+                      </select>
+                    </label>}
+                    {miEmpleado ? (
+                      <>
+                        <h3>{usuarioEsAdmin ? 'Horario de ' : 'Mi horario · '}{miEmpleado.nombre}</h3>
+                        <div className="dias-mios-grid">
+                          {diasSemana.map(dia => {
+                            const turnosDia = misTurnos.filter(t => t.fecha === dia.isoFecha);
+                            return (
+                              <section className={`dia-mio-card ${turnosDia.length ? 'trabaja' : 'libre'}`} key={dia.clave}>
+                                <h4>{dia.nombre}</h4>
+                                <strong>{dia.fecha}</strong>
+                                {turnosDia.length ? turnosDia.map(t => <p key={t.id}>{t.horaInicio}–{t.horaFin}<small>{t.ubicacion ? ' · '+t.ubicacion : ''}</small></p>) : <p>No trabajas</p>}
+                              </section>
+                            );
+                          })}
+                        </div>
+                      </>
+                    ) : <p>No se ha podido relacionar tu usuario con un empleado del cuadrante. Pide al administrador que compruebe el nombre de usuario.</p>}
+                  </div>
+                );
+              })()}
             </div>
           )}
 
