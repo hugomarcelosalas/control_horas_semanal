@@ -1037,3 +1037,45 @@ button {
   .controles-modo-pantalla > strong { width:100%; }
   .controles-modo-pantalla button { flex:1 1 130px; }
 }
+
+
+/* Modos de pantalla: reglas reforzadas para prevalecer sobre anchos de celdas */
+.contenedor-horarios.modo-pantalla-ajustado .tabla-responsive {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow-x: hidden !important;
+}
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios {
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  table-layout: fixed !important;
+}
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios th,
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios td {
+  min-width: 0 !important;
+  max-width: none !important;
+  box-sizing: border-box !important;
+}
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios th.cabecera-hora,
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios td.celda-emp-vacia,
+.contenedor-horarios.modo-pantalla-ajustado .tabla-horarios td.celda-bloque-activo {
+  width: auto !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+.contenedor-horarios.modo-pantalla-comodo .tabla-responsive,
+.contenedor-horarios.modo-pantalla-completo .tabla-responsive {
+  overflow-x: auto !important;
+  max-width: 100% !important;
+}
+.contenedor-horarios.modo-pantalla-comodo .tabla-horarios {
+  width: auto !important;
+  min-width: 900px !important;
+  table-layout: auto !important;
+}
+.contenedor-horarios.modo-pantalla-completo .tabla-horarios {
+  width: auto !important;
+  min-width: 1200px !important;
+  table-layout: auto !important;
+}
