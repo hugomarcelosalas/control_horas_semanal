@@ -896,3 +896,97 @@ button {
   .selector-bloque-color { flex: 1 1 130px; }
   .fila-selectores-dia select { max-width: 100%; }
 }
+
+
+/* Controles de color y clima separados del área horaria */
+.controles-semana-fuera-horario {
+  margin: 16px 0;
+  padding: 16px;
+  position: relative;
+  z-index: 1;
+  clear: both;
+  border: 1px solid #dbe3ed;
+  border-radius: 12px;
+  background: #f8fafc;
+  overflow: visible;
+}
+.controles-semana-fuera-horario h3 {
+  margin: 0 0 5px;
+  font-size: 16px;
+  color: #172033;
+}
+.controles-semana-fuera-horario > p {
+  margin: 0 0 12px;
+  color: #64748b;
+  font-size: 13px;
+}
+.controles-semana-grid {
+  display: grid;
+  grid-template-columns: repeat( auto-fit, minmax(min(100%, 280px), 1fr) );
+  gap: 12px;
+  align-items: start;
+}
+.control-dia-externo {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(15,23,42,.04);
+}
+.control-dia-titulo {
+  display: block;
+  margin-bottom: 8px;
+  color: #1e293b;
+  font-size: 14px;
+  text-transform: capitalize;
+}
+.control-dia-externo .controles-dia {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.control-dia-externo .selectores-color-bloques {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.control-dia-externo .selector-bloque-color {
+  min-width: 0;
+  width: 100%;
+  padding: 7px 5px;
+}
+.control-dia-externo .selector-bloque-color strong {
+  white-space: normal;
+  text-align: center;
+  font-size: 11px;
+}
+.control-dia-externo .selector-bloque-color select {
+  min-width: 0;
+  width: 100%;
+  font-size: 12px;
+}
+.control-dia-externo .selector-clima-wrap {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;
+  gap: 8px;
+}
+.control-dia-externo .imagen-clima {
+  width: 34px;
+  height: 30px;
+}
+.control-dia-externo .selector-clima-wrap select {
+  width: min(100%, 190px);
+  max-width: 100%;
+}
+@media (max-width: 600px) {
+  .controles-semana-fuera-horario { padding: 10px; }
+  .controles-semana-grid { grid-template-columns: 1fr; }
+}
