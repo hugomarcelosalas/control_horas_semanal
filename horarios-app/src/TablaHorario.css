@@ -723,3 +723,176 @@ button {
   .dia-simple-card { padding: 10px; }
   .dias-mios-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+
+/* --- Ajustes de visualización general del cuadrante (octubre 2026) --- */
+* { box-sizing: border-box; }
+.contenedor-horarios {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  padding: clamp(8px, 1.5vw, 18px);
+  overflow-x: hidden;
+  color: #172033;
+  background: #f8fafc;
+}
+.acciones-superiores, .grupo-botones-izquierda, .grupo-botones-derecha {
+  align-items: center;
+  min-width: 0;
+}
+.acciones-superiores { gap: 12px; }
+.contenedor-horas-empleados, .capacidad-parque-config, .selectores-color-bloques {
+  position: relative;
+  z-index: 2;
+  max-width: 100%;
+}
+.tabla-responsive {
+  display: block;
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(15,23,42,.06);
+  isolation: isolate;
+}
+.tabla-horarios {
+  table-layout: fixed;
+  width: max-content;
+  min-width: 100%;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  background: #fff;
+}
+.tabla-horarios th, .tabla-horarios td {
+  box-sizing: border-box;
+  border: 1px solid #dbe3ed !important;
+}
+.tabla-horarios th.columna-dia-fijo,
+.tabla-horarios td.celda-dia-nombre {
+  position: sticky;
+  left: 0;
+  z-index: 4;
+  width: 132px;
+  min-width: 132px;
+  max-width: 132px;
+  background: #f8fafc;
+  box-shadow: 2px 0 4px rgba(15,23,42,.08);
+  overflow-wrap: anywhere;
+}
+.tabla-horarios th.columna-dia-fijo { z-index: 6; }
+.tabla-horarios th.cabecera-hora {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+  padding: 5px 2px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.tabla-horarios td.celda-emp-vacia {
+  width: 48px;
+  min-width: 48px;
+  max-width: 48px;
+}
+.tabla-horarios .texto-bloque-celda,
+.tabla-horarios td.celda-bloque-activo span {
+  font-size: 12px !important;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.tabla-horarios .texto-bloque-celda small { font-size: 11px !important; }
+.tabla-horarios td.celda-bloque-activo {
+  padding: 2px;
+  overflow: hidden;
+}
+.tabla-horarios td.celda-bloque-activo > div {
+  max-width: 100%;
+  overflow: hidden;
+}
+.fila-selectores-dia {
+  position: relative;
+  z-index: 8;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+  padding: 8px 4px 4px;
+  background: #fff;
+}
+.fila-selectores-dia select {
+  width: 100%;
+  min-width: 0;
+  max-width: 145px;
+  min-height: 30px;
+  font-size: 12px;
+}
+.selectores-color-bloques {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: stretch;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid #dbe3ed;
+  border-radius: 10px;
+  background: #fff;
+  overflow: visible;
+}
+.selector-bloque-color {
+  flex: 0 1 150px;
+  min-width: 125px;
+  max-width: 190px;
+}
+.selector-bloque-color select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.marcadores-turno {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  font-size: 12px;
+  line-height: 1;
+  z-index: 2;
+}
+.marcadores-turno span {
+  font-size: 13px !important;
+  line-height: 1 !important;
+}
+.capacidad-dia { width: min(100%, 170px); }
+.capacidad-dia-cabecera { font-size: 10px; }
+.capacidad-dia-cabecera strong { font-size: 12px; }
+.ocupacion-dia-texto { font-size: 11px !important; }
+.datos-cabecera-dia { min-width: 0; overflow-wrap: anywhere; }
+.nombre-dia-grande { font-size: 16px !important; }
+.fecha-dia-grande { font-size: 12px !important; }
+.ninos-dia-grande { font-size: 13px !important; }
+.clima-dia-grande .imagen-clima { width: 42px; height: 34px; }
+@media (max-width: 900px) {
+  .contenedor-horarios { padding: 8px; }
+  .tabla-horarios th.columna-dia-fijo,
+  .tabla-horarios td.celda-dia-nombre { width: 112px; min-width: 112px; max-width: 112px; }
+  .tabla-horarios th.cabecera-hora,
+  .tabla-horarios td.celda-emp-vacia { width: 40px; min-width: 40px; max-width: 40px; }
+  .acciones-superiores { align-items: stretch; }
+  .grupo-botones-izquierda, .grupo-botones-derecha { flex-wrap: wrap; }
+  .selector-bloque-color { flex-basis: 135px; }
+}
+@media (max-width: 600px) {
+  .tabla-horarios th.columna-dia-fijo,
+  .tabla-horarios td.celda-dia-nombre { width: 96px; min-width: 96px; max-width: 96px; }
+  .tabla-horarios th.cabecera-hora,
+  .tabla-horarios td.celda-emp-vacia { width: 34px; min-width: 34px; max-width: 34px; }
+  .selector-bloque-color { flex: 1 1 130px; }
+  .fila-selectores-dia select { max-width: 100%; }
+}
