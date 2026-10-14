@@ -16,9 +16,10 @@ const COLORES_OPCIONES = [
 
 const TablaHorario = () => {
   const parentUser = window.parent && window.parent.__CONTROL_HORARIO_USER__ ? window.parent.__CONTROL_HORARIO_USER__ : {role:'employee'};
-  const [isAdmin, setIsAdmin] = useState(parentUser.role === 'admin');
+  const esRolAdmin = (role) => String(role || '').trim().toLowerCase() === 'admin' || String(role || '').trim().toLowerCase().includes('administrador');
+  const [isAdmin, setIsAdmin] = useState(esRolAdmin(parentUser.role));
   const [datosServidorCargados, setDatosServidorCargados] = useState(false);
-  const [pestanaActiva, setPestanaActiva] = useState(parentUser.role === 'admin' ? 'admin' : 'visualizacion'); 
+  const [pestanaActiva, setPestanaActiva] = useState(esRolAdmin(parentUser.role) ? 'admin' : 'visualizacion'); 
   const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles');
   const [subVista, setSubVista] = useState('detallada');
   const [usuarioActual, setUsuarioActual] = useState(parentUser);
@@ -105,7 +106,7 @@ useEffect(() => {
         setUsuarioActual(data.user);
         if (data.user.username) setEmpleadoVistaMia(data.user.role === 'admin' ? (data.employees?.[0]?.id || '') : data.user.username);
       }
-      const admin = role === 'admin';
+      const admin = esRolAdmin(role);
       setIsAdmin(admin);
       setPestanaActiva(admin ? 'admin' : 'visualizacion');
       setDatosServidorCargados(true);
@@ -122,7 +123,7 @@ useEffect(() => {
   const syncRole = () => {
     const role = window.parent && window.parent.__CONTROL_HORARIO_USER__?.role;
     if(role) {
-      const admin = role === 'admin';
+      const admin = esRolAdmin(role);
       setIsAdmin(admin);
       if(!admin) setPestanaActiva('visualizacion');
     }
