@@ -24,6 +24,7 @@ const TablaHorario = () => {
   const [subVista, setSubVista] = useState('detallada');
   const [usuarioActual, setUsuarioActual] = useState(parentUser);
   const [empleadoVistaMia, setEmpleadoVistaMia] = useState(parentUser.username || '');
+  const [modoPantalla, setModoPantalla] = useState('ajustado');
 
   const [fechaInicio, setFechaInicio] = useState('');
   const [semanaGenerada, setSemanaGenerada] = useState(false);
@@ -829,7 +830,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
   const colorEmpSeleccionado = empleados.find(e => String(e.id) === String(turnoEmpId))?.color || '#ffffff';
 
   return (
-    <div className="contenedor-horarios">
+    <div className={`contenedor-horarios modo-pantalla-${modoPantalla}`}>
       <h2>HORARIO SEMANAL</h2>
 
       <div className="pestanas-navegacion">
@@ -865,6 +866,12 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
           {/* ================= PESTAÑA 1: ADMINISTRADOR ================= */}
           {pestanaActiva === 'admin' && (
             <div className="seccion-pestana">
+              <div className="controles-modo-pantalla" role="group" aria-label="Modo de visualización del cuadrante">
+                <strong>Visualización:</strong>
+                <button type="button" className={modoPantalla === 'ajustado' ? 'modo-activo' : ''} onClick={() => setModoPantalla('ajustado')} title="Mostrar el cuadrante con el menor desplazamiento horizontal posible">⛶ Ajustar a la pantalla</button>
+                <button type="button" className={modoPantalla === 'comodo' ? 'modo-activo' : ''} onClick={() => setModoPantalla('comodo')}>↔ Cómodo</button>
+                <button type="button" className={modoPantalla === 'completo' ? 'modo-activo' : ''} onClick={() => setModoPantalla('completo')}>＋ Completo</button>
+              </div>
               <div className="acciones-superiores">
                 <div className="grupo-botones-izquierda">
                   <button onClick={abrirModalNuevoTurno} className="btn-secundario">+ Asignar Turno Empleado</button>
