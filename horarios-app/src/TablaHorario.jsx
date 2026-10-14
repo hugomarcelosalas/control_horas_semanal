@@ -942,6 +942,16 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
 </div>
                 </div>
 
+                {isAdmin && <section className="controles-semana-fuera-horario" data-html2canvas-ignore="true">
+                  <h3>🎨 Colores y clima por día</h3>
+                  <p>Estos controles están fuera del cuadrante para que ningún turno o empleado los tape.</p>
+                  <div className="controles-semana-grid">
+                    {diasSemana.map(dia => <div className="control-dia-externo" key={`controles_externos_${dia.clave}`}>
+                      <strong className="control-dia-titulo">{dia.nombre} · {dia.fecha}</strong>
+                      {controlesDia(dia)}
+                    </div>)}
+                  </div>
+                </section>}
                 <div className="tabla-responsive">
                   <table className="tabla-horarios tabla-compacta">
                     <thead>
@@ -989,7 +999,6 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                       style={estiloCeldaOcupacionDia(dia)}
                                     >
                                       {datosCabeceraDia(dia)}
-                                      {isAdmin && controlesDia(dia)}
                                     </td>
                                   )}
 
@@ -1142,7 +1151,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                   <tr key={`v1_${dia.clave}_${idxCarril}`} className={`fila-horario ${carril.length === 0 ? 'fila-separacion-turnos-eventos' : ''} ${esUltimoCarril ? 'ultimo-carril-dia' : ''} ${esSeparadorMonitor ? 'separador-monitor-kiosko' : ''}`}>
                                     {esPrimerCarril && (
                                       <td className="celda-dia-nombre celda-dia-ocupacion" rowSpan={filasFinales.length} style={estiloCeldaOcupacionDia(dia)}>
-                                        {datosCabeceraDia(dia, true, true)}{isAdmin && controlesDia(dia)}
+                                        {datosCabeceraDia(dia, true, true)}
                                       </td>
                                     )}
                                     {franjasHorarias.map((hora, indexHora) => {
@@ -1217,7 +1226,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                                 colSpan={numCarriles}
                                 style={{ ...estiloCeldaOcupacionDia(dia), textAlign: 'center', borderLeft: '2px solid #cbd5e0' }}
                               >
-                                {datosCabeceraDia(dia)}{isAdmin && controlesDia(dia)}
+                                {datosCabeceraDia(dia)}
                               </th>
                             );
                           })}
