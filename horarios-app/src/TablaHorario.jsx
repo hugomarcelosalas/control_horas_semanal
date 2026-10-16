@@ -781,11 +781,30 @@ useEffect(() => {
     const elemento = areaExportarRef.current;
     if (!elemento) return;
 
+    // Capturar el cuadrante en un clon de ancho completo y sin contenedores
+    // con scroll. html2canvas puede volver a pintar celdas de tabla con rowSpan
+    // cuando el elemento original está dentro de un área desplazable.
     const canvas = await html2canvas(elemento, {
       scale: 2,
       useCORS: true,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      scrollX: 0,
+      scrollY: 0,
+      windowWidth: Math.max(document.documentElement.clientWidth, elemento.scrollWidth, elemento.offsetWidth),
+      onclone: (documentoClonado) => {
+        const objetivo = documentoClonado.querySelector('.area-impresion');
+        if (objetivo) {
+          objetivo.style.width = objetivo.scrollWidth + 'px';
+          objetivo.style.maxWidth = 'none';
+          objetivo.style.overflow = 'visible';
+        }
+        documentoClonado.querySelectorAll('.tabla-responsive').forEach((tabla) => {
+          tabla.style.overflow = 'visible';
+          tabla.style.width = 'max-content';
+          tabla.style.maxWidth = 'none';
+        });
+      }
     });
 
     const enlace = document.createElement('a');
