@@ -95,8 +95,10 @@
           <label>Empleado<select id="adminVacationEmployee" required></select></label>
           <div class="two-col"><label>Fecha de inicio<input id="adminVacationStart" type="date" required></label><label>Fecha de fin<input id="adminVacationEnd" type="date" required></label></div>
           <label>Año de vacaciones<input id="adminVacationYear" type="number" min="2000" max="2100" required></label>
-          <div class="vacation-file-field"><div><strong>PDF adjunto</strong><p id="adminVacationCurrentFile">No hay documento adjunto</p></div><label class="file-pick-button">Elegir PDF<input id="adminVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
-          <p class="vacation-form-hint">Si no eliges otro archivo, se conservará el PDF actual. Tamaño máximo: 8 MB.</p>
+          <label>Enlace de Google Drive<input id="adminVacationDriveLink" type="url" placeholder="https://drive.google.com/..." inputmode="url"></label>
+          <p class="vacation-form-hint">Pega el enlace compartido del documento. Comprueba que los permisos de Drive permiten acceder a las personas autorizadas.</p>
+          <div class="vacation-file-field"><div><strong>PDF adjunto (opcional)</strong><p id="adminVacationCurrentFile">No hay documento adjunto</p></div><label class="file-pick-button">Elegir PDF<input id="adminVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
+          <p class="vacation-form-hint">Puedes usar un enlace, un PDF o ambos. Si no eliges otro archivo, se conservará el PDF actual. Tamaño máximo del PDF: 8 MB.</p>
           <div class="modal-actions"><button id="cancelAdminVacationEdit" class="ghost" type="button">Cancelar</button><button id="saveAdminVacationEdit" class="primary" type="submit">Guardar cambios</button></div>
         </form>
       </div></div>
