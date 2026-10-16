@@ -431,21 +431,46 @@ function allVacationRows(){
  (db.users||[]).filter(u=>u.role==='employee').forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
  return rows.sort((a,b)=>a.start.localeCompare(b.start)||a.employeeName.localeCompare(b.employeeName));
 }
+function vacationFiltersInit(){
+ const emp=$('vacFilterEmployee'),yr=$('vacFilterYear');if(!emp||!yr)return;
+ const currentEmp=emp.value,currentYear=yr.value;
+ emp.innerHTML='<option value="">Todos los empleados</option>'+(db.users||[]).filter(u=>u.role==='employee').map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
+ const years=[...new Set(allVacationRows().map(v=>v.year).filter(Boolean).concat([new Date().getFullYear()]))].sort((a,b)=>b-a);
+ yr.innerHTML='<option value="">Todos los años</option>'+years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');
+ emp.value=currentEmp;yr.value=currentYear;
+}
+function filteredVacationRows(){
+ const all=allVacationRows().filter(v=>isAdmin()||v.username===currentUser.username);
+ const emp=$('vacFilterEmployee')?.value||'',year=$('vacFilterYear')?.value||'',from=$('vacFilterStart')?.value||'',to=$('vacFilterEnd')?.value||'',status=$('vacFilterStatus')?.value||'',q=($('vacFilterSearch')?.value||'').trim().toLowerCase(),today=dateKey(new Date());
+ return all.filter(v=>{
+  if(emp&&v.username!==emp)return false;
+  if(year&&String(v.year)!==year)return false;
+  if(from&&v.end<from)return false;
+  if(to&&v.start>to)return false;
+  if(status==='upcoming'&&v.start<=today)return false;
+  if(status==='current'&&!(v.start<=today&&v.end>=today))return false;
+  if(status==='past'&&v.end>=today)return false;
+  if(q&&!String(v.employeeName+' '+v.filename+' '+v.year).toLowerCase().includes(q))return false;
+  return true;
+ });
+}
 function renderVacationsSection(){
+ vacationFiltersInit();
  const y=vacationsMonth.getFullYear(),m=vacationsMonth.getMonth(),label=vacationsMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
  $('vacMonthLabel').textContent=label.charAt(0).toUpperCase()+label.slice(1);
  $('vacAddBtn').classList.toggle('hidden',!isAdmin());
  $('vacCalendarBtn').classList.toggle('primary',vacationsViewMode==='calendar');$('vacCalendarBtn').classList.toggle('ghost',vacationsViewMode!=='calendar');
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
- const rows=allVacationRows().filter(v=>isAdmin()||v.username===currentUser.username);
+ const rows=filteredVacationRows();
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');
  for(let i=0;i<offset;i++)grid+='<div class="vac-cal-empty"></div>';
  for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=rows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill" title="'+escapeHtml(v.employeeName)+'">'+escapeHtml(isAdmin()?v.employeeName:'Vacaciones')+'</div>').join('')+'</div>'}
  $('vacationsCalendar').innerHTML=grid;
- $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span></span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':escapeHtml(v.filename||'—'))+'</span><span>'+(isAdmin()?'<button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones registradas.</div>';
+ $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span>Acciones</span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':escapeHtml(v.filename||'—'))+'</span><span>'+(isAdmin()?'<button class="ghost" data-vac-edit="'+v.username+'|'+v.id+'">Editar</button> <button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones que coincidan con los filtros.</div>';
 }
+
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 async function addVacationAdmin(){
  if(!isAdmin())return;
@@ -464,15 +489,37 @@ async function addVacationAdmin(){
  ensureUserData(emp.username);db.vacations[emp.username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,filename:file.name,pdfData,mimeType:'application/pdf',createdAt:new Date().toISOString()});await saveDB();renderVacationsSection();};
  picker.click();
 }
+
+async function editVacationAdmin(username,id){
+ if(!isAdmin())return;
+ const v=(db.vacations?.[username]||[]).find(x=>String(x.id)===String(id));if(!v)return;
+ const emp=(db.users||[]).filter(u=>u.role==='employee');
+ const opts=emp.map((u,i)=>(i+1)+'. '+u.name+' ('+u.username+')').join('\\n');
+ const currentIndex=Math.max(0,emp.findIndex(u=>u.username===username));
+ const choice=Number(prompt('Empleado para este periodo:\\n'+opts,String(currentIndex+1)));
+ if(!Number.isInteger(choice)||choice<1||choice>emp.length)return;
+ const target=emp[choice-1],start=prompt('Fecha de inicio (AAAA-MM-DD):',v.start);if(!start||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start))return alert('Fecha no válida.');
+ const end=prompt('Fecha de fin (AAAA-MM-DD):',v.end);if(!end||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)return alert('Fecha no válida.');
+ const year=Number(prompt('Año de vacaciones:',String(v.year||start.slice(0,4))));if(!Number.isInteger(year)||year<2000||year>2100)return alert('Año no válido.');
+ const save=async(pdf)=>{db.vacations[username]=(db.vacations[username]||[]).filter(x=>String(x.id)!==String(id));ensureUserData(target.username);db.vacations[target.username].push({...v,start,end,year,username:undefined,...pdf});await saveDB();renderVacationsSection()};
+ if(!confirm('¿Quieres adjuntar un PDF nuevo? Pulsa Cancelar para conservar el adjunto actual; Aceptar abre el selector de archivo.')){await save({});return}
+ const picker=document.createElement('input');picker.type='file';picker.accept='application/pdf,.pdf';picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('Solo PDF.');if(file.size>8*1024*1024)return alert('Máximo 8 MB.');const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});await save({filename:file.name,pdfData,mimeType:'application/pdf'})};picker.click();
+}
+
 document.addEventListener('click',async e=>{
  if(e.target.closest('#vacCalendarBtn')){vacationsViewMode='calendar';renderVacationsSection()}
  if(e.target.closest('#vacListBtn')){vacationsViewMode='list';renderVacationsSection()}
  if(e.target.closest('#vacPrevMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()-1);renderVacationsSection()}
  if(e.target.closest('#vacNextMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()+1);renderVacationsSection()}
  if(e.target.closest('#vacAddBtn'))addVacationAdmin();
+ const edit=e.target.closest('[data-vac-edit]');if(edit&&isAdmin()){const [username,id]=edit.dataset.vacEdit.split('|');editVacationAdmin(username,id)}
  const del=e.target.closest('[data-vac-delete]');if(del&&isAdmin()){const [username,id]=del.dataset.vacDelete.split('|');if(confirm('¿Eliminar este periodo de vacaciones?')){db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);await saveDB();renderVacationsSection()}}
  const pdf=e.target.closest('[data-vac-pdf]');if(pdf){const v=allVacationRows().find(x=>String(x.id)===pdf.dataset.vacPdf);if(v?.pdfData){const a=document.createElement('a');a.href='data:application/pdf;base64,'+v.pdfData;a.download=v.filename||'vacaciones.pdf';a.click()}}
 });
+
+
+['vacFilterEmployee','vacFilterYear','vacFilterStart','vacFilterEnd','vacFilterStatus','vacFilterSearch'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',()=>renderVacationsSection())});
+const clearVacationFilters=$('vacFilterClear');if(clearVacationFilters)clearVacationFilters.onclick=()=>{['vacFilterEmployee','vacFilterYear','vacFilterStart','vacFilterEnd','vacFilterStatus','vacFilterSearch'].forEach(id=>{const el=$(id);if(el)el.value=''});renderVacationsSection()};
 
 function updateSectionTabsVisibility(){
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
