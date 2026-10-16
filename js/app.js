@@ -468,7 +468,7 @@ function renderVacationsSection(){
  for(let i=0;i<offset;i++)grid+='<div class="vac-cal-empty"></div>';
  for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=rows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill" title="'+escapeHtml(v.employeeName)+'">'+escapeHtml(isAdmin()?v.employeeName:'Vacaciones')+'</div>').join('')+'</div>'}
  $('vacationsCalendar').innerHTML=grid;
- $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span>Acciones</span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':escapeHtml(v.filename||'—'))+'</span><span>'+(isAdmin()?'<button class="ghost" data-vac-edit="'+v.username+'|'+v.id+'">Editar</button> <button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones que coincidan con los filtros.</div>';
+ $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span>Acciones</span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a> ':'')+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':(!v.driveLink?escapeHtml(v.filename||'—'):''))+'</span><span>'+(isAdmin()?'<button class="ghost" data-vac-edit="'+v.username+'|'+v.id+'">Editar</button> <button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones que coincidan con los filtros.</div>';
 }
 
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
@@ -498,7 +498,7 @@ function openVacationEditForm(username,id){
  const emp=$('adminVacationEmployee');
  emp.innerHTML=(db.users||[]).filter(u=>u.role==='employee').map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
  emp.value=username;$('adminVacationStart').value=v.start;$('adminVacationEnd').value=v.end;$('adminVacationYear').value=v.year||String(v.start||'').slice(0,4);
- $('adminVacationCurrentFile').textContent=v.filename||'No hay PDF adjunto';$('adminVacationPdf').value='';
+ $('adminVacationCurrentFile').textContent=v.filename||'No hay PDF adjunto';$('adminVacationPdf').value='';$('adminVacationDriveLink').value=v.driveLink||'';
  $('adminVacationEditTitle').textContent='Editar vacaciones';$('adminVacationEditModal').classList.remove('hidden');
 }
 function closeVacationEditForm(){$('adminVacationEditModal').classList.add('hidden');editingVacationRef=null;$('adminVacationEditForm').reset()}
@@ -506,7 +506,7 @@ $('closeAdminVacationEdit').onclick=closeVacationEditForm;$('cancelAdminVacation
 $('adminVacationEditModal').addEventListener('click',e=>{if(e.target.id==='adminVacationEditModal')closeVacationEditForm()});
 $('adminVacationEditForm').onsubmit=async e=>{
  e.preventDefault();if(!isAdmin()||!editingVacationRef)return;
- const {username,id}=editingVacationRef,start=$('adminVacationStart').value,end=$('adminVacationEnd').value,year=Number($('adminVacationYear').value),target=$('adminVacationEmployee').value,file=$('adminVacationPdf').files?.[0];
+ const {username,id}=editingVacationRef,start=$('adminVacationStart').value,end=$('adminVacationEnd').value,year=Number($('adminVacationYear').value),target=$('adminVacationEmployee').value,file=$('adminVacationPdf').files?.[0],driveLink=$('adminVacationDriveLink').value.trim();
  if(!start||!end||end<start)return alert('Comprueba las fechas de inicio y fin.');
  if(!Number.isInteger(year)||year<2000||year>2100)return alert('Introduce un año válido.');
  if(!target||!(db.users||[]).some(u=>u.username===target&&u.role==='employee'))return alert('Selecciona un empleado válido.');
@@ -518,7 +518,7 @@ $('adminVacationEditForm').onsubmit=async e=>{
   const old=(db.vacations?.[username]||[]).find(v=>String(v.id)===id);if(!old)return;
   db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);
   ensureUserData(target);
-  db.vacations[target].push({...old,start,end,year,...fileData});
+  db.vacations[target].push({...old,start,end,year,driveLink,...fileData});
   await saveDB();closeVacationEditForm();vacationFiltersInit();renderVacationsSection();
  }catch(err){alert('No se pudieron guardar las vacaciones: '+err.message)}
  finally{btn.disabled=false;btn.textContent='Guardar cambios'}
