@@ -406,16 +406,15 @@ setupDashboardComparisonDefaults();
 
 
 async function loadPayrolls(){
-  const box=$("payrollBox");if(!box||!selectedEmployee)return;
+  const box=$("payrollBox");const payrollUser=isAdmin()?selectedEmployee:currentUser;if(!box||!payrollUser)return;
   try{const rows=await api("/api/payrolls");const mine=rows.filter(x=>x.username===selectedEmployee.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)));
-    box.innerHTML='<div class="payroll-head"><div><h3>📄 Mis nóminas</h3><p>Nóminas disponibles para '+String(selectedEmployee.name).replace(/</g,'&lt;')+'</p></div></div>'+(mine.length?'<div class="payroll-list">'+mine.map(x=>'<div class="payroll-row"><div><strong>Nómina '+x.month+'</strong><span>'+String(x.filename||'PDF')+'</span></div><div class="payroll-actions"><button class="small-btn payroll-view" data-payroll-id="'+x.id+'">📄 Ver PDF</button>'+(isAdmin()?'<button class="small-btn danger-small payroll-delete" data-payroll-id="'+x.id+'">Eliminar</button>':'')+'</div></div>').join('')+'</div>':'<div class="empty-state">Todavía no hay nóminas cargadas.</div>');
+    box.innerHTML='<div class="payroll-head"><div><h3>📄 Mis nóminas</h3><p>Nóminas disponibles para '+String(payrollUser.name).replace(/</g,'&lt;')+'</p></div></div>'+(mine.length?'<div class="payroll-list">'+mine.map(x=>'<div class="payroll-row"><div><strong>Nómina '+x.month+'</strong><span>'+String(x.filename||'PDF')+'</span></div><div class="payroll-actions"><button class="small-btn payroll-view" data-payroll-id="'+x.id+'">📄 Ver PDF</button>'+(isAdmin()?'<button class="small-btn danger-small payroll-delete" data-payroll-id="'+x.id+'">Eliminar</button>':'')+'</div></div>').join('')+'</div>':'<div class="empty-state">Todavía no hay nóminas cargadas.</div>');
     box.querySelectorAll(".payroll-view").forEach(b=>b.onclick=()=>window.open("/api/payroll/"+encodeURIComponent(b.dataset.payrollId),"_blank"));
     box.querySelectorAll(".payroll-delete").forEach(b=>b.onclick=async()=>{if(!confirm("¿Eliminar esta nómina? También se eliminará el PDF de Google Drive."))return;try{await api("/api/admin/payroll/"+encodeURIComponent(b.dataset.payrollId),{method:"DELETE"});loadPayrolls();}catch(e){alert(e.message)}});
   }catch(e){box.innerHTML='<div class="empty-state">No se pudieron cargar las nóminas: '+String(e.message)+'</div>'}
 }
 function setupPayrollUI(){
-  const main=$("mainPanel");
-  if(main&&!$("payrollBox")){const box=document.createElement("section");box.id="payrollBox";box.className="payroll-box";main.insertBefore(box,main.querySelector(".selected-employee-daily-chart")||main.querySelector("#selectedEmployeeDailyChart")||main.querySelector("#calendarView"));}
+  const main=$("personalSpacePanel");
   if(isAdmin()&&!$("payrollAdminTools")){const panel=$("adminPanel");if(panel){const box=document.createElement("div");box.id="payrollAdminTools";box.className="admin-subsection payroll-admin";box.innerHTML='<h3>📄 Nóminas</h3><p class="muted">Sube el PDF de una nómina y quedará guardado en Google Drive, asociado al empleado y mes.</p><div class="payroll-upload-form"><label>Empleado<select id="payrollEmployee"></select></label><label>Mes<input id="payrollMonth" type="month"></label><label>PDF<input id="payrollFile" type="file" accept="application/pdf"></label><button id="uploadPayrollBtn" class="primary" type="button">⬆️ Subir nómina</button></div><div id="payrollUploadStatus" class="muted"></div>';panel.appendChild(box);const sel=$("payrollEmployee");sel.innerHTML=db.users.filter(u=>u.role==="employee").map(u=>'<option value="'+u.username+'">'+u.name+'</option>').join("");sel.value=selectedEmployee?.username||sel.value;$("payrollMonth").value=dateKey(new Date()).slice(0,7);$("uploadPayrollBtn").onclick=uploadPayroll;}}
   loadPayrolls();
 }
@@ -566,7 +565,7 @@ function updateSectionTabsVisibility(){
 }
 
 function showSection(sectionId){
-  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel','vacationsPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel','vacationsPanel','personalSpacePanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();
