@@ -490,21 +490,39 @@ async function addVacationAdmin(){
  picker.click();
 }
 
-async function editVacationAdmin(username,id){
+let editingVacationRef=null;
+function openVacationEditForm(username,id){
  if(!isAdmin())return;
  const v=(db.vacations?.[username]||[]).find(x=>String(x.id)===String(id));if(!v)return;
- const emp=(db.users||[]).filter(u=>u.role==='employee');
- const opts=emp.map((u,i)=>(i+1)+'. '+u.name+' ('+u.username+')').join('\\n');
- const currentIndex=Math.max(0,emp.findIndex(u=>u.username===username));
- const choice=Number(prompt('Empleado para este periodo:\\n'+opts,String(currentIndex+1)));
- if(!Number.isInteger(choice)||choice<1||choice>emp.length)return;
- const target=emp[choice-1],start=prompt('Fecha de inicio (AAAA-MM-DD):',v.start);if(!start||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start))return alert('Fecha no válida.');
- const end=prompt('Fecha de fin (AAAA-MM-DD):',v.end);if(!end||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)return alert('Fecha no válida.');
- const year=Number(prompt('Año de vacaciones:',String(v.year||start.slice(0,4))));if(!Number.isInteger(year)||year<2000||year>2100)return alert('Año no válido.');
- const save=async(pdf)=>{db.vacations[username]=(db.vacations[username]||[]).filter(x=>String(x.id)!==String(id));ensureUserData(target.username);db.vacations[target.username].push({...v,start,end,year,username:undefined,...pdf});await saveDB();renderVacationsSection()};
- if(!confirm('¿Quieres adjuntar un PDF nuevo? Pulsa Cancelar para conservar el adjunto actual; Aceptar abre el selector de archivo.')){await save({});return}
- const picker=document.createElement('input');picker.type='file';picker.accept='application/pdf,.pdf';picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('Solo PDF.');if(file.size>8*1024*1024)return alert('Máximo 8 MB.');const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});await save({filename:file.name,pdfData,mimeType:'application/pdf'})};picker.click();
+ editingVacationRef={username,id:String(id)};
+ const emp=$('adminVacationEmployee');
+ emp.innerHTML=(db.users||[]).filter(u=>u.role==='employee').map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
+ emp.value=username;$('adminVacationStart').value=v.start;$('adminVacationEnd').value=v.end;$('adminVacationYear').value=v.year||String(v.start||'').slice(0,4);
+ $('adminVacationCurrentFile').textContent=v.filename||'No hay PDF adjunto';$('adminVacationPdf').value='';
+ $('adminVacationEditTitle').textContent='Editar vacaciones';$('adminVacationEditModal').classList.remove('hidden');
 }
+function closeVacationEditForm(){$('adminVacationEditModal').classList.add('hidden');editingVacationRef=null;$('adminVacationEditForm').reset()}
+$('closeAdminVacationEdit').onclick=closeVacationEditForm;$('cancelAdminVacationEdit').onclick=closeVacationEditForm;
+$('adminVacationEditModal').addEventListener('click',e=>{if(e.target.id==='adminVacationEditModal')closeVacationEditForm()});
+$('adminVacationEditForm').onsubmit=async e=>{
+ e.preventDefault();if(!isAdmin()||!editingVacationRef)return;
+ const {username,id}=editingVacationRef,start=$('adminVacationStart').value,end=$('adminVacationEnd').value,year=Number($('adminVacationYear').value),target=$('adminVacationEmployee').value,file=$('adminVacationPdf').files?.[0];
+ if(!start||!end||end<start)return alert('Comprueba las fechas de inicio y fin.');
+ if(!Number.isInteger(year)||year<2000||year>2100)return alert('Introduce un año válido.');
+ if(!target||!(db.users||[]).some(u=>u.username===target&&u.role==='employee'))return alert('Selecciona un empleado válido.');
+ if(file&&file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser un PDF.');
+ if(file&&file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
+ const btn=$('saveAdminVacationEdit');btn.disabled=true;btn.textContent='Guardando…';
+ try{
+  let fileData={};if(file){const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});fileData={filename:file.name,pdfData,mimeType:'application/pdf'}}
+  const old=(db.vacations?.[username]||[]).find(v=>String(v.id)===id);if(!old)return;
+  db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);
+  ensureUserData(target);
+  db.vacations[target].push({...old,start,end,year,...fileData});
+  await saveDB();closeVacationEditForm();vacationFiltersInit();renderVacationsSection();
+ }catch(err){alert('No se pudieron guardar las vacaciones: '+err.message)}
+ finally{btn.disabled=false;btn.textContent='Guardar cambios'}
+};
 
 document.addEventListener('click',async e=>{
  if(e.target.closest('#vacCalendarBtn')){vacationsViewMode='calendar';renderVacationsSection()}
@@ -512,7 +530,7 @@ document.addEventListener('click',async e=>{
  if(e.target.closest('#vacPrevMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()-1);renderVacationsSection()}
  if(e.target.closest('#vacNextMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()+1);renderVacationsSection()}
  if(e.target.closest('#vacAddBtn'))addVacationAdmin();
- const edit=e.target.closest('[data-vac-edit]');if(edit&&isAdmin()){const [username,id]=edit.dataset.vacEdit.split('|');editVacationAdmin(username,id)}
+ const edit=e.target.closest('[data-vac-edit]');if(edit&&isAdmin()){const [username,id]=edit.dataset.vacEdit.split('|');openVacationEditForm(username,id)}
  const del=e.target.closest('[data-vac-delete]');if(del&&isAdmin()){const [username,id]=del.dataset.vacDelete.split('|');if(confirm('¿Eliminar este periodo de vacaciones?')){db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);await saveDB();renderVacationsSection()}}
  const pdf=e.target.closest('[data-vac-pdf]');if(pdf){const v=allVacationRows().find(x=>String(x.id)===pdf.dataset.vacPdf);if(v?.pdfData){const a=document.createElement('a');a.href='data:application/pdf;base64,'+v.pdfData;a.download=v.filename||'vacaciones.pdf';a.click()}}
 });
