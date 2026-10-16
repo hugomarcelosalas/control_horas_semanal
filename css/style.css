@@ -119,3 +119,10 @@
 .vac-list-row{background:#fff;border:1px solid #e2e8f0;border-radius:8px}
 .vac-list-row .danger{background:#fee2e2;color:#991b1b;border:0;border-radius:6px;padding:7px 9px}
 @media(max-width:720px){.vacations-calendar{gap:3px}.vac-cal-day{min-height:66px;padding:3px}.vac-cal-pill{font-size:9px;padding:2px}.vac-list-head{display:none}.vac-list-row{grid-template-columns:1fr 1fr;gap:7px}.vac-list-row strong{grid-column:1/-1}}
+
+.vacation-filters{display:grid;grid-template-columns:repeat(3,minmax(150px,1fr));gap:12px;padding:14px;margin:10px 0 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
+.vacation-filters label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:650;color:#475569;min-width:0}
+.vacation-filters input,.vacation-filters select{width:100%;min-width:0;box-sizing:border-box;padding:9px;border:1px solid #cbd5e1;border-radius:7px;background:white;color:#172033}
+.vacation-filters button{align-self:end;min-height:36px}
+@media(max-width:720px){.vacation-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
+@media(max-width:460px){.vacation-filters{grid-template-columns:1fr}}
