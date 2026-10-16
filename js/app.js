@@ -429,7 +429,7 @@ let vacationsMonth=new Date();vacationsMonth.setDate(1);
 function allVacationRows(){
  const rows=[];
  (db.users||[]).filter(u=>u.role==='employee').forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
- return rows.sort((a,b)=>a.start.localeCompare(b.start)||a.employeeName.localeCompare(b.employeeName));
+ return rows.sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)||a.employeeName.localeCompare(b.employeeName));
 }
 function vacationFiltersInit(){
  const emp=$('vacFilterEmployee'),yr=$('vacFilterYear');if(!emp||!yr)return;
