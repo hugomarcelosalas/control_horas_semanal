@@ -472,23 +472,40 @@ function renderVacationsSection(){
 }
 
 function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-async function addVacationAdmin(){
+function addVacationAdmin(){
  if(!isAdmin())return;
  const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false);
  if(!employees.length)return alert('No hay empleados activos.');
- const promptList=employees.map((u,i)=>(i+1)+'. '+u.name+' ('+u.username+')').join('\n');
- const choice=Number(prompt('Selecciona el empleado escribiendo su número:\n'+promptList,'1'));
- if(!Number.isInteger(choice)||choice<1||choice>employees.length)return;
- const emp=employees[choice-1],start=prompt('Fecha de inicio (AAAA-MM-DD):');if(!start||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start))return alert('Fecha de inicio no válida.');
- const end=prompt('Fecha de fin (AAAA-MM-DD):',start);if(!end||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)return alert('Fecha de fin no válida.');
- const year=Number(prompt('Año de vacaciones:',start.slice(0,4)));if(!Number.isInteger(year)||year<2000||year>2100)return alert('Año no válido.');
- const prior=(db.vacations?.[emp.username]||[]).filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4)))===year);
- if(prior.length>=4&&!confirm(emp.name+' ya tiene 4 periodos en '+year+'. ¿Añadir otro como administrador?'))return;
- const picker=document.createElement('input');picker.type='file';picker.accept='application/pdf,.pdf';picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser PDF.');if(file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
- const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});
- ensureUserData(emp.username);db.vacations[emp.username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,filename:file.name,pdfData,mimeType:'application/pdf',createdAt:new Date().toISOString()});await saveDB();renderVacationsSection();};
- picker.click();
+ const sel=$('createVacationEmployee');
+ sel.innerHTML=employees.map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
+ const today=dateKey(new Date());
+ $('createVacationStart').value='';$('createVacationEnd').value='';$('createVacationYear').value=today.slice(0,4);
+ $('createVacationDriveLink').value='';$('createVacationPdf').value='';$('createVacationFileName').textContent='Ningún PDF seleccionado';
+ $('adminVacationCreateModal').classList.remove('hidden');
 }
+function closeVacationCreateForm(){$('adminVacationCreateModal').classList.add('hidden');$('adminVacationCreateForm').reset();$('createVacationFileName').textContent='Ningún PDF seleccionado'}
+$('closeAdminVacationCreate').onclick=closeVacationCreateForm;$('cancelAdminVacationCreate').onclick=closeVacationCreateForm;
+$('adminVacationCreateModal').addEventListener('click',e=>{if(e.target.id==='adminVacationCreateModal')closeVacationCreateForm()});
+$('createVacationStart').addEventListener('change',()=>{if($('createVacationStart').value)$('createVacationYear').value=$('createVacationStart').value.slice(0,4)});
+$('createVacationPdf').addEventListener('change',()=>{$('createVacationFileName').textContent=$('createVacationPdf').files?.[0]?.name||'Ningún PDF seleccionado'});
+$('adminVacationCreateForm').onsubmit=async e=>{
+ e.preventDefault();if(!isAdmin())return;
+ const username=$('createVacationEmployee').value,start=$('createVacationStart').value,end=$('createVacationEnd').value,year=Number($('createVacationYear').value),driveLink=$('createVacationDriveLink').value.trim(),file=$('createVacationPdf').files?.[0];
+ if(!username||!start||!end||end<start)return alert('Comprueba el empleado y las fechas.');
+ if(!Number.isInteger(year)||year<2000||year>2100)return alert('Introduce un año válido.');
+ if(driveLink&&!/^https:\/\/(drive\.google\.com|docs\.google\.com)\//i.test(driveLink))return alert('Introduce un enlace válido de Google Drive.');
+ if(file&&file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser PDF.');
+ if(file&&file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
+ const prior=(db.vacations?.[username]||[]).filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4)))===year);
+ if(prior.length>=4&&!confirm((db.users.find(u=>u.username===username)?.name||username)+' ya tiene 4 periodos en '+year+'. ¿Añadir otro como administrador?'))return;
+ const btn=$('saveAdminVacationCreate');btn.disabled=true;btn.textContent='Guardando…';
+ try{
+  let fileData={};if(file){const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});fileData={filename:file.name,pdfData,mimeType:'application/pdf'}}
+  ensureUserData(username);db.vacations[username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,driveLink,...fileData,createdAt:new Date().toISOString()});
+  await saveDB();closeVacationCreateForm();vacationFiltersInit();renderVacationsSection();
+ }catch(err){alert('No se pudieron guardar las vacaciones: '+err.message)}
+ finally{btn.disabled=false;btn.textContent='Guardar vacaciones'}
+};
 
 let editingVacationRef=null;
 function openVacationEditForm(username,id){
