@@ -157,3 +157,5 @@
 .vac-cal-cancelled{color:#b91c1c!important;background:#fee2e2!important;text-decoration:line-through;border:1px solid #fca5a5!important}
 .vac-list-cancelled{color:#b91c1c;background:#fff1f2}
 .vac-cancelled-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:5px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800}
+
+.my-vacations-list{display:flex;flex-direction:column;gap:9px}.my-vacation-row{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.my-vacation-row>span{font-size:12px;color:#64748b}.my-vacation-row a{margin-top:3px}
