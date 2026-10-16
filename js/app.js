@@ -462,7 +462,7 @@ function renderMyVacations(){
 function renderVacationsSection(){
  vacationFiltersInit();
  $('vacationFilters')?.classList.toggle('hidden',!isAdmin());
- $('vacListBtn')?.classList.toggle('hidden',!isAdmin());
+ $('vacListBtn')?.classList.remove('hidden');
  if(!isAdmin()&&vacationsViewMode==='list')vacationsViewMode='calendar';
  const y=vacationsMonth.getFullYear(),m=vacationsMonth.getMonth(),label=vacationsMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
  $('vacMonthLabel').textContent=label.charAt(0).toUpperCase()+label.slice(1);
