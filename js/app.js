@@ -84,7 +84,7 @@ function render(){
  renderEmployeeButtons();renderInactiveEmployees();renderRange();renderSelectedEmployeeDailyChart();loadPayrolls();
  ["calendar","list","balance","weekly","vacations"].forEach(v=>$(v+"View").classList.toggle("hidden",activeView!==v));
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===activeView));
- if(activeView==="calendar")renderCalendar();if(activeView==="list")renderList();if(activeView==="balance")renderBalance();if(activeView==="weekly")renderWeekly();if(activeView==="vacations")renderVacations();
+ if(activeView==="calendar")renderCalendar();if(activeView==="list")renderList();if(activeView==="balance")renderBalance();if(activeView==="weekly")renderWeekly();if(activeView==="vacations")renderVacations();renderMyVacations();
  const ml=$("toggleMonthLock");if(ml){const key=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}-01`,prev=isPreviousMonth(key),locked=isMonthLocked(key);ml.classList.toggle("hidden",!isAdmin()||!prev);ml.textContent=locked?"🔓 Abrir mes":"🔒 Cerrar mes";ml.onclick=toggleCurrentMonthLock;}
 }
 function excelDownload(name,rows,sheet='Resumen'){if(!window.XLSX)return alert('No se pudo cargar el exportador Excel. Recarga la página.');const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,sheet.slice(0,31));XLSX.writeFile(wb,name)}
@@ -452,6 +452,12 @@ function filteredVacationRows(){
   if(q&&!String(v.employeeName+' '+v.filename+' '+v.year).toLowerCase().includes(q))return false;
   return true;
  });
+}
+function renderMyVacations(){
+ const box=$('myVacationsBox');if(!box||!currentUser)return;
+ const mine=(db.vacations?.[currentUser.username]||[]).slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end));
+ box.innerHTML=mine.length?'<div class="my-vacations-list">'+mine.map(v=>{const n=workingDaysInclusive(parseKey(v.start),parseKey(v.end));return '<div class="my-vacation-row '+(v.cancelled?'vac-list-cancelled':'')+'"><strong>'+fmtDate(v.start)+' → '+fmtDate(v.end)+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':'')+'</strong><span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(currentUser))+' horas</span>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+(v.pdfData?'<button class="small-btn" type="button" data-my-vac-pdf="'+escapeHtml(v.id)+'">Ver PDF</button>':'')+'</div>'}).join('')+'</div>':'<div class="personal-space-empty">Todavía no tienes vacaciones registradas.</div>';
+ box.querySelectorAll('[data-my-vac-pdf]').forEach(b=>b.onclick=()=>{const v=mine.find(x=>String(x.id)===b.dataset.myVacPdf);if(v?.pdfData)openVacationPdf(v)});
 }
 function renderVacationsSection(){
  vacationFiltersInit();
