@@ -126,3 +126,19 @@
 .vacation-filters button{align-self:end;min-height:36px}
 @media(max-width:720px){.vacation-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}}
 @media(max-width:460px){.vacation-filters{grid-template-columns:1fr}}
+
+.vacation-edit-card{width:min(640px,100%);padding:30px;max-height:calc(100vh - 36px);overflow-y:auto}
+.vacation-edit-card h2{margin:4px 0 8px;font-size:26px;letter-spacing:-.03em}
+.vacation-edit-subtitle{color:#64748b;margin:0 0 22px}
+.vacation-edit-card form{display:flex;flex-direction:column;gap:16px}
+.vacation-edit-card form>label{display:flex;flex-direction:column;gap:7px;font-size:13px;font-weight:700;color:#334155}
+.vacation-edit-card input,.vacation-edit-card select{width:100%;box-sizing:border-box;border:1px solid #cbd5e1;border-radius:9px;padding:11px 12px;background:#fff;color:#172033;font:inherit}
+.vacation-edit-card input:focus,.vacation-edit-card select:focus{outline:3px solid #bfdbfe;border-color:#3b82f6}
+.vacation-file-field{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid #dbe3ed;background:#f8fafc;border-radius:12px}
+.vacation-file-field strong{display:block;color:#1e293b}
+.vacation-file-field p{margin:5px 0 0;color:#64748b;font-size:13px;overflow-wrap:anywhere}
+.file-pick-button{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;background:#e0e7ff;color:#3730a3;border-radius:8px;padding:10px 13px;font-weight:700;font-size:13px;cursor:pointer}
+.file-pick-button input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.vacation-form-hint{font-size:12px;color:#64748b;margin:-8px 0 0}
+.vacation-edit-card .modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:5px}
+@media(max-width:560px){.vacation-edit-card{padding:22px 16px}.vacation-file-field{align-items:flex-start;flex-direction:column}.vacation-edit-card .modal-actions>*{flex:1}}
