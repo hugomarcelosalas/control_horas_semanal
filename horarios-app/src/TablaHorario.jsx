@@ -444,9 +444,21 @@ useEffect(() => {
   };
 
   const calcularCarrilesEmpleados = (isoFecha) => {
+    // Evitar que un mismo turno se pinte dos veces al generar la vista/impresión.
+    // Se consideran duplicados solo los registros con todos los datos horarios iguales.
     const turnosZona = turnos.filter(t => t.fecha === isoFecha);
+    const firmasTurnos = new Set();
+    const turnosUnicos = turnosZona.filter(t => {
+      const firma = [
+        String(t.empleadoId), t.fecha, t.horaInicio, t.horaFin,
+        t.ubicacion || 'vendedor', Boolean(t.siEsNecesario), Boolean(t.encargado)
+      ].join('|');
+      if (firmasTurnos.has(firma)) return false;
+      firmasTurnos.add(firma);
+      return true;
+    });
 
-    const elementos = turnosZona.map(t => {
+    const elementos = turnosUnicos.map(t => {
       const emp = empleados.find(e => String(e.id) === String(t.empleadoId));
       return {
         id: `t_${t.id}`,
