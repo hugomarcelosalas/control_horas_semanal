@@ -463,10 +463,12 @@ function renderVacationsSection(){
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
  const rows=filteredVacationRows();
+ // El calendario es compartido para que todos los empleados puedan coordinarse; la lista sigue respetando la privacidad por usuario.
+ const calendarRows=allVacationRows();
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');
  for(let i=0;i<offset;i++)grid+='<div class="vac-cal-empty"></div>';
- for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=rows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill" title="'+escapeHtml(v.employeeName)+'">'+escapeHtml(isAdmin()?v.employeeName:'Vacaciones')+'</div>').join('')+'</div>'}
+ for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=calendarRows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill" title="'+escapeHtml(v.employeeName)+'">'+escapeHtml(v.employeeName)+'</div>').join('')+'</div>'}
  $('vacationsCalendar').innerHTML=grid;
  $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span>Acciones</span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a> ':'')+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':(!v.driveLink?escapeHtml(v.filename||'—'):''))+'</span><span>'+(isAdmin()?'<button class="ghost" data-vac-edit="'+v.username+'|'+v.id+'">Editar</button> <button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones que coincidan con los filtros.</div>';
 }
