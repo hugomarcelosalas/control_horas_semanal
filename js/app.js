@@ -423,15 +423,66 @@ async function uploadPayroll(){const username=$("payrollEmployee")?.value,month=
 
 
 
+
+let vacationsViewMode='calendar';
+let vacationsMonth=new Date();vacationsMonth.setDate(1);
+function allVacationRows(){
+ const rows=[];
+ (db.users||[]).filter(u=>u.role==='employee').forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
+ return rows.sort((a,b)=>a.start.localeCompare(b.start)||a.employeeName.localeCompare(b.employeeName));
+}
+function renderVacationsSection(){
+ const y=vacationsMonth.getFullYear(),m=vacationsMonth.getMonth(),label=vacationsMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
+ $('vacMonthLabel').textContent=label.charAt(0).toUpperCase()+label.slice(1);
+ $('vacAddBtn').classList.toggle('hidden',!isAdmin());
+ $('vacCalendarBtn').classList.toggle('primary',vacationsViewMode==='calendar');$('vacCalendarBtn').classList.toggle('ghost',vacationsViewMode!=='calendar');
+ $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
+ $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
+ const rows=allVacationRows().filter(v=>isAdmin()||v.username===currentUser.username);
+ const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
+ const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');
+ for(let i=0;i<offset;i++)grid+='<div class="vac-cal-empty"></div>';
+ for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=rows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill" title="'+escapeHtml(v.employeeName)+'">'+escapeHtml(isAdmin()?v.employeeName:'Vacaciones')+'</div>').join('')+'</div>'}
+ $('vacationsCalendar').innerHTML=grid;
+ $('vacationsList').innerHTML=rows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span></span></div>'+rows.map(v=>'<div class="vac-list-row"><strong>'+escapeHtml(isAdmin()?v.employeeName:'Mis vacaciones')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+v.year+'</span><span>'+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':escapeHtml(v.filename||'—'))+'</span><span>'+(isAdmin()?'<button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>').join(''):'<div class="empty-state">No hay vacaciones registradas.</div>';
+}
+function escapeHtml(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function addVacationAdmin(){
+ if(!isAdmin())return;
+ const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false);
+ if(!employees.length)return alert('No hay empleados activos.');
+ const promptList=employees.map((u,i)=>(i+1)+'. '+u.name+' ('+u.username+')').join('\n');
+ const choice=Number(prompt('Selecciona el empleado escribiendo su número:\n'+promptList,'1'));
+ if(!Number.isInteger(choice)||choice<1||choice>employees.length)return;
+ const emp=employees[choice-1],start=prompt('Fecha de inicio (AAAA-MM-DD):');if(!start||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start))return alert('Fecha de inicio no válida.');
+ const end=prompt('Fecha de fin (AAAA-MM-DD):',start);if(!end||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)return alert('Fecha de fin no válida.');
+ const year=Number(prompt('Año de vacaciones:',start.slice(0,4)));if(!Number.isInteger(year)||year<2000||year>2100)return alert('Año no válido.');
+ const prior=(db.vacations?.[emp.username]||[]).filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4))===year));
+ if(prior.length>=4&&!confirm(emp.name+' ya tiene 4 periodos en '+year+'. ¿Añadir otro como administrador?'))return;
+ const picker=document.createElement('input');picker.type='file';picker.accept='application/pdf,.pdf';picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser PDF.');if(file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
+ const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});
+ ensureUserData(emp.username);db.vacations[emp.username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,filename:file.name,pdfData,mimeType:'application/pdf',createdAt:new Date().toISOString()});await saveDB();renderVacationsSection();};
+ picker.click();
+}
+document.addEventListener('click',async e=>{
+ if(e.target.closest('#vacCalendarBtn')){vacationsViewMode='calendar';renderVacationsSection()}
+ if(e.target.closest('#vacListBtn')){vacationsViewMode='list';renderVacationsSection()}
+ if(e.target.closest('#vacPrevMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()-1);renderVacationsSection()}
+ if(e.target.closest('#vacNextMonth')){vacationsMonth.setMonth(vacationsMonth.getMonth()+1);renderVacationsSection()}
+ if(e.target.closest('#vacAddBtn'))addVacationAdmin();
+ const del=e.target.closest('[data-vac-delete]');if(del&&isAdmin()){const [username,id]=del.dataset.vacDelete.split('|');if(confirm('¿Eliminar este periodo de vacaciones?')){db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);await saveDB();renderVacationsSection()}}
+ const pdf=e.target.closest('[data-vac-pdf]');if(pdf){const v=allVacationRows().find(x=>String(x.id)===pdf.dataset.vacPdf);if(v?.pdfData){const a=document.createElement('a');a.href='data:application/pdf;base64,'+v.pdfData;a.download=v.filename||'vacaciones.pdf';a.click()}}
+});
+
 function updateSectionTabsVisibility(){
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
 }
 
 function showSection(sectionId){
-  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel','vacationsPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
-  if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');
+  if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
