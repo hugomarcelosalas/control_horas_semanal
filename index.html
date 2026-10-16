@@ -88,6 +88,19 @@
 
       <section id="vacationsPanel" class="panel hidden"><div class="section-head"><div><h2>🏖️ Vacaciones</h2><p>Consulta las vacaciones por calendario mensual o por lista.</p></div><div class="vacation-view-switch"><button id="vacCalendarBtn" class="primary" type="button">Calendario</button><button id="vacListBtn" class="ghost" type="button">Lista</button></div></div><div class="vacation-toolbar"><button id="vacPrevMonth" class="icon-btn" type="button">‹</button><strong id="vacMonthLabel"></strong><button id="vacNextMonth" class="icon-btn" type="button">›</button><button id="vacAddBtn" class="primary hidden" type="button">+ Añadir vacaciones</button></div><div id="vacationFilters" class="vacation-filters"><label>Empleado<select id="vacFilterEmployee"><option value="">Todos los empleados</option></select></label><label>Año<select id="vacFilterYear"><option value="">Todos los años</option></select></label><label>Desde<input id="vacFilterStart" type="date"></label><label>Hasta<input id="vacFilterEnd" type="date"></label><label>Estado<select id="vacFilterStatus"><option value="">Todos</option><option value="upcoming">Próximas</option><option value="current">En curso</option><option value="past">Pasadas</option></select></label><label>Buscar<input id="vacFilterSearch" type="search" placeholder="Empleado o archivo"></label><button id="vacFilterClear" class="ghost" type="button">Limpiar filtros</button></div><div id="vacationsCalendar" class="vacations-calendar"></div><div id="vacationsList" class="vacations-list hidden"></div></section>
 
+      <div id="adminVacationEditModal" class="modal hidden"><div class="modal-card vacation-edit-card">
+        <button id="closeAdminVacationEdit" class="modal-close" type="button">×</button>
+        <p class="eyebrow">GESTIÓN DE VACACIONES</p><h2 id="adminVacationEditTitle">Editar vacaciones</h2><p class="vacation-edit-subtitle">Actualiza los datos del periodo y el documento adjunto.</p>
+        <form id="adminVacationEditForm">
+          <label>Empleado<select id="adminVacationEmployee" required></select></label>
+          <div class="two-col"><label>Fecha de inicio<input id="adminVacationStart" type="date" required></label><label>Fecha de fin<input id="adminVacationEnd" type="date" required></label></div>
+          <label>Año de vacaciones<input id="adminVacationYear" type="number" min="2000" max="2100" required></label>
+          <div class="vacation-file-field"><div><strong>PDF adjunto</strong><p id="adminVacationCurrentFile">No hay documento adjunto</p></div><label class="file-pick-button">Elegir PDF<input id="adminVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
+          <p class="vacation-form-hint">Si no eliges otro archivo, se conservará el PDF actual. Tamaño máximo: 8 MB.</p>
+          <div class="modal-actions"><button id="cancelAdminVacationEdit" class="ghost" type="button">Cancelar</button><button id="saveAdminVacationEdit" class="primary" type="submit">Guardar cambios</button></div>
+        </form>
+      </div></div>
+
       <section id="horariosPanel" class="panel hidden"><div class="section-head admin-head"><div><h2>📅 Generador de horarios</h2><p>Cuadrante semanal, turnos, cumpleaños, clima y exportación.</p></div><button id="closeHorarios" class="ghost" type="button">Cerrar horarios</button></div><div class="generator-frame-wrap"><iframe id="generatorFrame" title="Generador de horarios" src="/horarios/" loading="lazy"></iframe></div></section>
 
       <section id="mainPanel" class="panel">
