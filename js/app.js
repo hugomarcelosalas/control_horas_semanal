@@ -457,7 +457,7 @@ async function addVacationAdmin(){
  const emp=employees[choice-1],start=prompt('Fecha de inicio (AAAA-MM-DD):');if(!start||!/^\\d{4}-\\d{2}-\\d{2}$/.test(start))return alert('Fecha de inicio no válida.');
  const end=prompt('Fecha de fin (AAAA-MM-DD):',start);if(!end||!/^\\d{4}-\\d{2}-\\d{2}$/.test(end)||end<start)return alert('Fecha de fin no válida.');
  const year=Number(prompt('Año de vacaciones:',start.slice(0,4)));if(!Number.isInteger(year)||year<2000||year>2100)return alert('Año no válido.');
- const prior=(db.vacations?.[emp.username]||[]).filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4))===year));
+ const prior=(db.vacations?.[emp.username]||[]).filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4)))===year);
  if(prior.length>=4&&!confirm(emp.name+' ya tiene 4 periodos en '+year+'. ¿Añadir otro como administrador?'))return;
  const picker=document.createElement('input');picker.type='file';picker.accept='application/pdf,.pdf';picker.onchange=async()=>{const file=picker.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser PDF.');if(file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
  const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});
