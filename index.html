@@ -103,6 +103,21 @@
         </form>
       </div></div>
 
+      <div id="adminVacationCreateModal" class="modal hidden"><div class="modal-card vacation-edit-card">
+        <button id="closeAdminVacationCreate" class="modal-close" type="button">×</button>
+        <p class="eyebrow">GESTIÓN DE VACACIONES</p><h2>Añadir vacaciones</h2><p class="vacation-edit-subtitle">Crea un periodo y adjunta su documento si lo necesitas.</p>
+        <form id="adminVacationCreateForm">
+          <label>Empleado<select id="createVacationEmployee" required></select></label>
+          <div class="two-col"><label>Fecha de inicio<input id="createVacationStart" type="date" required></label><label>Fecha de fin<input id="createVacationEnd" type="date" required></label></div>
+          <label>Año de vacaciones<input id="createVacationYear" type="number" min="2000" max="2100" required></label>
+          <label>Enlace de Google Drive<input id="createVacationDriveLink" type="url" placeholder="https://drive.google.com/..." inputmode="url"></label>
+          <p class="vacation-form-hint">Pega el enlace compartido y revisa que tenga los permisos adecuados.</p>
+          <div class="vacation-file-field"><div><strong>PDF adjunto (opcional)</strong><p id="createVacationFileName">Ningún PDF seleccionado</p></div><label class="file-pick-button">Elegir PDF<input id="createVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
+          <p class="vacation-form-hint">Puedes guardar un enlace, un PDF o ambos. Tamaño máximo del PDF: 8 MB.</p>
+          <div class="modal-actions"><button id="cancelAdminVacationCreate" class="ghost" type="button">Cancelar</button><button id="saveAdminVacationCreate" class="primary" type="submit">Guardar vacaciones</button></div>
+        </form>
+      </div></div>
+
       <section id="horariosPanel" class="panel hidden"><div class="section-head admin-head"><div><h2>📅 Generador de horarios</h2><p>Cuadrante semanal, turnos, cumpleaños, clima y exportación.</p></div><button id="closeHorarios" class="ghost" type="button">Cerrar horarios</button></div><div class="generator-frame-wrap"><iframe id="generatorFrame" title="Generador de horarios" src="/horarios/" loading="lazy"></iframe></div></section>
 
       <section id="mainPanel" class="panel">
