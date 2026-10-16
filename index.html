@@ -34,6 +34,7 @@
   <button type="button" class="section-tab admin-tab" data-section="balancesPanel">💰 Balances</button>
   <button type="button" class="section-tab" data-section="horariosPanel">📅 Horarios</button>
   <button type="button" class="section-tab" data-section="vacationsPanel">🏖️ Vacaciones</button>
+  <button type="button" class="section-tab" data-section="personalSpacePanel">👤 Mi espacio</button>
 </nav>
 
       <main class="container">
@@ -117,6 +118,8 @@
           <div class="modal-actions"><button id="cancelAdminVacationCreate" class="ghost" type="button">Cancelar</button><button id="saveAdminVacationCreate" class="primary" type="submit">Guardar vacaciones</button></div>
         </form>
       </div></div>
+
+      <section id="personalSpacePanel" class="panel hidden"><div class="section-head"><div><h2>👤 Mi espacio</h2><p>Tus documentos personales de trabajo, reunidos en un solo lugar.</p></div></div><div class="personal-space-grid"><div class="personal-space-card"><div class="personal-space-card-icon">📄</div><h3>Mis nóminas</h3><p>Consulta y abre tus nóminas disponibles.</p><div id="payrollBox" class="payroll-box"></div></div><div class="personal-space-card"><div class="personal-space-card-icon">📝</div><h3>Contratos y documentos</h3><p>Próximamente podrás consultar aquí tu contrato y otros documentos laborales.</p><div class="personal-space-empty">Los documentos que se incorporen estarán disponibles en este espacio.</div></div></div></section>
 
       <section id="horariosPanel" class="panel hidden"><div class="section-head admin-head"><div><h2>📅 Generador de horarios</h2><p>Cuadrante semanal, turnos, cumpleaños, clima y exportación.</p></div><button id="closeHorarios" class="ghost" type="button">Cerrar horarios</button></div><div class="generator-frame-wrap"><iframe id="generatorFrame" title="Generador de horarios" src="/horarios/" loading="lazy"></iframe></div></section>
 
