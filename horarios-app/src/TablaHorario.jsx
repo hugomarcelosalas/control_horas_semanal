@@ -380,24 +380,44 @@ useEffect(() => {
       .sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')));
     const empleadosDia = [...new Set(turnosDia.map(t => String(t.empleadoId)))]
       .map(id => empleados.find(emp => String(emp.id) === id))
-      .filter(Boolean)
-      .sort((a, b) => {
-        const horaA = turnosDia.find(t => String(t.empleadoId) === String(a.id))?.horaInicio || '99:99';
-        const horaB = turnosDia.find(t => String(t.empleadoId) === String(b.id))?.horaInicio || '99:99';
-        return horaA.localeCompare(horaB) || a.nombre.localeCompare(b.nombre, 'es');
-      });
+      .filter(Boolean);
+    const categorias = [
+      { clave: 'vendedor', titulo: 'Vendedores' },
+      { clave: 'monitor', titulo: 'Monitores' },
+      { clave: 'kiosko', titulo: 'Kiosko' },
+      { clave: 'otros', titulo: 'Otros' }
+    ];
     return (
       <section className="dia-simple-card" key={dia.clave}>
         <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
         {empleadosDia.length
-          ? <ul>{empleadosDia.map(emp => {
-              const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id));
-              return <li key={emp.id}>
-                <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
-                <strong>{emp.nombre}</strong>
-                <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id}>{t.horaInicio}–{t.horaFin}</span>)}</span>
-              </li>;
-            })}</ul>
+          ? <div className="simple-categorias">{categorias.map(categoria => {
+              const grupo = empleadosDia
+                .filter(emp => {
+                  const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id));
+                  return categoria.clave === 'otros'
+                    ? turnosEmpleado.every(t => !['vendedor', 'monitor', 'kiosko'].includes(t.ubicacion || 'vendedor'))
+                    : turnosEmpleado.some(t => (t.ubicacion || 'vendedor') === categoria.clave);
+                })
+                .sort((a, b) => {
+                  const horaA = turnosDia.find(t => String(t.empleadoId) === String(a.id) && (categoria.clave === 'otros' || (t.ubicacion || 'vendedor') === categoria.clave))?.horaInicio || '99:99';
+                  const horaB = turnosDia.find(t => String(t.empleadoId) === String(b.id) && (categoria.clave === 'otros' || (t.ubicacion || 'vendedor') === categoria.clave))?.horaInicio || '99:99';
+                  return horaA.localeCompare(horaB) || a.nombre.localeCompare(b.nombre, 'es');
+                });
+              if (!grupo.length) return null;
+              return <div className="simple-categoria" key={categoria.clave}>
+                <h4>{categoria.titulo}</h4>
+                <ul>{grupo.map(emp => {
+                  const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id) &&
+                    (categoria.clave === 'otros' ? !['vendedor', 'monitor', 'kiosko'].includes(t.ubicacion || 'vendedor') : (t.ubicacion || 'vendedor') === categoria.clave));
+                  return <li key={emp.id}>
+                    <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
+                    <strong>{emp.nombre}</strong>
+                    <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id}>{t.horaInicio}–{t.horaFin}</span>)}</span>
+                  </li>;
+                })}</ul>
+              </div>;
+            })}</div>
           : <p className="sin-turnos-dia">Sin empleados asignados</p>}
       </section>
     );
