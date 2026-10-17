@@ -406,12 +406,43 @@ setupDashboardComparisonDefaults();
 
 
 async function loadPayrolls(){
-  const box=$("payrollBox");const payrollUser=isAdmin()?selectedEmployee:currentUser;if(!box||!payrollUser)return;
-  try{const rows=await api("/api/payrolls");const mine=rows.filter(x=>x.username===selectedEmployee.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)));
-    box.innerHTML='<div class="payroll-head"><div><h3>📄 Mis nóminas</h3><p>Nóminas disponibles para '+String(payrollUser.name).replace(/</g,'&lt;')+'</p></div></div>'+(mine.length?'<div class="payroll-list">'+mine.map(x=>'<div class="payroll-row"><div><strong>Nómina '+x.month+'</strong><span>'+String(x.filename||'PDF')+'</span></div><div class="payroll-actions"><button class="small-btn payroll-view" data-payroll-id="'+x.id+'">📄 Ver PDF</button>'+(isAdmin()?'<button class="small-btn danger-small payroll-delete" data-payroll-id="'+x.id+'">Eliminar</button>':'')+'</div></div>').join('')+'</div>':'<div class="empty-state">Todavía no hay nóminas cargadas.</div>');
+  const box=$("payrollBox"),payrollUser=isAdmin()?selectedEmployee:currentUser;
+  if(!box||!payrollUser)return;
+  try{
+    const rows=await api("/api/payrolls");
+    const username=payrollUser.username;
+    const mine=rows.filter(x=>x.username===username).sort((a,b)=>String(b.month).localeCompare(String(a.month)));
+    const money=v=>Number(v||0).toLocaleString("es-ES",{style:"currency",currency:"EUR"});
+    box.innerHTML=mine.length?'<div class="payroll-list">'+mine.map(x=>'<div class="payroll-row"><div class="payroll-period"><strong>'+String(x.month||"").split("-").reverse().join("/")+'</strong>'+(isAdmin()?'<span>'+String(x.employeeName||payrollUser.name||"").replace(/</g,'&lt;')+'</span>':'')+'</div>'+(isAdmin()?'<div class="payroll-amount">'+money(x.amount)+'</div>':'')+'<div class="payroll-actions"><button class="small-btn payroll-view" data-payroll-id="'+x.id+'">📄 Ver nómina</button>'+(isAdmin()?'<button class="small-btn danger-small payroll-delete" data-payroll-id="'+x.id+'">Eliminar</button>':'')+'</div></div>').join('')+'</div>':'<div class="empty-state">Todavía no hay nóminas cargadas.</div>';
     box.querySelectorAll(".payroll-view").forEach(b=>b.onclick=()=>window.open("/api/payroll/"+encodeURIComponent(b.dataset.payrollId),"_blank"));
     box.querySelectorAll(".payroll-delete").forEach(b=>b.onclick=async()=>{if(!confirm("¿Eliminar esta nómina? También se eliminará el PDF de Google Drive."))return;try{await api("/api/admin/payroll/"+encodeURIComponent(b.dataset.payrollId),{method:"DELETE"});loadPayrolls();}catch(e){alert(e.message)}});
   }catch(e){box.innerHTML='<div class="empty-state">No se pudieron cargar las nóminas: '+String(e.message)+'</div>'}
+}
+function setupPayrollUI(){
+  if(isAdmin()&&!$("payrollAdminTools")){
+    const panel=$("personalSpacePanel");
+    if(panel){
+      const box=document.createElement("div");box.id="payrollAdminTools";box.className="personal-space-card payroll-admin";
+      box.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">📄</div><h3>Gestionar nóminas</h3><p>Asocia cada PDF a un empleado, indica el periodo y registra el importe.</p></div><div class="payroll-upload-form"><label>Empleado<select id="payrollEmployee" required></select></label><label>Periodo (mes y año)<input id="payrollMonth" type="month" required></label><label>Importe (€)<input id="payrollAmount" type="number" min="0" step="0.01" placeholder="Ej. 1450,00" required></label><label class="payroll-file-label">Archivo de nómina (PDF)<input id="payrollFile" type="file" accept="application/pdf,.pdf" required></label><button id="uploadPayrollBtn" class="primary" type="button">⬆️ Guardar nómina</button></div><div id="payrollUploadStatus" class="muted"></div>';
+      panel.querySelector(".personal-space-grid")?.appendChild(box);
+      const sel=$("payrollEmployee");sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+u.username+'">'+String(u.name).replace(/</g,'&lt;')+'</option>').join("");
+      sel.value=selectedEmployee?.username||sel.value;$("payrollMonth").value=dateKey(new Date()).slice(0,7);$("uploadPayrollBtn").onclick=uploadPayroll;
+    }
+  }
+  loadPayrolls();
+}
+async function uploadPayroll(){
+  const username=$("payrollEmployee")?.value,month=$("payrollMonth")?.value,amount=Number($("payrollAmount")?.value),file=$("payrollFile")?.files?.[0],status=$("payrollUploadStatus");
+  if(!username||!month||!Number.isFinite(amount)||amount<0||!file)return alert("Completa empleado, periodo, importe y PDF.");
+  if(file.type!=="application/pdf"&&!file.name.toLowerCase().endsWith(".pdf"))return alert("El archivo debe ser un PDF.");
+  if(file.size>8*1024*1024)return alert("El PDF no puede superar 8 MB.");
+  if(status)status.textContent="Subiendo PDF a Google Drive…";
+  try{
+    const dataBase64=await new Promise((resolve,reject)=>{const fr=new FileReader();fr.onload=()=>resolve(String(fr.result).split(",")[1]||"");fr.onerror=reject;fr.readAsDataURL(file)});
+    await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,month,amount,filename:file.name,mimeType:"application/pdf",dataBase64})});
+    if(status)status.textContent="Nómina guardada correctamente."; $("payrollFile").value="";$("payrollAmount").value="";
+    selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;loadPayrolls();
+  }catch(e){if(status)status.textContent="";alert(e.message)}
 }
 function setupPayrollUI(){
   const main=$("personalSpacePanel");
