@@ -620,9 +620,19 @@ function showSection(sectionId){
   if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
+const sectionTabsNav=$('sectionTabs');
+if(sectionTabsNav){
+  sectionTabsNav.addEventListener('click',e=>{
+    const tab=e.target.closest('.section-tab');
+    if(!tab)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const sectionId=tab.dataset.section;
+    if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel'].includes(sectionId)&&!isAdmin())return;
+    showSection(sectionId);
+  },true);
+}
 document.addEventListener('click',e=>{
-  const tab=e.target.closest('.section-tab');
-  if(tab){e.preventDefault();const s=tab.dataset.section;if((s==='dashboardPanel'||s==='balancesPanel'||s==='employeesPanel'||s==='hugoErikaPanel'||s==='importExportPanel')&&!isAdmin())return;showSection(s);return}
   if(e.target.closest('#horariosBtn')){e.preventDefault();showSection('horariosPanel')}
   else if(e.target.closest('#dashboardBtn')){e.preventDefault();showSection('dashboardPanel')}
   else if(e.target.closest('#balancesBtn')){e.preventDefault();showSection('balancesPanel')}
