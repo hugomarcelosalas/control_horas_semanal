@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control horario</title>
-  <link rel="stylesheet" href="css/style.css?v=20261018-employeebalancecolors1">
+  <link rel="stylesheet" href="css/style.css?v=20261018-historycolors1">
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -162,17 +162,18 @@
           <div class="month-nav"><button id="prevMonth" class="icon-btn">‹</button><strong id="monthLabel"></strong><button id="nextMonth" class="icon-btn">›</button><button id="toggleMonthLock" class="ghost hidden" type="button"></button></div>
         </div>
 
-        <div class="range-box"><div class="range-title"><strong>Filtro de fechas personalizado</strong><span>Elige cualquier periodo para consultar horas y balance.</span></div>
-          <div><label>Desde<input id="rangeStart" type="date"></label><label>Hasta<input id="rangeEnd" type="date"></label></div>
-          <div class="range-result"><span>Horas en el rango</span><strong id="rangeHours">0:00</strong></div>
-          <div class="range-result"><span>Balance del rango</span><strong id="rangeBalance">0:00</strong></div>
-        </div>
-
-        <div id="selectedEmployeeDailyChart" class="selected-employee-chart"></div><div id="calendarView" class="view"></div>
+        <div id="calendarView" class="view"></div>
         <div id="listView" class="view hidden"></div>
         <div id="balanceView" class="view hidden"></div>
         <div id="weeklyView" class="view hidden"></div>
         <div id="vacationsView" class="view hidden"></div>
+
+        <div id="rangeBox" class="range-box"><div class="range-title"><strong>Filtro de fechas personalizado</strong><span>Elige cualquier periodo para consultar horas y balance.</span></div>
+          <div><label>Desde<input id="rangeStart" type="date"></label><label>Hasta<input id="rangeEnd" type="date"></label></div>
+          <div class="range-result"><span>Horas en el rango</span><strong id="rangeHours">0:00</strong></div>
+          <div class="range-result"><span>Balance del rango</span><strong id="rangeBalance">0:00</strong></div>
+        </div>
+        <div id="selectedEmployeeDailyChart" class="selected-employee-chart"></div>
       </section>
     </main>
   </div>
@@ -214,6 +215,6 @@
     <p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿Eliminar usuario?</h2><p id="confirmText"></p>
     <div class="modal-actions"><button id="cancelConfirm" class="ghost">Cancelar</button><button id="confirmDelete" class="danger">Sí, eliminar</button></div>
   </div></div>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261018-readonlydocs2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261018-historylayout1"></script>
 </body>
 </html>
