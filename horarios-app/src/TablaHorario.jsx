@@ -21,7 +21,7 @@ const TablaHorario = () => {
   const [datosServidorCargados, setDatosServidorCargados] = useState(false);
   const [pestanaActiva, setPestanaActiva] = useState(esRolAdmin(parentUser.role) ? 'admin' : 'visualizacion'); 
   const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles');
-  const [subVista, setSubVista] = useState('detallada');
+  const [subVista, setSubVista] = useState(esRolAdmin(parentUser.role) ? 'detallada' : 'mia');
   const [usuarioActual, setUsuarioActual] = useState(parentUser);
   const [empleadoVistaMia, setEmpleadoVistaMia] = useState(parentUser.username || '');
   const [modoPantalla, setModoPantalla] = useState('ajustado');
@@ -110,6 +110,7 @@ useEffect(() => {
       const admin = esRolAdmin(role);
       setIsAdmin(admin);
       setPestanaActiva(admin ? 'admin' : 'visualizacion');
+      if(!admin) setSubVista('mia');
       setDatosServidorCargados(true);
     } catch (err) { console.error('Error cargando el cuadrante:', err); }
     finally { cargando = false; }
@@ -126,7 +127,7 @@ useEffect(() => {
     if(role) {
       const admin = esRolAdmin(role);
       setIsAdmin(admin);
-      if(!admin) setPestanaActiva('visualizacion');
+      if(!admin) { setPestanaActiva('visualizacion'); setSubVista('mia'); }
     }
   };
   window.addEventListener('control-horario-auth', syncRole);
