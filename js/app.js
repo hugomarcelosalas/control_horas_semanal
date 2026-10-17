@@ -446,6 +446,35 @@ function setupDashboardComparisonDefaults(){
 setupDashboardComparisonDefaults();
 
 
+async function setupPersonalDocuments(){
+ const box=$("personalDocumentsBox");if(!box)return;
+ const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ if(isAdmin()&&!$("personalDocumentsAdminTools")){
+  const tools=document.createElement("div");tools.id="personalDocumentsAdminTools";tools.className="personal-space-card payroll-admin";
+  tools.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">🗂️</div><h3>Gestionar contratos y documentos</h3><p>Añade enlaces de Google Drive. Los empleados solo podrán abrir y consultar sus propios documentos.</p></div><div class="payroll-upload-form"><label>Empleado<select id="documentEmployee" required></select></label><label>Tipo<select id="documentType"><option>Contrato</option><option>Documento laboral</option><option>Certificado</option><option>Otro</option></select></label><label>Nombre del documento<input id="documentTitle" maxlength="160" placeholder="Ej. Contrato de trabajo" required></label><label>Periodo (opcional)<input id="documentMonth" type="month"></label><label>Enlace de Google Drive<input id="documentDriveUrl" type="url" placeholder="https://drive.google.com/..." required></label><button id="addPersonalDocumentBtn" class="primary" type="button">🔗 Añadir documento</button></div><div id="documentUploadStatus" class="muted"></div>';
+  $("personalSpacePanel")?.querySelector(".personal-space-grid")?.appendChild(tools);
+  const sel=$("documentEmployee");if(sel)sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+esc(u.username)+'">'+esc(u.name)+'</option>').join("");
+  if(sel)sel.value=selectedEmployee?.username||sel.value;
+  $("addPersonalDocumentBtn").onclick=async()=>{
+   const username=$("documentEmployee").value,title=$("documentTitle").value.trim(),type=$("documentType").value,month=$("documentMonth").value,driveUrl=$("documentDriveUrl").value.trim(),status=$("documentUploadStatus");
+   if(!username||!title||!driveUrl){alert("Completa empleado, nombre y enlace.");return}
+   try{const u=new URL(driveUrl);if(u.protocol!=="https:"||!["drive.google.com","docs.google.com"].includes(u.hostname))throw new Error("Usa un enlace HTTPS de Google Drive.")}catch(e){alert(e.message||"Enlace no válido.");return}
+   status.textContent="Guardando documento…";
+   try{await api("/api/admin/documents",{method:"POST",body:JSON.stringify({username,title,type,month,driveUrl})});$("documentTitle").value="";$("documentDriveUrl").value="";status.textContent="Documento añadido correctamente.";await renderPersonalDocuments()}catch(e){status.textContent=e.message}
+  };
+ }
+ await renderPersonalDocuments();
+}
+async function renderPersonalDocuments(){
+ const box=$("personalDocumentsBox");if(!box||!currentUser)return;
+ const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ try{
+  const docs=isAdmin()?await api("/api/admin/documents"):await api("/api/my-documents");
+  const mine=isAdmin()?docs.filter(d=>d.username===selectedEmployee?.username):docs;
+  box.innerHTML=mine.length?'<div class="personal-documents-list">'+mine.map(d=>'<div class="payroll-row"><div class="payroll-period"><strong>'+esc(d.title)+'</strong><span>'+esc(d.type)+(d.month?' · '+esc(d.month.split("-").reverse().join("/")):'')+'</span></div><div class="payroll-actions"><a class="small-btn" href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">🔗 Abrir documento</a>'+(isAdmin()?'<button type="button" class="small-btn danger-small" data-delete-personal-doc="'+esc(d.id)+'">Eliminar</button>':'')+'</div></div>').join("")+'</div>':'<div class="personal-space-empty">Todavía no hay contratos ni otros documentos disponibles.</div>';
+  box.querySelectorAll("[data-delete-personal-doc]").forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm("¿Eliminar este documento de la lista?"))return;try{await api("/api/admin/documents/"+encodeURIComponent(b.dataset.deletePersonalDoc),{method:"DELETE"});await renderPersonalDocuments()}catch(e){alert(e.message)}});
+ }catch(e){box.innerHTML='<div class="personal-space-empty">No se pudieron cargar los documentos: '+esc(e.message)+'</div>'}
+}
 async function loadPayrolls(){
   const box=$("payrollBox"),payrollUser=isAdmin()?selectedEmployee:currentUser;
   if(!box||!payrollUser)return;
@@ -469,6 +498,7 @@ function setupPayrollUI(){
     }
   }
   loadPayrolls();
+  setupPersonalDocuments();
 }
 async function uploadPayroll(){
   if(!isAdmin())return alert("Solo el administrador puede gestionar nóminas.");
