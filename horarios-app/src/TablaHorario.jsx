@@ -373,6 +373,36 @@ useEffect(() => {
     return opciones;
   };
 
+  const renderDiaSimple = (dia) => {
+    const turnosDia = turnos
+      .filter(t => t.fecha === dia.isoFecha && empleados.some(emp => String(emp.id) === String(t.empleadoId)))
+      .slice()
+      .sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')));
+    const empleadosDia = [...new Set(turnosDia.map(t => String(t.empleadoId)))]
+      .map(id => empleados.find(emp => String(emp.id) === id))
+      .filter(Boolean)
+      .sort((a, b) => {
+        const horaA = turnosDia.find(t => String(t.empleadoId) === String(a.id))?.horaInicio || '99:99';
+        const horaB = turnosDia.find(t => String(t.empleadoId) === String(b.id))?.horaInicio || '99:99';
+        return horaA.localeCompare(horaB) || a.nombre.localeCompare(b.nombre, 'es');
+      });
+    return (
+      <section className="dia-simple-card" key={dia.clave}>
+        <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
+        {empleadosDia.length
+          ? <ul>{empleadosDia.map(emp => {
+              const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id));
+              return <li key={emp.id}>
+                <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
+                <strong>{emp.nombre}</strong>
+                <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id}>{t.horaInicio}–{t.horaFin}</span>)}</span>
+              </li>;
+            })}</ul>
+          : <p className="sin-turnos-dia">Sin empleados asignados</p>}
+      </section>
+    );
+  };
+
   const franjasHorarias = generarFranjasHorarias();
   const opcionesHorasEmpleado = generarOpcionesHorasEmpleado();
 
@@ -1380,35 +1410,12 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
               </>}
               {subVista === 'simple' && (
                 <div className="vista-simple-semanal">
-                  {diasSemana.map(dia => {
-                    const turnosDia = turnos
-                      .filter(t => t.fecha === dia.isoFecha && empleados.some(emp => String(emp.id) === String(t.empleadoId)))
-                      .slice()
-                      .sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')));
-                    const empleadosDia = [...new Set(turnosDia.map(t => String(t.empleadoId)))]
-                      .map(id => empleados.find(emp => String(emp.id) === id))
-                      .filter(Boolean)
-                      .sort((a, b) => {
-                        const horaA = turnosDia.find(t => String(t.empleadoId) === String(a.id))?.horaInicio || '99:99';
-                        const horaB = turnosDia.find(t => String(t.empleadoId) === String(b.id))?.horaInicio || '99:99';
-                        return horaA.localeCompare(horaB) || a.nombre.localeCompare(b.nombre, 'es');
-                      });
-                    return (
-                      <section className="dia-simple-card" key={dia.clave}>
-                        <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
-                        {empleadosDia.length
-                          ? <ul>{empleadosDia.map(emp => {
-                              const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id));
-                              return <li key={emp.id}>
-                                <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
-                                <strong>{emp.nombre}</strong>
-                                <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id}>{t.horaInicio}–{t.horaFin}</span>)}</span>
-                              </li>;
-                            })}</ul>
-                          : <p className="sin-turnos-dia">Sin empleados asignados</p>}
-                      </section>
-                    );
-                  })}
+                  <div className="fila-dias-simple fila-dias-superior">
+                    {diasSemana.slice(0, 4).map(dia => renderDiaSimple(dia))}
+                  </div>
+                  <div className="fila-dias-simple fila-dias-inferior">
+                    {diasSemana.slice(4, 7).map(dia => renderDiaSimple(dia))}
+                  </div>
                 </div>
               )}
               {subVista === 'mia' && (() => {
