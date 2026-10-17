@@ -228,3 +228,9 @@
 
 /* Historial semanal: el color de cada fila refleja su balance. */
 .weekly-row.positive{background:#eaf7ef;border-color:#b8e2c7;color:#176b3a}.weekly-row.positive:hover{background:#def2e5}.weekly-row.negative{background:#fff0f0;border-color:#f0c2c2;color:#a52c2c}.weekly-row.negative:hover{background:#ffe5e5}.weekly-row.neutral{background:#f1f3f5;border-color:#dfe3e8;color:#56606d}
+
+/* Color de fondo para toda la fila del historial según su balance */
+.weekly-row.positive,.weekly-row.positive:hover{background-color:#e0f4e7!important;border-color:#9bd4ad!important;color:#176b3a}
+.weekly-row.negative,.weekly-row.negative:hover{background-color:#ffe3e3!important;border-color:#e8a5a5!important;color:#a52c2c}
+.weekly-row.neutral,.weekly-row.neutral:hover{background-color:#edf0f3!important;border-color:#d3d9e0!important;color:#56606d}
+.weekly-row.positive>div,.weekly-row.negative>div,.weekly-row.neutral>div{background-color:transparent!important}
