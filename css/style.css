@@ -225,3 +225,6 @@
 .employee-name{margin-right:0!important}
 .employee-balance{margin-left:2px!important}
 @media print{.balance-admin-row{display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:8px;padding:7px 10px!important;margin:0!important}.balance-admin-row>div{display:flex;flex-direction:row;align-items:center;gap:10px}.balance-admin-row>div span{font-size:11px}.balances-list{gap:4px!important}}
+
+/* Historial semanal: el color de cada fila refleja su balance. */
+.weekly-row.positive{background:#eaf7ef;border-color:#b8e2c7;color:#176b3a}.weekly-row.positive:hover{background:#def2e5}.weekly-row.negative{background:#fff0f0;border-color:#f0c2c2;color:#a52c2c}.weekly-row.negative:hover{background:#ffe5e5}.weekly-row.neutral{background:#f1f3f5;border-color:#dfe3e8;color:#56606d}
