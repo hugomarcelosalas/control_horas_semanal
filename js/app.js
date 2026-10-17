@@ -110,7 +110,7 @@ function render(){
   loadPlannedSummary();
  if(!selectedEmployee)return;ensureUserData(selectedEmployee.username);
  $("employeeTitle").textContent=selectedEmployee.name;$("employeeSubtitle").textContent=`Jornada contratada: ${selectedEmployee.weeklyHours} horas semanales`;
- $("heroBalance").textContent=fmtMinutes(isAdmin()?sumCurrentEmployeeBalances():calculateBalanceToDate());renderEmployeeTopSummary();$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
+ const currentWeeklyBalance=latestWeeklyBalance(selectedEmployee);$("heroBalance").textContent=currentWeeklyBalance?fmtMinutes(currentWeeklyBalance.balance):"—";$("heroBalance").className=currentWeeklyBalance?classBalance(currentWeeklyBalance.balance):"neutral";renderEmployeeTopSummary();$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
  renderEmployeeButtons();renderInactiveEmployees();renderRange();renderSelectedEmployeeDailyChart();loadPayrolls();
  ["calendar","list","balance","weekly","vacations"].forEach(v=>$(v+"View").classList.toggle("hidden",activeView!==v));
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===activeView));
