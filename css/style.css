@@ -216,3 +216,10 @@
 .he-row-actions{display:flex;gap:5px}
 @media(max-width:1150px){.he-layout{grid-template-columns:1fr}.he-form{max-width:none}}
 @media(max-width:650px){.he-form,.he-records{padding:15px}.he-filters{grid-template-columns:1fr}.he-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.he-calculation strong{font-size:17px}}
+
+/* Compacto en pantalla y en PDF: empleado y balance próximos */
+.employee-buttons{display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:8px;align-items:start}
+.employee-chip{gap:7px!important;padding:8px 10px!important;justify-content:flex-start!important}
+.employee-name{margin-right:0!important}
+.employee-balance{margin-left:2px!important}
+@media print{.balance-admin-row{display:grid;grid-template-columns:minmax(160px,1fr) auto;gap:8px;padding:7px 10px!important;margin:0!important}.balance-admin-row>div{display:flex;flex-direction:row;align-items:center;gap:10px}.balance-admin-row>div span{font-size:11px}.balances-list{gap:4px!important}}
