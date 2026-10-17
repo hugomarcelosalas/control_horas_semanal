@@ -32,6 +32,7 @@
   <button type="button" class="section-tab active" data-section="mainPanel">⏱️ Control horario</button>
   <button type="button" class="section-tab admin-tab" data-section="dashboardPanel">📈 Dashboard</button>
   <button type="button" class="section-tab admin-tab" data-section="balancesPanel">💰 Balances</button>
+  <button type="button" class="section-tab admin-tab" data-section="hugoErikaPanel">🧾 Hugo &amp; Erika</button>
   <button type="button" class="section-tab admin-tab" data-section="importExportPanel">📥 Importar / Exportar</button>
   <button type="button" class="section-tab" data-section="horariosPanel">📅 Horarios</button>
   <button type="button" class="section-tab" data-section="vacationsPanel">🏖️ Vacaciones</button>
@@ -60,6 +61,28 @@
         <div id="balancesList" class="balances-list"></div>
       </section>
 
+      <section id="hugoErikaPanel" class="panel hidden">
+        <div class="section-head admin-head"><div><h2>🧾 Hugo &amp; Erika</h2><p>Registro mensual de horas, importes y nóminas.</p></div></div>
+        <div class="he-layout">
+          <form id="heForm" class="he-form">
+            <div class="he-form-intro"><span class="he-kicker">NUEVO REGISTRO</span><h3>Liquidación mensual</h3><p>El total y el importe en mano se calculan automáticamente.</p></div>
+            <label>Empleado<select id="heEmployee" required><option value="Hugo">Hugo</option><option value="Erika">Erika</option></select></label>
+            <div class="two-col"><label>Mes<input id="heMonth" type="month" required></label><label>Horas trabajadas<input id="heHours" type="number" min="0" step="0.01" value="0" required></label></div>
+            <div class="two-col"><label>Horas festivas<input id="heFestiveHours" type="number" min="0" step="0.01" value="0" required></label><label>Horas extra<input id="heExtraHours" type="number" min="0" step="0.01" value="0" required></label></div>
+            <div class="two-col"><label>Precio hora (€)<input id="heRate" type="number" min="0" step="0.01" value="0" required></label><label>Precio hora festiva (€)<input id="heFestiveRate" type="number" min="0" step="0.01" value="0" required></label></div>
+            <div class="two-col"><label>Precio hora extra (€)<input id="heExtraRate" type="number" min="0" step="0.01" value="0" required></label><label>Ingreso extra (€)<input id="heExtraIncome" type="number" min="0" step="0.01" value="0" required></label></div>
+            <label>Nómina (€)<input id="hePayroll" type="number" min="0" step="0.01" value="0" required></label>
+            <div class="he-calculation"><div><span>Total calculado</span><strong id="heTotalPreview">0,00 €</strong></div><div><span>En mano</span><strong id="heHandPreview">0,00 €</strong></div></div>
+            <div class="he-form-actions"><button type="submit" class="primary" id="heSaveBtn">Guardar registro</button><button type="button" class="ghost hidden" id="heCancelEdit">Cancelar edición</button></div>
+          </form>
+          <div class="he-records">
+            <div class="he-records-head"><div><h3>Registros guardados</h3><p>Filtra por periodo y empleado; los totales se actualizan con los filtros.</p></div></div>
+            <div class="he-filters"><label>Periodo<input id="heFilterMonth" type="month"></label><label>Año<select id="heFilterYear"><option value="">Todos los años</option></select></label><label>Empleado<select id="heFilterEmployee"><option value="">Hugo y Erika</option><option value="Hugo">Hugo</option><option value="Erika">Erika</option></select></label></div>
+            <div class="he-summary"><div><span>Registros</span><strong id="heCount">0</strong></div><div><span>Total</span><strong id="heSumTotal">0,00 €</strong></div><div><span>Nóminas</span><strong id="heSumPayroll">0,00 €</strong></div><div><span>En mano</span><strong id="heSumHand">0,00 €</strong></div></div>
+            <div id="heRecordsList" class="he-records-list"></div>
+          </div>
+        </div>
+      </section>
       <section id="importExportPanel" class="panel hidden"><div class="section-head admin-head"><div><h2>📥 Importar / Exportar</h2><p>Importa datos de Notion y exporta registros, resúmenes y copias de seguridad. Solo para administradores.</p></div><button id="exportBalancesPdf" class="primary" type="button">📄 Exportar PDF de balances</button></div><div class="admin-data-grid"><div class="admin-data-card export-card"><div class="admin-data-icon">📤</div><div class="admin-data-content"><span class="admin-data-kicker">Exportar</span><h3>Exportar datos</h3><p>Descarga Excel y resúmenes mensuales o anuales.</p><div class="admin-data-actions"><button id="exportEmployeeExcel" class="data-action primary-action" type="button">📗 Excel empleado</button><button id="exportAllExcel" class="data-action" type="button">👥 Excel todos</button><button id="exportMonthlyExcel" class="data-action" type="button">📅 Resumen mensual</button><button id="exportAnnualExcel" class="data-action" type="button">📆 Resumen anual</button></div></div></div><div class="admin-data-card import-card"><div class="admin-data-icon">📥</div><div class="admin-data-content"><span class="admin-data-kicker">Importar</span><h3>Importar datos de Notion</h3><p>Selecciona un empleado activo y sube el ZIP o CSV exportado de Notion.</p><div class="admin-data-actions"><label class="data-action primary-action file-action" for="notionImportFile">📂 Elegir archivo</label><button id="importNotionBtn" class="data-action" type="button">⬆️ Importar Notion</button></div><input id="notionImportFile" class="data-file-input" type="file" accept=".zip,.csv"><div id="notionFileName" class="data-file-name">Ningún archivo seleccionado</div></div></div></div></section>
 
       <section id="dashboardPanel" class="panel hidden">
