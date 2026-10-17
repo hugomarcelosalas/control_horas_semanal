@@ -451,19 +451,19 @@ let vacationsViewMode='calendar';
 let vacationsMonth=new Date();vacationsMonth.setDate(1);
 function allVacationRows(){
  const rows=[];
- (db.users||[]).filter(u=>u.role==='employee').forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
+ (db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
  return rows.sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)||a.employeeName.localeCompare(b.employeeName));
 }
 function vacationFiltersInit(){
  const emp=$('vacFilterEmployee'),yr=$('vacFilterYear');if(!emp||!yr)return;
  const currentEmp=emp.value,currentYear=yr.value;
- emp.innerHTML='<option value="">Todos los empleados</option>'+(db.users||[]).filter(u=>u.role==='employee').map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
+ emp.innerHTML='<option value="">Todos los empleados</option>'+(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
  const years=[...new Set(allVacationRows().map(v=>v.year).filter(Boolean).concat([new Date().getFullYear()]))].sort((a,b)=>b-a);
  yr.innerHTML='<option value="">Todos los años</option>'+years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');
  emp.value=currentEmp;yr.value=currentYear;
 }
 function filteredVacationRows(){
- const all=allVacationRows().filter(v=>isAdmin()||v.username===currentUser.username);
+ const all=allVacationRows();
  const emp=$('vacFilterEmployee')?.value||'',year=$('vacFilterYear')?.value||'',from=$('vacFilterStart')?.value||'',to=$('vacFilterEnd')?.value||'',status=$('vacFilterStatus')?.value||'',q=($('vacFilterSearch')?.value||'').trim().toLowerCase(),today=dateKey(new Date());
  return all.filter(v=>{
   if(emp&&v.username!==emp)return false;
@@ -487,14 +487,14 @@ function renderVacationsSection(){
  vacationFiltersInit();
  $('vacationFilters')?.classList.toggle('hidden',!isAdmin());
  $('vacListBtn')?.classList.remove('hidden');
- if(!isAdmin()&&vacationsViewMode==='list')vacationsViewMode='calendar';
+ /* Los empleados también pueden consultar la lista compartida. */
  const y=vacationsMonth.getFullYear(),m=vacationsMonth.getMonth(),label=vacationsMonth.toLocaleDateString('es-ES',{month:'long',year:'numeric'});
  $('vacMonthLabel').textContent=label.charAt(0).toUpperCase()+label.slice(1);
  $('vacAddBtn').classList.toggle('hidden',!isAdmin());
  $('vacCalendarBtn').classList.toggle('primary',vacationsViewMode==='calendar');$('vacCalendarBtn').classList.toggle('ghost',vacationsViewMode!=='calendar');
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
- const rows=filteredVacationRows();
+ const visibleRows=filteredVacationRows();
  // El calendario es compartido para que todos los empleados puedan coordinarse; la lista sigue respetando la privacidad por usuario.
  const calendarRows=allVacationRows();
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
