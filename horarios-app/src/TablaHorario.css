@@ -682,11 +682,18 @@ button {
   margin: 10px 0 14px;
 }
 .vista-simple-semanal {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  gap: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
   margin-top: 14px;
 }
+.fila-dias-simple {
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
+}
+.fila-dias-superior { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.fila-dias-inferior { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .dia-simple-card {
   padding: 14px;
   border: 1px solid #cbd5e1;
@@ -706,7 +713,15 @@ button {
 .dia-simple-card li { display: flex; align-items: center; gap: 8px; font-weight: 650; }
 .simple-turno-horas { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px; color: #1e293b; font-size: 13px; font-weight: 750; white-space: nowrap; }
 .simple-turno-horas span { background: #e8f2ff; border: 1px solid #c7dcf7; border-radius: 6px; padding: 3px 7px; }
-@media (max-width: 520px) { .dia-simple-card li { align-items: flex-start; flex-wrap: wrap; } .simple-turno-horas { width: 100%; margin-left: 19px; } }
+@media (max-width: 900px) {
+  .fila-dias-superior { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .fila-dias-inferior { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .fila-dias-superior, .fila-dias-inferior { grid-template-columns: 1fr; }
+  .dia-simple-card li { align-items: flex-start; flex-wrap: wrap; }
+  .simple-turno-horas { width: 100%; margin-left: 19px; }
+}
 .punto-empleado { display: inline-block; flex: 0 0 11px; width: 11px; height: 11px; border-radius: 50%; border: 1px solid rgba(0,0,0,.15); }
 .sin-turnos-dia { color: #64748b; font-size: 13px; margin: 0; }
 .vista-mia-semanal { margin-top: 14px; }
