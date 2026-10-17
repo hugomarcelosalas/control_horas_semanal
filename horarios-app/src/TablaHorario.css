@@ -1097,3 +1097,17 @@ button {
   min-width: 1200px !important;
   table-layout: auto !important;
 }
+
+
+/* Vista simple: separar turnos por puesto y evitar que las horas se corten */
+.simple-categorias { display: flex; flex-direction: column; gap: 14px; }
+.simple-categoria { min-width: 0; }
+.simple-categoria + .simple-categoria { border-top: 1px solid #e2e8f0; padding-top: 10px; }
+.simple-categoria h4 { margin: 0 0 7px; color: #64748b; font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.dia-simple-card li { min-width: 0; gap: 7px; }
+.dia-simple-card li > strong { min-width: 0; overflow-wrap: anywhere; }
+.simple-turno-horas { flex-shrink: 0; }
+@media (min-width: 901px) {
+  .fila-dias-superior { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .fila-dias-inferior { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
