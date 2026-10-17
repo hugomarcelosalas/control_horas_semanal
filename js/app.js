@@ -495,7 +495,7 @@ function renderVacationsSection(){
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
  const visibleRows=filteredVacationRows();
- // El calendario es compartido para que todos los empleados puedan coordinarse; la lista sigue respetando la privacidad por usuario.
+ // El calendario y la lista muestran las vacaciones de todos los empleados activos; solo administración puede editar.
  const calendarRows=allVacationRows();
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');
