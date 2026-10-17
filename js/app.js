@@ -1,4 +1,18 @@
 const $=id=>document.getElementById(id);
+// Navegación registrada al inicio para que no dependa de la inicialización de otros módulos.
+document.getElementById('sectionTabs')?.addEventListener('click',e=>{
+  const tab=e.target.closest('.section-tab');
+  if(!tab)return;
+  e.preventDefault();
+  const sectionId=tab.dataset.section;
+  if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel'].includes(sectionId) && window.__CONTROL_HORARIO_USER__?.role!=='admin')return;
+  if(typeof showSection==='function')showSection(sectionId);
+  else {
+    document.querySelectorAll('#app main > section.panel').forEach(p=>p.classList.toggle('hidden',p.id!==sectionId));
+    document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t===tab));
+  }
+},true);
+
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
@@ -619,18 +633,6 @@ function showSection(sectionId){
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();
   if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
-}
-const sectionTabsNav=$('sectionTabs');
-if(sectionTabsNav){
-  sectionTabsNav.addEventListener('click',e=>{
-    const tab=e.target.closest('.section-tab');
-    if(!tab)return;
-    e.preventDefault();
-    e.stopPropagation();
-    const sectionId=tab.dataset.section;
-    if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel'].includes(sectionId)&&!isAdmin())return;
-    showSection(sectionId);
-  },true);
 }
 document.addEventListener('click',e=>{
   if(e.target.closest('#horariosBtn')){e.preventDefault();showSection('horariosPanel')}
