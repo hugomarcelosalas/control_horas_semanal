@@ -547,7 +547,7 @@ function openVacationEditForm(username,id){
  const v=(db.vacations?.[username]||[]).find(x=>String(x.id)===String(id));if(!v)return;
  editingVacationRef={username,id:String(id)};
  const emp=$('adminVacationEmployee');
- emp.innerHTML=(db.users||[]).filter(u=>u.role==='employee').map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
+ emp.innerHTML=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
  emp.value=username;$('adminVacationStart').value=v.start;$('adminVacationEnd').value=v.end;$('adminVacationYear').value=v.year||String(v.start||'').slice(0,4);
  $('adminVacationCurrentFile').textContent=v.filename||'No hay PDF adjunto';$('adminVacationPdf').value='';$('adminVacationDriveLink').value=v.driveLink||'';
  $('adminVacationEditTitle').textContent='Editar vacaciones';$('adminVacationEditModal').classList.remove('hidden');
