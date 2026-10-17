@@ -66,7 +66,7 @@ function restoreBackup(file){if(!isAdmin())return;const reader=new FileReader();
 async function loadAuditHistory(){if(!isAdmin())return;try{const rows=await api('/api/audit');const box=$("auditHistory");if(!box)return;box.innerHTML=rows.length?rows.slice(0,100).map(x=>'<div class="audit-row"><strong>'+String(x.actorName||x.actor||'Administrador')+'</strong><span>'+new Date(x.at).toLocaleString('es-ES')+'</span><p>'+String(x.message||'Cambio registrado')+'</p></div>').join(''):'<div class="muted">No hay cambios registrados todavía.</div>'}catch(e){console.warn(e)}}
 function setupExcelAndReview(){const a=$("exportEmployeeExcel"),b=$("exportAllExcel"),c=$("exportMonthlyExcel"),d=$("exportAnnualExcel"),rev=$("weekReviewBtn"),ah=$("auditRefreshBtn");if(a)a.onclick=exportEmployeeExcel;if(b)b.onclick=exportAllExcel;if(c)c.onclick=exportMonthlyExcel;if(d)d.onclick=exportAnnualExcel;if(rev)rev.onclick=reviewCurrentWeek;if(ah)ah.onclick=()=>{$("auditHistory")?.classList.toggle("hidden");loadAuditHistory()};const nf=$("notionImportFile"),nl=$("notionFileName");if(nf&&nl)nf.onchange=()=>{nl.textContent=nf.files?.[0]?.name||"Ningún archivo seleccionado"}}
 function renderLastBackupLabel(){const el=$("lastBackupLabel");if(!el)return;const v=localStorage.getItem("control_horario_last_backup");el.textContent=v?"Última copia: "+new Date(v).toLocaleString("es-ES",{dateStyle:"short",timeStyle:"short"}):"Última copia: todavía no creada"}
-function setupBackupControls(){if(!isAdmin())return;const panel=$("adminPanel");if(!panel)return;let box=$("backupTools");if(!box){box=document.createElement("div");box.id="backupTools";box.className="backup-tools";box.innerHTML='<div><strong>💾 Copias de seguridad</strong><p class="muted">Guarda una copia completa antes de migrar el servidor o hacer cambios importantes.</p><div id="lastBackupLabel" class="muted"></div></div><div class="backup-actions"><button type="button" class="small-btn" id="exportBackupBtn">⬇️ Crear backup</button><label class="small-btn" for="restoreBackupFile">↩️ Restaurar copia</label><input id="restoreBackupFile" type="file" accept=".json,application/json" hidden></div>';panel.appendChild(box)}$("exportBackupBtn").onclick=()=>{makeBackup();renderLastBackupLabel()};renderLastBackupLabel();$("restoreBackupFile").onchange=e=>{const file=e.target.files?.[0];if(file)restoreBackup(file)}}
+function setupBackupControls(){if(!isAdmin())return;const panel=$("importExportPanel");if(!panel)return;let box=$("backupTools");if(!box){box=document.createElement("div");box.id="backupTools";box.className="backup-tools";box.innerHTML='<div><strong>💾 Copias de seguridad</strong><p class="muted">Guarda una copia completa antes de migrar el servidor o hacer cambios importantes.</p><div id="lastBackupLabel" class="muted"></div></div><div class="backup-actions"><button type="button" class="small-btn" id="exportBackupBtn">⬇️ Crear backup</button><label class="small-btn" for="restoreBackupFile">↩️ Restaurar copia</label><input id="restoreBackupFile" type="file" accept=".json,application/json" hidden></div>';panel.appendChild(box)}$("exportBackupBtn").onclick=()=>{makeBackup();renderLastBackupLabel()};renderLastBackupLabel();$("restoreBackupFile").onchange=e=>{const file=e.target.files?.[0];if(file)restoreBackup(file)}}
 
 
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const u=$("username").value.trim().toLowerCase(),p=$("password").value;try{const r=await api('/api/login',{method:'POST',body:JSON.stringify({username:u,password:p})});authToken=r.token;currentUser=r.user;window.__CONTROL_HORARIO_TOKEN__=authToken;window.__CONTROL_HORARIO_USER__=currentUser;window.dispatchEvent(new Event('control-horario-auth'));
@@ -601,18 +601,24 @@ const clearVacationFilters=$('vacFilterClear');if(clearVacationFilters)clearVaca
 
 function updateSectionTabsVisibility(){
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
+  $('importExportPanel')?.classList.toggle('hidden', !isAdmin() || $('importExportPanel').dataset.active !== 'true');
 }
 
 function showSection(sectionId){
-  ['mainPanel','dashboardPanel','balancesPanel','horariosPanel','vacationsPanel','personalSpacePanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  if(sectionId==='importExportPanel'&&!isAdmin())return;
+  if(['dashboardPanel','balancesPanel'].includes(sectionId)&&!isAdmin())return;
+  ['mainPanel','dashboardPanel','balancesPanel','importExportPanel','horariosPanel','vacationsPanel','personalSpacePanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  const importPanel=$('importExportPanel');
+  if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();
+  if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.section-tab');
-  if(tab){e.preventDefault();const s=tab.dataset.section;if((s==='dashboardPanel'||s==='balancesPanel')&&!isAdmin())return;showSection(s);return}
+  if(tab){e.preventDefault();const s=tab.dataset.section;if((s==='dashboardPanel'||s==='balancesPanel'||s==='importExportPanel')&&!isAdmin())return;showSection(s);return}
   if(e.target.closest('#horariosBtn')){e.preventDefault();showSection('horariosPanel')}
   else if(e.target.closest('#dashboardBtn')){e.preventDefault();showSection('dashboardPanel')}
   else if(e.target.closest('#balancesBtn')){e.preventDefault();showSection('balancesPanel')}
