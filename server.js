@@ -7,7 +7,7 @@ const { Readable } = require('stream');
 const path = require('path');
 
 const app = express();
-app.use(express.json({limit:'15mb'}));
+app.use(express.json({limit:'50mb'}));
 app.use(express.static(__dirname));
 app.use('/horarios', express.static(path.join(__dirname,'horarios-app','build')));
 
