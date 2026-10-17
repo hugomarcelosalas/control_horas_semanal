@@ -110,6 +110,7 @@ function render(){
   loadPlannedSummary();
  if(!selectedEmployee)return;ensureUserData(selectedEmployee.username);
  $("employeeTitle").textContent=selectedEmployee.name;$("employeeSubtitle").textContent=`Jornada contratada: ${selectedEmployee.weeklyHours} horas semanales`;
+ const controlSelector=$("controlEmployeeSelector"),controlSelect=$("controlEmployeeSelect");if(controlSelector&&controlSelect){controlSelector.classList.toggle("hidden",!isAdmin());if(isAdmin()){const activeEmployees=db.users.filter(u=>u.role==="employee"&&u.active!==false);controlSelect.innerHTML=activeEmployees.map(u=>`<option value="${u.username}">${u.name}</option>`).join("");controlSelect.value=selectedEmployee.username;controlSelect.onchange=()=>{selectedEmployee=db.users.find(u=>u.username===controlSelect.value)||selectedEmployee;render()};}}
  const currentWeeklyBalance=latestWeeklyBalance(selectedEmployee);$("heroBalance").textContent=currentWeeklyBalance?fmtMinutes(currentWeeklyBalance.balance):"—";$("heroBalance").className=currentWeeklyBalance?classBalance(currentWeeklyBalance.balance):"neutral";renderEmployeeTopSummary();$("monthLabel").textContent=currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"});
  renderEmployeeButtons();renderInactiveEmployees();renderRange();renderSelectedEmployeeDailyChart();loadPayrolls();
  ["calendar","list","balance","weekly","vacations"].forEach(v=>$(v+"View").classList.toggle("hidden",activeView!==v));
