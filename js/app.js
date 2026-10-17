@@ -13,6 +13,19 @@ document.getElementById('sectionTabs')?.addEventListener('click',e=>{
   }
 },true);
 
+// Acciones críticas con delegación temprana: no dependen de que otros módulos hayan enlazado sus botones.
+document.addEventListener('click',e=>{
+  const target=e.target;
+  const pdf=target.closest('#exportBalancesPdf');
+  if(pdf){e.preventDefault();e.stopImmediatePropagation();if(typeof exportBalancesPdf==='function')exportBalancesPdf();return;}
+  const inactive=target.closest('#toggleInactiveEmployees');
+  if(inactive){e.preventDefault();e.stopImmediatePropagation();inactiveEmployeesVisible=!inactiveEmployeesVisible;if(typeof renderInactiveEmployees==='function')renderInactiveEmployees();return;}
+  const calendar=target.closest('#vacCalendarBtn');
+  if(calendar){e.preventDefault();e.stopImmediatePropagation();if(typeof vacationsViewMode!=='undefined')vacationsViewMode='calendar';if(typeof renderVacationsSection==='function')renderVacationsSection();return;}
+  const list=target.closest('#vacListBtn');
+  if(list){e.preventDefault();e.stopImmediatePropagation();if(typeof vacationsViewMode!=='undefined')vacationsViewMode='list';if(typeof renderVacationsSection==='function')renderVacationsSection();return;}
+},true);
+
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
