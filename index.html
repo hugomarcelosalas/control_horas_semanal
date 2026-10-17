@@ -66,11 +66,10 @@
         <div class="he-layout">
           <form id="heForm" class="he-form">
             <div class="he-form-intro"><span class="he-kicker">NUEVO REGISTRO</span><h3>Liquidación mensual</h3><p>El total y el importe en mano se calculan automáticamente.</p></div>
-            <label>Empleado<select id="heEmployee" required><option value="Hugo">Hugo</option><option value="Erika">Erika</option></select></label>
-            <div class="two-col"><label>Mes<input id="heMonth" type="month" required></label><label>Horas trabajadas<input id="heHours" type="number" min="0" step="0.01" value="0" required></label></div>
-            <div class="two-col"><label>Horas festivas<input id="heFestiveHours" type="number" min="0" step="0.01" value="0" required></label><label>Horas extra<input id="heExtraHours" type="number" min="0" step="0.01" value="0" required></label></div>
-            <div class="two-col"><label>Precio hora (€)<input id="heRate" type="number" min="0" step="0.01" value="0" required></label><label>Precio hora festiva (€)<input id="heFestiveRate" type="number" min="0" step="0.01" value="0" required></label></div>
-            <div class="two-col"><label>Precio hora extra (€)<input id="heExtraRate" type="number" min="0" step="0.01" value="0" required></label><label>Ingreso extra (€)<input id="heExtraIncome" type="number" min="0" step="0.01" value="0" required></label></div>
+            <div class="two-col"><label>Periodo<input id="heMonth" type="month" required></label><label>Empleado<select id="heEmployee" required><option value="Hugo">Hugo</option><option value="Erika">Erika</option></select></label></div>
+            <div class="two-col"><label>Horas trabajadas<input id="heHours" type="number" min="0" step="0.01" value="0" required></label><label>Precio hora (€)<input id="heRate" type="number" min="0" step="0.01" value="0" required></label></div>
+            <div class="two-col"><label>Hs festivo<input id="heFestiveHours" type="number" min="0" step="0.01" value="0" required></label><label>Precio festivo (€)<input id="heFestiveRate" type="number" min="0" step="0.01" value="0" required></label></div>
+            <label>Ingreso extra (€)<input id="heExtraIncome" type="number" min="0" step="0.01" value="0" required></label>
             <label>Nómina (€)<input id="hePayroll" type="number" min="0" step="0.01" value="0" required></label>
             <div class="he-calculation"><div><span>Total calculado</span><strong id="heTotalPreview">0,00 €</strong></div><div><span>En mano</span><strong id="heHandPreview">0,00 €</strong></div></div>
             <div class="he-form-actions"><button type="submit" class="primary" id="heSaveBtn">Guardar registro</button><button type="button" class="ghost hidden" id="heCancelEdit">Cancelar edición</button></div>
