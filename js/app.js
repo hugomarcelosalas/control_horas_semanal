@@ -1,4 +1,7 @@
 const $=id=>document.getElementById(id);
+// Estado de vacaciones inicializado antes de registrar manejadores de clics.
+let vacationsViewMode='calendar';
+let vacationsMonth=new Date();vacationsMonth.setDate(1);
 // Navegación registrada al inicio para que no dependa de la inicialización de otros módulos.
 document.getElementById('sectionTabs')?.addEventListener('click',e=>{
   const tab=e.target.closest('.section-tab');
@@ -27,9 +30,6 @@ document.addEventListener('click',e=>{
 },true);
 
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
-// Estado de vacaciones inicializado antes de registrar manejadores de clics.
-let vacationsViewMode='calendar';
-let vacationsMonth=new Date();vacationsMonth.setDate(1);
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
