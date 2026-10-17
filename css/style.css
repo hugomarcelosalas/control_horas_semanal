@@ -159,3 +159,21 @@
 .vac-cancelled-badge{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:5px;background:#fee2e2;color:#b91c1c;font-size:11px;font-weight:800}
 
 .my-vacations-list{display:flex;flex-direction:column;gap:9px}.my-vacation-row{display:flex;flex-direction:column;align-items:flex-start;gap:6px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}.my-vacation-row>span{font-size:12px;color:#64748b}.my-vacation-row a{margin-top:3px}
+
+
+/* Nóminas: formulario de administración y listas por periodo */
+.payroll-admin{grid-column:1/-1;background:linear-gradient(145deg,#fff,#f8faff);border-color:#dbe4f0}
+.payroll-form-heading .personal-space-card-icon{background:#e0e7ff}
+.payroll-form-heading h3{margin:0 0 7px;font-size:20px}
+.payroll-form-heading p{margin:0 0 18px;color:#64748b;font-size:13px}
+.payroll-upload-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:end}
+.payroll-upload-form label{margin:0;min-width:0;gap:7px}
+.payroll-upload-form input,.payroll-upload-form select{width:100%;min-width:0;padding:11px 12px;border:1px solid #cbd5e1;border-radius:9px;background:#fff;font:inherit;color:#172033}
+.payroll-upload-form button{min-height:42px;align-self:end}
+.payroll-list{display:flex;flex-direction:column;gap:8px}
+.payroll-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:13px;border:1px solid #e2e8f0;border-radius:11px;background:#fff}
+.payroll-period strong{display:block;font-size:14px;color:#172033}
+.payroll-period span{display:block;font-size:12px;color:#64748b;margin-top:4px}
+.payroll-amount{font-weight:800;font-variant-numeric:tabular-nums;color:#172033;white-space:nowrap}
+.payroll-actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+@media(max-width:600px){.payroll-upload-form{grid-template-columns:1fr}.payroll-row{grid-template-columns:1fr auto}.payroll-amount{grid-column:1;grid-row:2}.payroll-actions{grid-column:2;grid-row:1/3;flex-direction:column;align-items:stretch}}
