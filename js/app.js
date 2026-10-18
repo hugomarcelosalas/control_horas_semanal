@@ -558,7 +558,7 @@ function filteredVacationRows(){
   return true;
  });
 }
-function inferVacationWeek(username,v){const rows=(db.vacations?.[username]||[]).filter(x=>(Number(x.year)||Number(String(x.start||'').slice(0,4)))===(Number(v.year)||Number(String(v.start||'').slice(0,4))).slice().sort((a,b)=>String(a.start).localeCompare(String(b.start)));const idx=rows.findIndex(x=>String(x.id)===String(v.id));return Math.min(4,Math.max(1,idx+1))}
+function inferVacationWeek(username,v){const year=Number(v.year)||Number(String(v.start||'').slice(0,4));const rows=(db.vacations?.[username]||[]).filter(x=>(Number(x.year)||Number(String(x.start||'').slice(0,4)))===year).slice().sort((a,b)=>String(a.start).localeCompare(String(b.start)));const idx=rows.findIndex(x=>String(x.id)===String(v.id));return Math.min(4,Math.max(1,idx+1))}
 function renderMyVacations(){
  const box=$('myVacationsBox');if(!box||!currentUser)return;
  const target=isAdmin()?selectedEmployee:currentUser;if(!target)return;
