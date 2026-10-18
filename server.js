@@ -80,9 +80,8 @@ app.put('/api/state',requireAuth,async(req,res)=>{try{const old=await getDb(), i
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
     if(!same(old.locks,incoming.locks)||!same(old.weekly,incoming.weekly))return res.status(403).json({error:'Solo el admin puede modificar bloqueos y la lista semanal'});
     for(const [username,rows] of Object.entries(incoming.vacations||{})){const oldRows=old.vacations?.[username]||[];incoming.vacations[username]=(rows||[]).map(v=>{const prior=oldRows.find(x=>String(x.id)===String(v.id));if(prior)return {...v,adminObservations:prior.adminObservations||''};const {adminObservations,...clean}=v;return clean;});}
-    for(const key of ['records','vacations']){
-      for(const username of Object.keys(incoming[key]||{})) if(username!==me.username && !same(old[key]?.[username]||{},incoming[key]?.[username]||{})) return res.status(403).json({error:'No tienes permiso para modificar otros empleados'});
-    }
+    incoming.vacations=old.vacations||{};
+    for(const username of Object.keys(incoming.records||{})) if(username!==me.username && !same(old.records?.[username]||{},incoming.records?.[username]||{})) return res.status(403).json({error:'No tienes permiso para modificar otros empleados'});
   }
   const oldByUser=new Map(old.users.map(u=>[u.username,u]));
   incoming.users=(incoming.users||[]).map(u=>({...u,passwordHash:oldByUser.get(u.username)?.passwordHash}));
