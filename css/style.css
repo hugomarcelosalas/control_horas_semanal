@@ -352,3 +352,6 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 .invoice-row-actions{display:flex;gap:6px;flex-wrap:wrap}
 @media(max-width:900px){.invoice-layout{grid-template-columns:1fr;padding:14px}.invoice-form{grid-template-columns:repeat(2,minmax(0,1fr))}.invoice-form label{min-width:0}.invoice-form .invoice-notes,.invoice-form .invoice-actions{grid-column:1/-1}}
 @media(max-width:560px){.invoice-form{grid-template-columns:1fr}.invoice-form .invoice-notes,.invoice-form .invoice-actions{grid-column:auto}.invoice-table{min-width:720px}.invoice-layout{padding:10px;gap:14px}}
+
+.invoice-import-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.invoice-import-help{margin:-3px 0 12px;color:#64748b;font-size:12px}
