@@ -558,6 +558,7 @@ function filteredVacationRows(){
   return true;
  });
 }
+function inferVacationWeek(username,v){const rows=(db.vacations?.[username]||[]).filter(x=>(Number(x.year)||Number(String(x.start||'').slice(0,4)))===(Number(v.year)||Number(String(v.start||'').slice(0,4))).slice().sort((a,b)=>String(a.start).localeCompare(String(b.start)));const idx=rows.findIndex(x=>String(x.id)===String(v.id));return Math.min(4,Math.max(1,idx+1))}
 function renderMyVacations(){
  const box=$('myVacationsBox');if(!box||!currentUser)return;
  const target=isAdmin()?selectedEmployee:currentUser;if(!target)return;
@@ -603,7 +604,7 @@ function addVacationAdmin(){
  const sel=$('createVacationEmployee');
  sel.innerHTML=employees.map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
  const today=dateKey(new Date());
- $('createVacationStart').value='';$('createVacationEnd').value='';$('createVacationYear').value=today.slice(0,4);
+ $('createVacationStart').value='';$('createVacationEnd').value='';$('createVacationYear').value=today.slice(0,4);$('createVacationWeek').value='1';
  $('createVacationDriveLink').value='';$('createVacationObservations').value='';$('createVacationPdf').value='';$('createVacationFileName').textContent='Ningún PDF seleccionado';
  $('adminVacationCreateModal').classList.remove('hidden');
 }
@@ -614,9 +615,10 @@ $('createVacationStart').addEventListener('change',()=>{if($('createVacationStar
 $('createVacationPdf').addEventListener('change',()=>{$('createVacationFileName').textContent=$('createVacationPdf').files?.[0]?.name||'Ningún PDF seleccionado'});
 $('adminVacationCreateForm').onsubmit=async e=>{
  e.preventDefault();if(!isAdmin())return;
- const username=$('createVacationEmployee').value,start=$('createVacationStart').value,end=$('createVacationEnd').value,year=Number($('createVacationYear').value),driveLink=$('createVacationDriveLink').value.trim(),adminObservations=$('createVacationObservations').value.trim(),file=$('createVacationPdf').files?.[0];
+ const username=$('createVacationEmployee').value,start=$('createVacationStart').value,end=$('createVacationEnd').value,year=Number($('createVacationYear').value),week=Number($('createVacationWeek').value),driveLink=$('createVacationDriveLink').value.trim(),adminObservations=$('createVacationObservations').value.trim(),file=$('createVacationPdf').files?.[0];
  if(!username||!start||!end||end<start)return alert('Comprueba el empleado y las fechas.');
  if(!Number.isInteger(year)||year<2000||year>2100)return alert('Introduce un año válido.');
+ if(!Number.isInteger(week)||week<1||week>4)return alert('Selecciona la semana de vacaciones (1 a 4).');
  if(driveLink&&!/^https:\/\/(drive\.google\.com|docs\.google\.com)\//i.test(driveLink))return alert('Introduce un enlace válido de Google Drive.');
  if(file&&file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser PDF.');
  if(file&&file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
@@ -625,7 +627,7 @@ $('adminVacationCreateForm').onsubmit=async e=>{
  const btn=$('saveAdminVacationCreate');btn.disabled=true;btn.textContent='Guardando…';
  try{
   let fileData={};if(file){const pdfData=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=reject;reader.readAsDataURL(file)});fileData={filename:file.name,pdfData,mimeType:'application/pdf'}}
-  ensureUserData(username);db.vacations[username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,driveLink,adminObservations,...fileData,createdAt:new Date().toISOString()});
+  ensureUserData(username);db.vacations[username].push({id:crypto.randomUUID?crypto.randomUUID():String(Date.now()),start,end,year,week,driveLink,adminObservations,...fileData,createdAt:new Date().toISOString()});
   await saveDB();closeVacationCreateForm();vacationFiltersInit();renderVacationsSection();
  }catch(err){alert('No se pudieron guardar las vacaciones: '+err.message)}
  finally{btn.disabled=false;btn.textContent='Guardar vacaciones'}
@@ -638,7 +640,7 @@ function openVacationEditForm(username,id){
  editingVacationRef={username,id:String(id)};
  const emp=$('adminVacationEmployee');
  emp.innerHTML=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+'</option>').join('');
- emp.value=username;$('adminVacationStart').value=v.start;$('adminVacationEnd').value=v.end;$('adminVacationYear').value=v.year||String(v.start||'').slice(0,4);
+ emp.value=username;$('adminVacationStart').value=v.start;$('adminVacationEnd').value=v.end;$('adminVacationYear').value=v.year||String(v.start||'').slice(0,4);$('adminVacationWeek').value=String(v.week||inferVacationWeek(username,v));
  $('adminVacationCurrentFile').textContent=v.filename||'No hay PDF adjunto';$('adminVacationPdf').value='';$('adminVacationDriveLink').value=v.driveLink||'';$('adminVacationObservations').value=v.adminObservations||'';
  $('adminVacationEditTitle').textContent='Editar vacaciones';$('adminVacationEditModal').classList.remove('hidden');
 }
@@ -647,9 +649,10 @@ $('closeAdminVacationEdit').onclick=closeVacationEditForm;$('cancelAdminVacation
 $('adminVacationEditModal').addEventListener('click',e=>{if(e.target.id==='adminVacationEditModal')closeVacationEditForm()});
 $('adminVacationEditForm').onsubmit=async e=>{
  e.preventDefault();if(!isAdmin()||!editingVacationRef)return;
- const {username,id}=editingVacationRef,start=$('adminVacationStart').value,end=$('adminVacationEnd').value,year=Number($('adminVacationYear').value),target=$('adminVacationEmployee').value,file=$('adminVacationPdf').files?.[0],driveLink=$('adminVacationDriveLink').value.trim(),adminObservations=$('adminVacationObservations').value.trim();
+ const {username,id}=editingVacationRef,start=$('adminVacationStart').value,end=$('adminVacationEnd').value,year=Number($('adminVacationYear').value),week=Number($('adminVacationWeek').value),target=$('adminVacationEmployee').value,file=$('adminVacationPdf').files?.[0],driveLink=$('adminVacationDriveLink').value.trim(),adminObservations=$('adminVacationObservations').value.trim();
  if(!start||!end||end<start)return alert('Comprueba las fechas de inicio y fin.');
  if(!Number.isInteger(year)||year<2000||year>2100)return alert('Introduce un año válido.');
+ if(!Number.isInteger(week)||week<1||week>4)return alert('Selecciona la semana de vacaciones (1 a 4).');
  if(!target||!(db.users||[]).some(u=>u.username===target&&u.role==='employee'))return alert('Selecciona un empleado válido.');
  if(file&&file.type!=='application/pdf'&&!file.name.toLowerCase().endsWith('.pdf'))return alert('El adjunto debe ser un PDF.');
  if(file&&file.size>8*1024*1024)return alert('El PDF no puede superar 8 MB.');
@@ -659,7 +662,7 @@ $('adminVacationEditForm').onsubmit=async e=>{
   const old=(db.vacations?.[username]||[]).find(v=>String(v.id)===id);if(!old)return;
   db.vacations[username]=(db.vacations[username]||[]).filter(v=>String(v.id)!==id);
   ensureUserData(target);
-  db.vacations[target].push({...old,start,end,year,driveLink,adminObservations,...fileData});
+  db.vacations[target].push({...old,start,end,year,week,driveLink,adminObservations,...fileData});
   await saveDB();closeVacationEditForm();vacationFiltersInit();renderVacationsSection();renderMyVacations();
  }catch(err){alert('No se pudieron guardar las vacaciones: '+err.message)}
  finally{btn.disabled=false;btn.textContent='Guardar cambios'}
