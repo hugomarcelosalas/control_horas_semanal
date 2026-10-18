@@ -567,7 +567,7 @@ function renderMyVacations(){
  box.querySelectorAll('[data-space-vac-edit]').forEach(b=>b.onclick=()=>openVacationEditForm(target.username,b.dataset.spaceVacEdit));
  box.querySelectorAll('[data-space-vac-delete]').forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm('¿Eliminar este periodo de vacaciones de '+target.name+'?'))return;db.vacations[target.username]=(db.vacations[target.username]||[]).filter(v=>String(v.id)!==b.dataset.spaceVacDelete);try{await saveDB();renderMyVacations();renderVacationsSection()}catch(e){alert(e.message)}});
 }
-async function refreshPrivateRequests(){try{const data=await api('/api/state');db.dayOffRequests=data.db?.dayOffRequests||[];}catch(e){console.warn('No se pudieron actualizar las solicitudes',e)}}
+async function refreshPrivateRequests(){try{const data=await api('/api/state');if(Array.isArray(data.dayOffRequests))db.dayOffRequests=data.dayOffRequests;}catch(e){console.warn('No se pudieron actualizar las solicitudes',e)}}
 function requestStatusLabel(status){return status==='approved'?'Aceptada':status==='rejected'?'Rechazada':'Pendiente'}
 function requestFlags(r){return Array.isArray(r.statuses)?r.statuses:(r.status&&r.status!=='pending'?[r.status]:[])}
 function requestFlagsLabel(r){const a=requestFlags(r);return [a.includes('read')?'Leída':'',a.includes('approved')?'Aceptada':'',a.includes('rejected')?'Rechazada':''].filter(Boolean).join(' · ')||'Pendiente'}
