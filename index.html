@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control horario</title>
-  <link rel="stylesheet" href="css/style.css?v=20261018-historycolors1">
+  <link rel="stylesheet" href="css/style.css?v=20261018-professional1">
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -124,6 +124,7 @@
           <label>Empleado<select id="adminVacationEmployee" required></select></label>
           <div class="two-col"><label>Fecha de inicio<input id="adminVacationStart" type="date" required></label><label>Fecha de fin<input id="adminVacationEnd" type="date" required></label></div>
           <label>Año de vacaciones<input id="adminVacationYear" type="number" min="2000" max="2100" required></label>
+          <label>Observaciones (solo administración)<textarea id="adminVacationObservations" rows="3" placeholder="Notas internas sobre este periodo"></textarea></label>
           <label>Enlace de Google Drive<input id="adminVacationDriveLink" type="url" placeholder="https://drive.google.com/..." inputmode="url"></label>
           <p class="vacation-form-hint">Pega el enlace compartido del documento. Comprueba que los permisos de Drive permiten acceder a las personas autorizadas.</p>
           <div class="vacation-file-field"><div><strong>PDF adjunto (opcional)</strong><p id="adminVacationCurrentFile">No hay documento adjunto</p></div><label class="file-pick-button">Elegir PDF<input id="adminVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
@@ -139,6 +140,7 @@
           <label>Empleado<select id="createVacationEmployee" required></select></label>
           <div class="two-col"><label>Fecha de inicio<input id="createVacationStart" type="date" required></label><label>Fecha de fin<input id="createVacationEnd" type="date" required></label></div>
           <label>Año de vacaciones<input id="createVacationYear" type="number" min="2000" max="2100" required></label>
+          <label>Observaciones (solo administración)<textarea id="createVacationObservations" rows="3" placeholder="Notas internas sobre este periodo"></textarea></label>
           <label>Enlace de Google Drive<input id="createVacationDriveLink" type="url" placeholder="https://drive.google.com/..." inputmode="url"></label>
           <p class="vacation-form-hint">Pega el enlace compartido y revisa que tenga los permisos adecuados.</p>
           <div class="vacation-file-field"><div><strong>PDF adjunto (opcional)</strong><p id="createVacationFileName">Ningún PDF seleccionado</p></div><label class="file-pick-button">Elegir PDF<input id="createVacationPdf" type="file" accept="application/pdf,.pdf"></label></div>
@@ -215,6 +217,6 @@
     <p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿Eliminar usuario?</h2><p id="confirmText"></p>
     <div class="modal-actions"><button id="cancelConfirm" class="ghost">Cancelar</button><button id="confirmDelete" class="danger">Sí, eliminar</button></div>
   </div></div>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261018-adminemployeeselector1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261018-vacobservations1"></script>
 </body>
 </html>
