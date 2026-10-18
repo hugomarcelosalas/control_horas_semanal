@@ -154,7 +154,7 @@ function renderInactiveEmployees(){
 }
 function renderCalendar(){
  const y=currentDate.getFullYear(),m=currentDate.getMonth(),first=new Date(y,m,1),days=new Date(y,m+1,0).getDate(),start=(first.getDay()+6)%7,recs=userRecords(),locks=userLocks();
- let h=`<div class="calendar">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>`<div class="weekday">${x}</div>`).join("")}`;
+ let h=`${!isAdmin()?'<div class="day-off-request-tools"><button type="button" id="requestDayOffBtn" class="primary">＋ Solicitar día libre</button><div id="dayOffRequestForm" class="day-off-request-form hidden"><h3>Solicitar día libre</h3><form id="dayOffForm"><div class="two-col"><label>Fecha de inicio<input id="dayOffStart" type="date" required></label><label>Fecha de fin<input id="dayOffEnd" type="date" required></label></div><label>Prioridad<select id="dayOffPriority" required><option value="green">🟢 Verde · Si se puede</option><option value="yellow">🟡 Amarillo · Es importante</option><option value="red">🔴 Rojo · Realmente necesito el día</option></select></label><label>Observaciones<textarea id="dayOffObservations" rows="3" maxlength="1000" placeholder="Cuéntanos el motivo o cualquier detalle importante"></textarea></label><div class="modal-actions"><button type="button" id="cancelDayOff" class="ghost">Cancelar</button><button type="submit" class="primary">Enviar solicitud</button></div></form></div></div>':''}<div class="calendar">${["Lun","Mar","Mié","Jue","Vie","Sáb","Dom"].map(x=>`<div class="weekday">${x}</div>`).join("")}`;
  for(let i=0;i<start;i++)h+='<div class="day empty"></div>';
  for(let d=1;d<=days;d++){
   const k=`${y}-${pad(m+1)}-${pad(d)}`,r=recs[k]||{},mins=totalMinutes(r),locked=isDayLocked(k),monthLocked=isMonthLocked(k),vac=vacationForDate(k),today=k===dateKey(new Date());
@@ -166,6 +166,7 @@ function renderCalendar(){
    </div></div>`;
  }
  $("calendarView").innerHTML=h+"</div>";
+ const requestBtn=$("requestDayOffBtn"),requestForm=$("dayOffRequestForm");if(requestBtn&&requestForm){requestBtn.onclick=()=>requestForm.classList.toggle("hidden");$("cancelDayOff").onclick=()=>requestForm.classList.add("hidden");$("dayOffForm").onsubmit=async e=>{e.preventDefault();const start=$("dayOffStart").value,end=$("dayOffEnd").value;if(!start||!end||end<start){alert("La fecha de fin debe ser igual o posterior a la fecha de inicio.");return}try{await api("/api/day-off-requests",{method:"POST",body:JSON.stringify({start,end,priority:$("dayOffPriority").value,observations:$("dayOffObservations").value})});alert("Solicitud enviada. Solo tú y administración podéis verla.");requestForm.classList.add("hidden");$("dayOffForm").reset();await refreshPrivateRequests();renderCalendar();renderVacationsSection()}catch(err){alert(err.message)}}}
  document.querySelectorAll("#calendarView [data-day]").forEach(el=>el.onclick=()=>openDay(el.dataset.day));
  document.querySelectorAll("[data-lock-day]").forEach(b=>b.onclick=e=>{e.stopPropagation();toggleDayLock(b.dataset.lockDay)});
 }
@@ -530,6 +531,7 @@ async function uploadPayroll(){
 
 function allVacationRows(){
  const rows=[];
+ (db.dayOffRequests||[]).forEach(r=>{const u=(db.users||[]).find(x=>x.username===r.username);if(u)rows.push({...r,employeeName:u.name,year:Number(String(r.start||'').slice(0,4)),isDayOffRequest:true})});
  (db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
  return rows.sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)||a.employeeName.localeCompare(b.employeeName));
 }
@@ -565,6 +567,8 @@ function renderMyVacations(){
  box.querySelectorAll('[data-space-vac-edit]').forEach(b=>b.onclick=()=>openVacationEditForm(target.username,b.dataset.spaceVacEdit));
  box.querySelectorAll('[data-space-vac-delete]').forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm('¿Eliminar este periodo de vacaciones de '+target.name+'?'))return;db.vacations[target.username]=(db.vacations[target.username]||[]).filter(v=>String(v.id)!==b.dataset.spaceVacDelete);try{await saveDB();renderMyVacations();renderVacationsSection()}catch(e){alert(e.message)}});
 }
+async function refreshPrivateRequests(){try{const data=await api('/api/state');db.dayOffRequests=data.db?.dayOffRequests||[];}catch(e){console.warn('No se pudieron actualizar las solicitudes',e)}}
+function requestStatusLabel(status){return status==='approved'?'Aceptada':status==='rejected'?'Rechazada':'Pendiente'}
 function renderVacationsSection(){
  vacationFiltersInit();
  $('vacationFilters')?.classList.toggle('hidden',!isAdmin());
@@ -578,12 +582,13 @@ function renderVacationsSection(){
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
  const visibleRows=filteredVacationRows();
  // El calendario y la lista muestran las vacaciones de todos los empleados activos; solo administración puede editar.
- const calendarRows=allVacationRows();
+ const calendarRows=allVacationRows().filter(v=>!v.isDayOffRequest||isAdmin()||v.username===currentUser?.username);
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');
  for(let i=0;i<offset;i++)grid+='<div class="vac-cal-empty"></div>';
- for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=calendarRows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>'<div class="vac-cal-pill '+(v.cancelled?'vac-cal-cancelled':'')+'" title="'+escapeHtml(v.employeeName)+(v.cancelled?' · ANULADAS':'')+'">'+(v.cancelled?'<s>':'')+escapeHtml(v.employeeName)+(v.cancelled?'</s> · ANULADAS':'')+'</div>').join('')+'</div>'}
+ for(let d=1;d<=days;d++){const key=dateKey(new Date(y,m,d));const todays=calendarRows.filter(v=>v.start<=key&&v.end>=key);grid+='<div class="vac-cal-day"><strong>'+d+'</strong>'+todays.map(v=>v.isDayOffRequest?'<div class="vac-cal-pill day-off-'+escapeHtml(v.priority)+'" title="Solicitud de día libre · '+escapeHtml(requestStatusLabel(v.status))+'">'+(isAdmin()?escapeHtml(v.employeeName)+' · ':'')+'Solicitud '+escapeHtml(requestStatusLabel(v.status))+(isAdmin()?'<br><button type="button" class="small-btn day-off-status" data-id="'+escapeHtml(v.id)+'" data-status="approved">Aceptar</button> <button type="button" class="small-btn day-off-status" data-id="'+escapeHtml(v.id)+'" data-status="rejected">Rechazar</button>':'')+'</div>':'<div class="vac-cal-pill '+(v.cancelled?'vac-cal-cancelled':'')+'" title="'+escapeHtml(v.employeeName)+(v.cancelled?' · ANULADAS':'')+'">'+(v.cancelled?'<s>':'')+escapeHtml(v.employeeName)+(v.cancelled?'</s> · ANULADAS':'')+'</div>').join('')+'</div>'}
  $('vacationsCalendar').innerHTML=grid;
+ $('vacationsCalendar').querySelectorAll('.day-off-status').forEach(b=>b.onclick=async e=>{e.stopPropagation();try{await api('/api/admin/day-off-requests/'+encodeURIComponent(b.dataset.id),{method:'PUT',body:JSON.stringify({status:b.dataset.status})});await refreshPrivateRequests();renderVacationsSection()}catch(err){alert(err.message)}});
  const todayKey=dateKey(new Date());const sortedVacationRows=visibleRows.slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end));let lastVacationYear=null;const vacationListHtml=sortedVacationRows.map(v=>{const year=Number(v.year||String(v.start).slice(0,4));const heading=year!==lastVacationYear?'<div class="vac-list-year"><span></span><strong>'+year+'</strong><span></span></div>':'';lastVacationYear=year;const isPast=!v.cancelled&&v.end<todayKey;return heading+'<div class="vac-list-row '+(v.cancelled?'vac-list-cancelled':isPast?'vac-list-past':'')+'"><strong>'+escapeHtml(v.employeeName)+(v.cancelled?' <b class="vac-cancelled-badge">ANULADAS</b>':isPast?' <b class="vac-past-badge">PASADAS</b>':'')+(isAdmin()&&v.adminObservations?'<small class="vac-admin-observation"><b>Observaciones:</b> '+escapeHtml(v.adminObservations)+'</small>':'')+'</strong><span>'+fmtDate(v.start)+'</span><span>'+fmtDate(v.end)+'</span><span>'+year+'</span><span>'+(v.pdfData?'<button class="ghost" data-vac-pdf="'+v.id+'">Ver PDF</button>':(v.driveLink?'<span class="vac-doc-note">Disponible en Mi espacio</span>':escapeHtml(v.filename||'—')))+'</span><span>'+(isAdmin()?'<button class="ghost" data-vac-edit="'+v.username+'|'+v.id+'">Editar</button> '+(v.cancelled?'<button class="ghost" data-vac-restore="'+v.username+'|'+v.id+'">Reactivar</button>':'<button class="danger" data-vac-cancel="'+v.username+'|'+v.id+'">Anular</button>')+' <button class="danger" data-vac-delete="'+v.username+'|'+v.id+'">Eliminar</button>':'')+'</span></div>'}).join('');$('vacationsList').innerHTML=visibleRows.length?'<div class="vac-list-head"><span>Empleado</span><span>Desde</span><span>Hasta</span><span>Año</span><span>Adjunto</span><span>Acciones</span></div>'+vacationListHtml:'<div class="empty-state">No hay vacaciones que coincidan con los filtros.</div>';
 }
 
