@@ -696,14 +696,14 @@ function updateSectionTabsVisibility(){
 }
 
 function showSection(sectionId){
-  if(sectionId==='importExportPanel'&&!isAdmin())return;
+  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel')&&!isAdmin())return;
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
-  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','vacationsPanel','personalSpacePanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','vacationsPanel','personalSpacePanel','invoicesPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
-  if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();
+  if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();if(sectionId==='invoicesPanel'&&isAdmin())setupInvoices();
   if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
