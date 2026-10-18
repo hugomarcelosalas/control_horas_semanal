@@ -457,7 +457,7 @@ async function setupPersonalDocuments(){
   tools.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">🗂️</div><h3>Gestionar contratos y documentos</h3><p>Añade enlaces de Google Drive. Los empleados solo podrán abrir y consultar sus propios documentos.</p></div><div class="payroll-upload-form"><label>Empleado<select id="documentEmployee" required></select></label><label>Tipo<select id="documentType"><option>Contrato</option><option>Documento laboral</option><option>Certificado</option><option>Otro</option></select></label><label>Nombre del documento<input id="documentTitle" maxlength="160" placeholder="Ej. Contrato de trabajo" required></label><label>Periodo (opcional)<input id="documentMonth" type="month"></label><label>Enlace de Google Drive<input id="documentDriveUrl" type="url" placeholder="https://drive.google.com/..." required></label><button id="addPersonalDocumentBtn" class="primary" type="button">🔗 Añadir documento</button></div><div id="documentUploadStatus" class="muted"></div>';
   $("personalSpacePanel")?.querySelector(".personal-space-grid")?.appendChild(tools);
   const sel=$("documentEmployee");if(sel)sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+esc(u.username)+'">'+esc(u.name)+'</option>').join("");
-  if(sel){sel.value=selectedEmployee?.username||sel.value;sel.onchange=()=>renderPersonalDocuments()}
+  if(sel){sel.value=selectedEmployee?.username||sel.value;sel.onchange=()=>{if(!isAdmin())return;selectedEmployee=db.users.find(u=>u.username===sel.value)||selectedEmployee;syncPersonalSpaceEmployee();}}
   $("addPersonalDocumentBtn").onclick=async()=>{
    const username=$("documentEmployee").value,title=$("documentTitle").value.trim(),type=$("documentType").value,month=$("documentMonth").value,driveUrl=$("documentDriveUrl").value.trim(),status=$("documentUploadStatus");
    if(!username||!title||!driveUrl){alert("Completa empleado, nombre y enlace.");return}
@@ -489,6 +489,11 @@ async function loadPayrolls(){
     box.querySelectorAll(".payroll-delete").forEach(b=>b.onclick=async()=>{if(!confirm("¿Eliminar esta nómina de la lista?"))return;try{await api("/api/admin/payroll/"+encodeURIComponent(b.dataset.payrollId),{method:"DELETE"});loadPayrolls();}catch(e){alert(e.message)}});
   }catch(e){box.innerHTML='<div class="empty-state">No se pudieron cargar las nóminas: '+String(e.message)+'</div>'}
 }
+function syncPersonalSpaceEmployee(){
+ if(!isAdmin()||!selectedEmployee)return;
+ ['documentEmployee','payrollEmployee'].forEach(id=>{const el=$(id);if(el)el.value=selectedEmployee.username});
+ renderMyVacations();loadPayrolls();renderPersonalDocuments();
+}
 function setupPayrollUI(){
   if(isAdmin()&&!$("payrollAdminTools")){
     const panel=$("personalSpacePanel");
@@ -497,7 +502,7 @@ function setupPayrollUI(){
       box.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">📄</div><h3>Gestionar nóminas</h3><p>Registra el enlace de Google Drive de cada nómina para el empleado y el mes correspondiente.</p></div><div class="payroll-upload-form"><label>Empleado<select id="payrollEmployee" required></select></label><label>Periodo (mes y año)<input id="payrollMonth" type="month" required></label><label>Importe (€), solo administración<input id="payrollAmount" type="number" min="0" step="0.01" placeholder="Ej. 1450,00"></label><label>Enlace de Google Drive<input id="payrollDriveUrl" type="url" placeholder="https://drive.google.com/..." required></label><button id="uploadPayrollBtn" class="primary" type="button">🔗 Guardar enlace de nómina</button></div><div id="payrollUploadStatus" class="muted"></div>';
       panel.querySelector(".personal-space-grid")?.appendChild(box);
       const sel=$("payrollEmployee");sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+String(u.username).replace(/"/g,"&quot;")+'">'+String(u.name).replace(/</g,'&lt;')+'</option>').join("");
-      sel.value=selectedEmployee?.username||sel.value;$("payrollMonth").value=dateKey(new Date()).slice(0,7);$("uploadPayrollBtn").onclick=uploadPayroll;
+      sel.value=selectedEmployee?.username||sel.value;sel.onchange=()=>{if(!isAdmin())return;selectedEmployee=db.users.find(u=>u.username===sel.value)||selectedEmployee;syncPersonalSpaceEmployee();};$("payrollMonth").value=dateKey(new Date()).slice(0,7);$("uploadPayrollBtn").onclick=uploadPayroll;
     }
   }
   loadPayrolls();
@@ -551,9 +556,12 @@ function filteredVacationRows(){
 }
 function renderMyVacations(){
  const box=$('myVacationsBox');if(!box||!currentUser)return;
- const mine=(db.vacations?.[currentUser.username]||[]).slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end));
- box.innerHTML=mine.length?'<div class="my-vacations-list">'+mine.map(v=>{const n=workingDaysInclusive(parseKey(v.start),parseKey(v.end));return '<div class="my-vacation-row '+(v.cancelled?'vac-list-cancelled':'')+'"><strong>'+fmtDate(v.start)+' → '+fmtDate(v.end)+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':'')+'</strong><span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(currentUser))+' horas</span>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+'</div>'}).join('')+'</div>':'<div class="personal-space-empty">Todavía no tienes vacaciones registradas.</div>';
+ const target=isAdmin()?selectedEmployee:currentUser;if(!target)return;
+ const mine=(db.vacations?.[target.username]||[]).slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end));
+ box.innerHTML=mine.length?'<div class="my-vacations-list">'+mine.map(v=>{const n=workingDaysInclusive(parseKey(v.start),parseKey(v.end));return '<div class="my-vacation-row '+(v.cancelled?'vac-list-cancelled':'')+'"><div class="my-vacation-info"><strong>'+fmtDate(v.start)+' → '+fmtDate(v.end)+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':'')+'</strong><span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(target))+' horas</span>'+(isAdmin()&&v.adminObservations?'<small class="vac-admin-observation"><b>Observaciones:</b> '+escapeHtml(v.adminObservations)+'</small>':'')+'</div>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+(v.pdfData?'<button type="button" class="small-btn" data-my-vac-pdf="'+escapeHtml(v.id)+'">Ver PDF</button>':'')+(isAdmin()?'<div class="vacation-actions"><button type="button" class="small-btn" data-space-vac-edit="'+escapeHtml(v.id)+'">Editar</button><button type="button" class="small-btn danger-small" data-space-vac-delete="'+escapeHtml(v.id)+'">Eliminar</button></div>':'')+'</div>'}).join('')+'</div>':'<div class="personal-space-empty">Todavía no hay vacaciones registradas para '+escapeHtml(target.name)+'.</div>';
  box.querySelectorAll('[data-my-vac-pdf]').forEach(b=>b.onclick=()=>{const v=mine.find(x=>String(x.id)===b.dataset.myVacPdf);if(v?.pdfData)openVacationPdf(v)});
+ box.querySelectorAll('[data-space-vac-edit]').forEach(b=>b.onclick=()=>openVacationEditForm(target.username,b.dataset.spaceVacEdit));
+ box.querySelectorAll('[data-space-vac-delete]').forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm('¿Eliminar este periodo de vacaciones de '+target.name+'?'))return;db.vacations[target.username]=(db.vacations[target.username]||[]).filter(v=>String(v.id)!==b.dataset.spaceVacDelete);try{await saveDB();renderMyVacations();renderVacationsSection()}catch(e){alert(e.message)}});
 }
 function renderVacationsSection(){
  vacationFiltersInit();
