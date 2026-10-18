@@ -297,3 +297,16 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 .vac-cal-pill.day-off-red{background:#fee2e2;color:#991b1b;border-left:4px solid #dc2626;white-space:normal}
 .day-off-status{margin-top:5px;padding:3px 6px;font-size:11px}
 @media(max-width:640px){.day-off-request-tools{padding:12px}.day-off-request-form{padding:12px}.vac-cal-pill.day-off-green,.vac-cal-pill.day-off-yellow,.vac-cal-pill.day-off-red{font-size:10px;overflow-wrap:anywhere}}
+
+
+/* Vista detallada de solicitudes de días libres */
+.day-off-admin-modal{max-width:560px}
+.day-off-admin-modal #dayOffAdminDetails{padding:12px 14px;margin:12px 0 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;line-height:1.55}
+.day-off-admin-modal #dayOffAdminDetails p{margin:7px 0}
+.day-off-admin-modal .checkbox-line{display:flex;align-items:center;gap:10px;margin:12px 0}
+.day-off-admin-modal .checkbox-line input{width:18px;height:18px}
+.day-off-open{display:block;width:100%;text-align:left;cursor:pointer;border:0;font:inherit;padding:5px;border-radius:6px}
+.day-off-calendar-mark{margin:4px 0;padding:3px 4px;border-radius:5px;font-size:10px;line-height:1.25;overflow-wrap:anywhere}
+.day-off-calendar-mark.day-off-green{background:#dcfce7;color:#166534}
+.day-off-calendar-mark.day-off-yellow{background:#fef3c7;color:#92400e}
+.day-off-calendar-mark.day-off-red{background:#fee2e2;color:#991b1b}
