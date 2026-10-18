@@ -355,3 +355,5 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 
 .invoice-import-tools{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .invoice-import-help{margin:-3px 0 12px;color:#64748b;font-size:12px}
+
+.invoice-filters{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:10px;margin:12px 0 16px}.invoice-filters label{display:flex;flex-direction:column;gap:5px;font-size:12px;font-weight:700;color:#475569}.invoice-filters input,.invoice-filters select{width:100%;min-width:0;border:1px solid #cbd5e1;border-radius:9px;padding:9px 10px;background:#fff;color:#0f172a;font:inherit}@media(max-width:700px){.invoice-filters{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:420px){.invoice-filters{grid-template-columns:1fr}}
