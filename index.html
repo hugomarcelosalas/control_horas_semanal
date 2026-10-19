@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Control horario</title>
-  <link rel="stylesheet" href="css/style.css?v=20261019-weeklyrange1">
+  <link rel="stylesheet" href="css/style.css?v=20261018-invoiceimport1">
 </head>
 <body>
   <div id="loginScreen" class="login-screen">
@@ -62,7 +62,7 @@
           <div><h2>Balances de empleados</h2><p>Balance de la última semana disponible en la lista semanal.</p></div>
           <div class="admin-actions"><button id="exportBalancesPdf" class="primary" type="button">📄 Exportar PDF</button></div>
         </div>
-        <div class="balance-period-toolbar"><label>Periodo desde<input type="date" id="balancePeriodStart"></label><label>hasta<input type="date" id="balancePeriodEnd"></label><button type="button" id="balancePeriodApply" class="primary">Calcular periodo</button></div><p class="balance-period-label" id="balancePeriodLabel"></p><div id="balancesList" class="balances-list"></div>
+        <div id="balancesList" class="balances-list"></div>
       </section>
 
       <section id="hugoErikaPanel" class="panel hidden">
@@ -198,7 +198,7 @@
     <button id="closeWeeklyModal" class="modal-close">×</button><p class="eyebrow">LISTA SEMANAL</p><h2 id="weeklyModalTitle">Nueva línea semanal</h2>
     <div id="weeklyLockNotice" class="lock-notice hidden">🔒 Esta línea está bloqueada por el administrador.</div>
     <form id="weeklyForm">
-      <div class="two-col"><label>Periodo de la línea · Desde<input id="weeklyStart" type="date" required></label><label>Hasta<input id="weeklyEnd" type="date" required></label></div><div class="two-col weekly-calc-range"><label>Rango para calcular horas · Desde<input id="weeklyCalcStart" type="date"></label><label>Hasta<input id="weeklyCalcEnd" type="date"></label></div><p id="weeklyRangeWorked" class="muted">Selecciona un rango para calcular las horas trabajadas.</p>
+      <div class="two-col"><label>Desde<input id="weeklyStart" type="date" required></label><label>Hasta<input id="weeklyEnd" type="date" required></label></div>
       <div class="three-col"><label>Anterior<input id="weeklyPrevious" type="number" step="0.01" placeholder="0"></label><label>Contrato (horas)<input id="weeklyContract" type="number" step="0.01" placeholder="40"></label><label>Esta semana (horas)<input id="weeklyWorked" type="number" step="0.01" placeholder="0"></label></div>
       <div class="formula-box">Balance = Esta semana − Contrato + Anterior <strong id="weeklyBalancePreview">0:00</strong></div>
       <div class="modal-actions"><button type="button" id="deleteWeekly" class="danger-outline">Eliminar línea</button><button type="submit" class="primary">Guardar línea</button></div>
@@ -220,6 +220,6 @@
     <p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿Eliminar usuario?</h2><p id="confirmText"></p>
     <div class="modal-actions"><button id="cancelConfirm" class="ghost">Cancelar</button><button id="confirmDelete" class="danger">Sí, eliminar</button></div>
   </div></div>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261019-weeklyrange1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261018-invoiceimport2"></script>
 </body>
 </html>
