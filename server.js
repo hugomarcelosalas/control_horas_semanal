@@ -33,9 +33,37 @@ function createVendorSheetTemplate(){
  const semCells={'D1':'Mayo','A3':'Dia','C3':'TOTAL','D3':'XS','E3':'S','F3':'M','G3':'L','H3':'XL','I3':'XXL','J3':'CASH','K3':'PIN','L3':'TOT DAY'};
  const borrar={'A2':'Fecha','B2':'Entrada','C2':'Salida','D2':'Entrada','E2':'Salida','F2':'Entrada','G2':'Salida','H2':'Entrada','I2':'Salida','J2':'Entrada','K2':'Salida','L2':'Entrada','M2':'Salida','N2':'Entrada','O2':'Salida','P2':'Entrada','Q2':'Salida','R2':'Entrada','S2':'Salida','T2':'Entrada','U2':'Salida'};
  const camp={'A1':'Summer Camp 2022','A3':'Dia','B3':'Calcetines','H3':'Bands','J3':'Kiosko','B4':'xs','C4':'s','D4':'m','E4':'l','F4':'xl','G4':'xxl','H4':'Silver','I4':'Gold','J4':'Agua Grande','K4':'Fruta/ensalada','L4':'Yogurt/Gelatina'};
- return {'mon-thursday':make(46,13,dayCells),'Friday':make(46,13,dayCells),'Saturday- vacaciones':make(50,13,{...dayCells,'A10':'Summer C.'}),'Sunday':make(49,13,dayCells),'week state':make(34,18,weekCells),'Semanal con suma':make(97,32,semCells),'week con suma':make(34,18,weekCells),'Borrar':make(2,21,borrar),'Camp Verano':make(18,14,camp)};
+ return {'Cierre':createCierreSheetTemplate(),'mon-thursday':make(46,13,dayCells),'Friday':make(46,13,dayCells),'Saturday- vacaciones':make(50,13,{...dayCells,'A10':'Summer C.'}),'Sunday':make(49,13,dayCells),'week state':make(34,18,weekCells),'Semanal con suma':make(97,32,semCells),'week con suma':make(34,18,weekCells),'Borrar':make(2,21,borrar),'Camp Verano':make(18,14,camp)};
 }
 
+function createCierreSheetTemplate(){
+ const cells={
+ 'A1':'1 Hora','E1':'Calcetines','F1':'2.5','G1':'Fecha','J1':'Vendedor','A2':'Extra','G2':'Dia','H2':'= TEXT(H1,"dddd")','J2':'Azafata',
+ 'B3':'colour','D3':'last nº','E3':'sold','F3':'bday bands','G3':'extra bands','H3':'total','I3':'pc people','J3':'pc socks','K3':'3',
+ 'A4':'2nd hour','B4':'Yellow','E4':'=D4-C4','F4':'ooooooo','G4':'ooooooooo','H4':'ooooooo','I4':'oooooooo','J4':'ooooooo','K4':'=E4',
+ 'A5':'cumpleaños','B5':'0','E5':'=D5-C5','H5':'=E5','I5':'0','J5':'0','K5':'0',
+ 'A6':'happy hour','E6':'=D6-C6','F6':'ooooooo','G6':'ooooooooo','H6':'ooooooo','I6':'=E5','J6':'ooooooo','K6':'ooooo',
+ 'A7':'under 5','E7':'=D7-C7','H7':'ooooooo','I7':'=I5','J7':'ooooooo','K7':'ooooo',
+ 'A8':'11-12','E8':'=D8-C8','H8':'=F8+G8','A9':'12-13','E9':'=D9-C9','H9':'=F9+G9',
+ 'A10':'13-14','E10':'=D10-C10','H10':'=F10+G10','A11':'14-15','E11':'=D11-C11','H11':'=F11+G11',
+ 'A12':'15-16','E12':'=D12-C12','H12':'=F12+G12','A13':'16-17','E13':'=D13-C13','H13':'=F13+G13',
+ 'A14':'17-18','E14':'=D14-C14','H14':'=F14+G14','A15':'18-19','E15':'=D15-C15','H15':'=F15+G15',
+ 'A16':'19-20','E16':'=D16-C16','H16':'=F16+G16','A17':'20-21','E17':'=D17-C17','H17':'=F17+G17',
+ 'A18':'Total','E18':'=SUM(E8:E17)+E4+E5','H18':'=SUM(H8:H17)+H5','I18':'0','J18':'=J5','K18':'ooooo',
+ 'A19':'euros','E19':'=E18*C1','H19':'=H18*C1','I19':'=I18*C2','J19':'=(J18)*12','K19':'=K4*K3',
+ 'A21':'Socks','B21':'start socks','C21':'extra socks','D21':'left over','E21':'total','F21':'bday socks','G21':'left over','H21':'total','J21':'extras','K21':'Total',
+ 'A22':'XL','E22':'=(B22+C22)-D22','H22':'=F22-G22','I22':'bono','J22':'','K22':'',
+ 'A23':'L','E23':'=(B23+C23)-D23','H23':'=F23-G23','I23':'vouch','A24':'M','E24':'=(B24+C24)-D24','H24':'=F24-G24',
+ 'A25':'S','E25':'=(B25+C25)-D25','H25':'=F25-G25','A26':'XS','E26':'=(B26+C26)-D26','H26':'=F26-G26','A27':'XXS','E27':'=(B27+C27)-D27','H27':'=F27-G27',
+ 'D28':'cantidad','E28':'=E27+E26+E25+E24+E23+E22','H28':'=H27+H26+H25+H24+H23+H22','D29':'euros','E29':'=E28*F1',
+ 'J30':'Total','K30':'=SUM(K22:K29)','A32':'Reserva Cash','B32':'Reserva pin','C32':'cumple cash','D32':'cumple pin','G32':'Facturas (cash)',
+ 'J33':'total cash','L33':'=K36-K34','M33':'Cash Teorico','J34':'total pin','K34':'=M34+O34','L34':'Pin abajo',
+ 'J35':'total in','K35':'=K33+K34','J36':'formula','K36':'=E19+E29+E41+D44+E47-H19-K19-K30','J37':'balance','K37':'=K35-K36',
+ 'F38':'Total','G38':'=G33+G34+G35+G36','J38':'TPV','J39':'kiosko','A40':'Parties','B41':'total','C41':'=C40+C39+C38+C37+C36+C35+C34+C33','D41':'=D40+D39+D38+D37+D36+D35+D34+D33','E41':'=C41+D41',
+ 'J41':'Transferencias','A43':'bono st','B43':'bono end','D43':'Total','J43':'Z','L43':'Diferencia','M43':'Formula','D44':'=C44*100','H44':'Cumples cash','J44':'cash abajo','L44':'=(K44-M44-K33)*(-1)+G38-I46+O34-O34','M44':'=O34-I45'
+ };
+ return {rows:47,cols:21,cells};
+}
 function createInitialDb(password){
   const users=DEFAULT_USERS.map(u=>({...u,passwordHash:u.username==='admin'?bcrypt.hashSync(password,12):bcrypt.hashSync(u.username,12)}));
   users.push({username:'vendedor',name:'Vendedor',role:'vendedor',weeklyHours:0,active:true,color:'#64748b',passwordHash:bcrypt.hashSync('vendedor',12)});
