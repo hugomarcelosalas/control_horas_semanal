@@ -37,6 +37,34 @@ async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:
 let vendorSheetsState={},vendorActiveSheet='',vendorSaveTimer=null;
 function vendorEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function vendorColName(n){let out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out}
+function vendorCellClass(sheetName,ref){
+ const m=ref.match(/^([A-Z]+)(\\d+)$/);if(!m)return '';
+ const col=m[1],row=Number(m[2]),num=col.split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0);
+ const weekend=sheetName==='Saturday- vacaciones'||sheetName==='Sunday';
+ const shift=weekend? -1:0;
+ const mainStart=weekend?6:7, mainEnd=weekend?22:18;
+ const sections=[
+  [mainStart,mainEnd,1,13],
+  [weekend?24:20,weekend?33:29,1,5],
+  [weekend?24:20,weekend?31:27,8,10],
+  [weekend?24:20,weekend?29:29,12,13],
+  [weekend?33:30,weekend?43:40,1,4],
+  [weekend?36:31,weekend?42:37,9,10],
+  [weekend?36:31,weekend?41:36,12,13],
+  [weekend?45:42,weekend?46:43,1,4],
+  [weekend?47:45,weekend?50:46,1,6],
+  [weekend?45:41,weekend?46:41,11,13]
+ ];
+ const active=sections.some(([r1,r2,c1,c2])=>row>=r1&&row<=r2&&num>=c1&&num<=c2);
+ let cls=active?'vendor-cell-bordered':'vendor-cell-blank';
+ if(row===mainStart)cls+=' vendor-main-header';
+ if((row===(weekend?24:20))&&(num===1||num===8||num===12))cls+=' vendor-section-header';
+ if((row===(weekend?33:30)&&num===1)||(row===(weekend?36:31)&&num===12))cls+=' vendor-label-green';
+ if((row===(weekend?45:42)||row===(weekend?47:45))&&num===1)cls+=' vendor-label-orange';
+ if(num===2&&row>=mainStart&&row<=mainStart+4)cls+=' vendor-colour-cell';
+ if(num===1&&row>=mainStart+1&&row<=mainStart+10)cls+=' vendor-row-label';
+ return cls;
+}
 function renderVendorWorkspace(sheets){
  vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
  const tabs=$('vendorSheetTabs');if(!tabs)return;
@@ -44,15 +72,17 @@ function renderVendorWorkspace(sheets){
  tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
  tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorSheet===vendorActiveSheet)));
  const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
- let table='<table class="vendor-grid"><thead><tr><th></th>';
- for(let c=1;c<=sh.cols;c++)table+='<th>'+vendorColName(c)+'</th>';
+ const isDaily=['mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
+ box.classList.toggle('vendor-daily-sheet',isDaily);
+ let table='<table class="vendor-grid '+(isDaily?'vendor-daily-grid':'')+'"><thead><tr><th class="vendor-index"></th>';
+ for(let c=1;c<=sh.cols;c++)table+='<th class="vendor-colhead">'+vendorColName(c)+'</th>';
  table+='</tr></thead><tbody>';
- for(let r=1;r<=sh.rows;r++){table+='<tr><td class="row-num">'+r+'</td>';for(let c=1;c<=sh.cols;c++){const ref=vendorColName(c)+r,val=sh.cells?.[ref]??'';table+='<td><input aria-label="'+ref+'" data-vendor-cell="'+ref+'" value="'+vendorEscape(val)+'" autocomplete="off" spellcheck="false"></td>'}table+='</tr>'}
+ for(let r=1;r<=sh.rows;r++){table+='<tr><td class="row-num vendor-index">'+r+'</td>';for(let c=1;c<=sh.cols;c++){const ref=vendorColName(c)+r,val=sh.cells?.[ref]??'';const cellClass=isDaily?vendorCellClass(vendorActiveSheet,ref):'vendor-cell-bordered';table+='<td class="'+cellClass+'" data-vendor-td="'+ref+'"><input aria-label="'+ref+'" data-vendor-cell="'+ref+'" value="'+vendorEscape(val)+'" autocomplete="off" spellcheck="false"></td>'}table+='</tr>'}
  table+='</tbody></table>';box.innerHTML=table;
- box.querySelectorAll('[data-vendor-cell]').forEach(input=>input.addEventListener('input',()=>{sh.cells[ input.dataset.vendorCell ]=input.value;const status=$('vendorSaveStatus');if(status)status.textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}));
+ box.querySelectorAll('[data-vendor-cell]').forEach(input=>input.addEventListener('input',()=>{sh.cells[input.dataset.vendorCell]=input.value;const status=$('vendorSaveStatus');if(status)status.textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}));
  const save=$('vendorSaveBtn');if(save)save.onclick=()=>saveVendorSheets(true);
-}
-async function saveVendorSheets(manual){
+ const print=$('vendorPrintBtn');if(print)print.onclick=()=>{document.body.classList.add('vendor-printing');window.print();setTimeout(()=>document.body.classList.remove('vendor-printing'),500)};
+}async function saveVendorSheets(manual){
  const status=$('vendorSaveStatus');if(status)status.textContent='Guardando cambios…';
  try{const out=await api('/api/vendor/sheets',{method:'PUT',body:JSON.stringify({sheets:vendorSheetsState})});vendorSheetsState=out.sheets||vendorSheetsState;if(status)status.textContent='Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
  catch(e){if(status)status.textContent='No se pudo guardar: '+e.message;if(manual)alert('No se pudo guardar la planilla: '+e.message)}
