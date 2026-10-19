@@ -34,6 +34,30 @@ let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
+let vendorSheetsState={},vendorActiveSheet='',vendorSaveTimer=null;
+function vendorEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
+function vendorColName(n){let out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out}
+function renderVendorWorkspace(sheets){
+ vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
+ const tabs=$('vendorSheetTabs');if(!tabs)return;
+ tabs.innerHTML=Object.keys(vendorSheetsState).map(name=>'<button type="button" class="vendor-sheet-tab '+(name===vendorActiveSheet?'active':'')+'" data-vendor-sheet="'+vendorEscape(name)+'">'+vendorEscape(name)+'</button>').join('');
+ tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
+ tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorSheet===vendorActiveSheet)));
+ const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
+ let table='<table class="vendor-grid"><thead><tr><th></th>';
+ for(let c=1;c<=sh.cols;c++)table+='<th>'+vendorColName(c)+'</th>';
+ table+='</tr></thead><tbody>';
+ for(let r=1;r<=sh.rows;r++){table+='<tr><td class="row-num">'+r+'</td>';for(let c=1;c<=sh.cols;c++){const ref=vendorColName(c)+r,val=sh.cells?.[ref]??'';table+='<td><input aria-label="'+ref+'" data-vendor-cell="'+ref+'" value="'+vendorEscape(val)+'" autocomplete="off" spellcheck="false"></td>'}table+='</tr>'}
+ table+='</tbody></table>';box.innerHTML=table;
+ box.querySelectorAll('[data-vendor-cell]').forEach(input=>input.addEventListener('input',()=>{sh.cells[ input.dataset.vendorCell ]=input.value;const status=$('vendorSaveStatus');if(status)status.textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}));
+ const save=$('vendorSaveBtn');if(save)save.onclick=()=>saveVendorSheets(true);
+}
+async function saveVendorSheets(manual){
+ const status=$('vendorSaveStatus');if(status)status.textContent='Guardando cambios…';
+ try{const out=await api('/api/vendor/sheets',{method:'PUT',body:JSON.stringify({sheets:vendorSheetsState})});vendorSheetsState=out.sheets||vendorSheetsState;if(status)status.textContent='Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
+ catch(e){if(status)status.textContent='No se pudo guardar: '+e.message;if(manual)alert('No se pudo guardar la planilla: '+e.message)}
+}
+
 
 function pad(n){return String(n).padStart(2,"0")}
 function dateKey(d){return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`}
@@ -100,9 +124,9 @@ function setupBackupControls(){if(!isAdmin())return;const panel=$("importExportP
 
 
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();const u=$("username").value.trim().toLowerCase(),p=$("password").value;try{const r=await api('/api/login',{method:'POST',body:JSON.stringify({username:u,password:p})});authToken=r.token;currentUser=r.user;window.__CONTROL_HORARIO_TOKEN__=authToken;window.__CONTROL_HORARIO_USER__=currentUser;window.dispatchEvent(new Event('control-horario-auth'));
-  updateSectionTabsVisibility();db=r.db;selectedEmployee=currentUser.role==="admin"?(db.users.find(x=>x.role==="employee"&&x.active!==false)||db.users.find(x=>x.role==="employee")||currentUser):currentUser;$("loginError").classList.add("hidden");$("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("currentUser").textContent=`${currentUser.name}${currentUser.role==="admin"?" · Administrador":""}`;$("adminPanel").classList.toggle("hidden",!isAdmin());setupBackupControls();setupExcelAndReview();loadAuditHistory();setupPayrollUI();setupHugoErika();$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden");setupRange();render();}catch(err){$("loginError").textContent=err.message;$("loginError").classList.remove("hidden")}});
+  updateSectionTabsVisibility();db=r.db;selectedEmployee=currentUser.role==="admin"?(db.users.find(x=>x.role==="employee"&&x.active!==false)||db.users.find(x=>x.role==="employee")||currentUser):currentUser;$("loginError").classList.add("hidden");$("loginScreen").classList.add("hidden");$("app").classList.remove("hidden");$("currentUser").textContent=`${currentUser.name}${currentUser.role==="admin"?" · Administrador":""}`;if(currentUser.role==="vendedor"){$("sectionTabs")?.classList.add("hidden");document.querySelectorAll("#app main > *").forEach(el=>{if(el.id!=="vendorWorkspace")el.classList.add("hidden")});$("vendorWorkspace")?.classList.remove("hidden");renderVendorWorkspace(db.vendorSheets||{});return;}$("sectionTabs")?.classList.remove("hidden");$("vendorWorkspace")?.classList.add("hidden");document.querySelector("#app main > .hero")?.classList.remove("hidden");$("adminPanel").classList.toggle("hidden",!isAdmin());setupBackupControls();setupExcelAndReview();loadAuditHistory();setupPayrollUI();setupHugoErika();$("dashboardPanel").classList.add("hidden");$("mainPanel").classList.remove("hidden");setupRange();render();}catch(err){$("loginError").textContent=err.message;$("loginError").classList.remove("hidden")}});
 $("logoutBtn").onclick=async()=>{try{await api('/api/logout',{method:'POST'})}catch(e){}authToken=null;currentUser=null;window.__CONTROL_HORARIO_TOKEN__=null;window.__CONTROL_HORARIO_USER__=null;window.dispatchEvent(new Event('control-horario-auth'));
-  updateSectionTabsVisibility();db={users:[],records:{},locks:{},weekly:{},vacations:{},horarios:{},balanceVisibility:{},version:8};$("app").classList.add("hidden");$("loginScreen").classList.remove("hidden");$("password").value=""}
+  updateSectionTabsVisibility();db={users:[],records:{},locks:{},weekly:{},vacations:{},horarios:{},balanceVisibility:{},version:8};$("sectionTabs")?.classList.remove("hidden");$("vendorWorkspace")?.classList.add("hidden");document.querySelector("#app main > .hero")?.classList.remove("hidden");$("app").classList.add("hidden");$("loginScreen").classList.remove("hidden");$("password").value=""}
 
 function setupRange(){const y=currentDate.getFullYear(),m=currentDate.getMonth();$("rangeStart").value=dateKey(new Date(y,m,1));$("rangeEnd").value=dateKey(new Date(y,m+1,0))}
 function renderSelectedEmployeeDailyChart(){const box=$("selectedEmployeeDailyChart");if(!box||!selectedEmployee)return;const y=currentDate.getFullYear(),m=currentDate.getMonth()+1,days=new Date(y,m,0).getDate(),u=selectedEmployee,items=[];for(let d=1;d<=days;d++){const k=`${y}-${pad(m)}-${pad(d)}`,q=dashboardMetricsForUser(u,k);items.push({label:String(d),segments:q.work>0?[{name:u.name,color:u.color||"#172033",minutes:q.work}]:[],vac:q.vac})}const workedDays=items.filter(x=>x.segments.length).length;box.innerHTML='<div class="selected-chart-head"><div><h3>Horas trabajadas por día</h3><p>'+u.name+' · '+workedDays+' día(s) con horas en '+currentDate.toLocaleDateString("es-ES",{month:"long",year:"numeric"})+'</p></div></div>'+chartBars(items,[u]);setupChartTooltips()}
