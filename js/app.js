@@ -44,6 +44,7 @@ function vendorCellClass(sheetName,ref){
  const shift=weekend? -1:0;
  const mainStart=weekend?6:7, mainEnd=weekend?22:18;
  const sections=[
+  [weekend?1:2,weekend?4:5,10,13],
   [mainStart,mainEnd,1,13],
   [weekend?24:20,weekend?33:29,1,5],
   [weekend?24:20,weekend?31:27,8,10],
