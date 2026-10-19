@@ -42,6 +42,12 @@
 </nav>
 
       <main class="container">
+      <section id="vendorWorkspace" class="panel hidden vendor-workspace">
+        <div class="section-head"><div><p class="eyebrow">ZONA DE VENTAS</p><h2>Planilla diaria y semanal</h2><p>Rellena las celdas y guarda los cambios. Solo tienes acceso a esta planilla.</p></div><button type="button" id="vendorSaveBtn" class="primary">Guardar cambios</button></div>
+        <div id="vendorSaveStatus" class="muted vendor-save-status">Cambios guardados al abrir la planilla.</div>
+        <div id="vendorSheetTabs" class="vendor-sheet-tabs"></div>
+        <div id="vendorSheetContainer" class="vendor-sheet-container"></div>
+      </section>
       <section class="hero">
         <div><p class="eyebrow">ZONA DE CONTROL</p><h1 id="employeeTitle">Mi horario</h1><p id="employeeSubtitle"></p><label id="controlEmployeeSelector" class="control-employee-selector hidden">Ver horario de empleado<select id="controlEmployeeSelect"></select></label></div>
         <div class="hero-stats"><div id="heroBalanceBox" class="hero-stat"><span>Balance actual</span><strong id="heroBalance">0:00</strong></div><div class="hero-stat"><span>Horas trabajadas esta semana</span><strong id="heroWeekWorked">0:00</strong><small id="heroWeekRange"></small></div><div class="hero-stat"><span>Horas contrato</span><strong id="heroWeekContract">0:00</strong></div><div class="hero-stat"><span>Horas previstas</span><strong id="heroWeekPlanned">0:00</strong><small id="heroWeekDifference">vs. trabajadas</small></div></div>
