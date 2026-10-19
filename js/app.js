@@ -73,7 +73,7 @@ function renderVendorWorkspace(sheets){
  tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
  tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorSheet===vendorActiveSheet)));
  const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
- const isDaily=['mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
+ const isDaily=['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
  box.classList.toggle('vendor-daily-sheet',isDaily);
  let table='<table class="vendor-grid '+(isDaily?'vendor-daily-grid':'')+'"><thead><tr><th class="vendor-index"></th>';
  for(let c=1;c<=sh.cols;c++)table+='<th class="vendor-colhead">'+vendorColName(c)+'</th>';
