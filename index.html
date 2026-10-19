@@ -198,7 +198,7 @@
     <button id="closeWeeklyModal" class="modal-close">×</button><p class="eyebrow">LISTA SEMANAL</p><h2 id="weeklyModalTitle">Nueva línea semanal</h2>
     <div id="weeklyLockNotice" class="lock-notice hidden">🔒 Esta línea está bloqueada por el administrador.</div>
     <form id="weeklyForm">
-      <div class="two-col"><label>Periodo de la línea · Desde<input id="weeklyStart" type="date" required></label><label>Hasta<input id="weeklyEnd" type="date" required></label></div><div class="two-col weekly-calc-range"><label>Rango para calcular horas · Desde<input id="weeklyCalcStart" type="date"></label><label>Hasta<input id="weeklyCalcEnd" type="date"></label></div><p id="weeklyRangeWorked" class="muted">Selecciona un rango para calcular las horas trabajadas.</p>
+      <div class="two-col"><label>Periodo y cálculo de horas · Desde<input id="weeklyStart" type="date" required></label><label>Hasta<input id="weeklyEnd" type="date" required></label></div><p id="weeklyRangeWorked" class="muted">Selecciona las fechas para calcular automáticamente las horas trabajadas.</p>
       <div class="three-col"><label>Anterior<input id="weeklyPrevious" type="number" step="0.01" placeholder="0"></label><label>Contrato (horas)<input id="weeklyContract" type="number" step="0.01" placeholder="40"></label><label>Esta semana (horas)<input id="weeklyWorked" type="number" step="0.01" placeholder="0"></label></div>
       <div class="formula-box">Balance = Esta semana − Contrato + Anterior <strong id="weeklyBalancePreview">0:00</strong></div>
       <div class="modal-actions"><button type="button" id="deleteWeekly" class="danger-outline">Eliminar línea</button><button type="submit" class="primary">Guardar línea</button></div>
@@ -220,6 +220,6 @@
     <p class="eyebrow">CONFIRMACIÓN</p><h2 id="confirmTitle">¿Eliminar usuario?</h2><p id="confirmText"></p>
     <div class="modal-actions"><button id="cancelConfirm" class="ghost">Cancelar</button><button id="confirmDelete" class="danger">Sí, eliminar</button></div>
   </div></div>
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261019-weeklyrange1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script><script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script><script src="js/app.js?v=20261019-weeklyrange2"></script>
 </body>
 </html>
