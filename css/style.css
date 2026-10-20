@@ -420,3 +420,8 @@ label{color:#47566d;font-size:12px;line-height:1.45}
  body.vendor-printing .vendor-grid:not(.vendor-daily-grid){width:100%!important}
  body.vendor-printing .vendor-grid:not(.vendor-daily-grid) input{font-size:7pt!important}
 }
+.vendor-main-tabs{display:flex;gap:10px;margin:0 0 12px;border-bottom:2px solid #dce3ed;padding-bottom:10px}
+.vendor-main-tab{flex:1;min-height:44px;border:1px solid #cbd5e1;border-radius:10px;background:#f1f5f9;color:#172033;font-size:16px;font-weight:800;cursor:pointer}
+.vendor-main-tab.active{background:#172b49;color:#fff;border-color:#172b49}
+.vendor-sub-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px}
+@media print{.vendor-main-tabs,.vendor-sub-tabs{display:none!important}}
