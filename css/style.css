@@ -425,3 +425,5 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 .vendor-main-tab.active{background:#172b49;color:#fff;border-color:#172b49}
 .vendor-sub-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 16px}
 @media print{.vendor-main-tabs,.vendor-sub-tabs{display:none!important}}
+
+.published-schedule-content{padding:18px;overflow-x:auto}.published-schedule-period{margin:0 0 14px;color:#334155}.published-schedule-period span{color:#64748b;font-size:12px}.published-schedule-table-wrap{overflow:auto;border:1px solid #dbe3ee;border-radius:10px}.published-schedule-table{border-collapse:collapse;width:100%;min-width:720px;background:#fff;font-size:13px}.published-schedule-table th,.published-schedule-table td{padding:11px 12px;border:1px solid #dbe3ee;text-align:center;vertical-align:top}.published-schedule-table thead th{background:#edf2f8;font-weight:800}.published-schedule-table tbody th{text-align:left;white-space:nowrap;background:#f8fafc}.published-schedule-table td{min-width:100px;line-height:1.6}
