@@ -2,6 +2,7 @@
 (function(){
  const $ = id => document.getElementById(id);
  const esc = v => String(v ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ let vaSortDirection = 'asc';
  const money = v => Number(v||0).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
  function records(){
    const sheet=vendorSheetsState?.['V&A'];
@@ -30,10 +31,12 @@
    if(!vendorActiveSheet||vendorActiveSheet!=='V&A'||!$('vendorSheetContainer'))return;
    const box=$('vendorSheetContainer');box.classList.remove('vendor-daily-sheet');
    const rows=records();
+   rows.sort((a,b)=>String(a.date||'').localeCompare(String(b.date||'')) * (vaSortDirection==='asc'?1:-1));
    box.innerHTML='<div class="va-toolbar"><button type="button" class="primary" id="vaAdd">+ Añadir recaudación</button><span class="muted">Los cambios se guardan automáticamente.</span></div>'+
-    '<div class="invoice-table-wrap"><table class="invoice-table va-table"><thead><tr><th>Fecha recaudación</th><th>Monto</th><th>Fecha ingresado</th><th>Link (Drive)</th><th>Observaciones</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
+    '<div class="invoice-table-wrap"><table class="invoice-table va-table"><thead><tr><th><button type="button" class="va-sort-date" id="vaSortDate">Fecha recaudación '+(vaSortDirection==='asc'?'↑':'↓')+'</button></th><th>Monto</th><th>Fecha ingresado</th><th>Link (Drive)</th><th>Observaciones</th><th>Estado</th><th>Acciones</th></tr></thead><tbody>'+
     (rows.length?rows.map((r,i)=>'<tr data-va-row="'+i+'"><td><input type="date" data-va-field="date" value="'+esc(r.date||'')+'"></td><td><input type="number" min="0" step="0.01" data-va-field="amount" value="'+esc(r.amount??'')+'" placeholder="0,00"></td><td><input type="date" data-va-field="enteredDate" value="'+esc(r.enteredDate||'')+'"></td><td><input type="url" data-va-field="driveUrl" value="'+esc(r.driveUrl||'')+'" placeholder="https://drive.google.com/...">'+(r.driveUrl?'<a href="'+esc(r.driveUrl)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+'</td><td><textarea data-va-field="observations" rows="2">'+esc(r.observations||'')+'</textarea></td><td><select data-va-field="status" class="'+(r.status==='delivered'?'va-delivered':'va-pending')+'"><option value="pending" '+(r.status!=='delivered'?'selected':'')+'>🔴 No entregado</option><option value="delivered" '+(r.status==='delivered'?'selected':'')+'>🟢 Entregado</option></select></td><td><button type="button" class="small-btn danger-small" data-va-delete="'+i+'">Eliminar</button></td></tr>').join(''):'<tr><td colspan="7">Todavía no hay recaudaciones registradas.</td></tr>')+
     '</tbody></table></div>';
+   $('vaSortDate').onclick=()=>{vaSortDirection=vaSortDirection==='asc'?'desc':'asc';renderVA()};
    $('vaAdd').onclick=()=>{rows.push({date:new Date().toISOString().slice(0,10),amount:'',enteredDate:'',driveUrl:'',observations:'',status:'pending',id:'va-'+Date.now()});persistRecords();renderVA()};
    box.querySelectorAll('[data-va-field]').forEach(input=>input.addEventListener('change',()=>{
      const row=rows[Number(input.closest('[data-va-row]').dataset.vaRow)];
@@ -81,6 +84,6 @@
  document.addEventListener('click',e=>{if(e.target.closest('[data-vendor-sheet="V&A"]')||e.target.closest('[data-vendor-group="V&A"]'))setTimeout(renderVA,0)});
  const originalLoad=loadVendorSheets;
  if(typeof originalLoad==='function'&&!originalLoad.__vaWrapped){const wrapped=async function(...args){const r=await originalLoad.apply(this,args);setTimeout(renderVA,0);return r};wrapped.__vaWrapped=true;loadVendorSheets=wrapped}
- const style=document.createElement('style');style.textContent='.va-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.va-table input,.va-table textarea,.va-table select{min-width:115px;width:100%;box-sizing:border-box;padding:8px;border:1px solid #cbd5e1;border-radius:6px;font:inherit}.va-table textarea{min-width:150px}.va-table .va-delivered{background:#dcfce7;color:#166534;border-color:#86efac}.va-table .va-pending{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.va-table a{display:inline-block;margin-top:4px}.va-table td{vertical-align:top}';
+ const style=document.createElement('style');style.textContent='.va-sort-date{background:transparent;border:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:0}.va-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.va-table input,.va-table textarea,.va-table select{min-width:115px;width:100%;box-sizing:border-box;padding:8px;border:1px solid #cbd5e1;border-radius:6px;font:inherit}.va-table textarea{min-width:150px}.va-table .va-delivered{background:#dcfce7;color:#166534;border-color:#86efac}.va-table .va-pending{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.va-table a{display:inline-block;margin-top:4px}.va-table td{vertical-align:top}';
  document.head.appendChild(style);
 })();
