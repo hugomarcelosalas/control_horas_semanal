@@ -33,7 +33,7 @@ function createVendorSheetTemplate(){
  const semCells={'D1':'Mayo','A3':'Dia','C3':'TOTAL','D3':'XS','E3':'S','F3':'M','G3':'L','H3':'XL','I3':'XXL','J3':'CASH','K3':'PIN','L3':'TOT DAY'};
  const borrar={'A2':'Fecha','B2':'Entrada','C2':'Salida','D2':'Entrada','E2':'Salida','F2':'Entrada','G2':'Salida','H2':'Entrada','I2':'Salida','J2':'Entrada','K2':'Salida','L2':'Entrada','M2':'Salida','N2':'Entrada','O2':'Salida','P2':'Entrada','Q2':'Salida','R2':'Entrada','S2':'Salida','T2':'Entrada','U2':'Salida'};
  const camp={'A1':'Summer Camp 2022','A3':'Dia','B3':'Calcetines','H3':'Bands','J3':'Kiosko','B4':'xs','C4':'s','D4':'m','E4':'l','F4':'xl','G4':'xxl','H4':'Silver','I4':'Gold','J4':'Agua Grande','K4':'Fruta/ensalada','L4':'Yogurt/Gelatina'};
- return {'Cierre':createCierreSheetTemplate(),'mon-thursday':make(46,13,dayCells),'Friday':make(46,13,dayCells),'Saturday- vacaciones':make(50,13,{...dayCells,'A10':'Summer C.'}),'Sunday':make(49,13,dayCells),'week state':make(34,18,weekCells),'Semanal con suma':make(97,32,semCells),'week con suma':make(34,18,weekCells),'Borrar':make(2,21,borrar),'Camp Verano':make(18,14,camp)};
+ return {'Cierre':createCierreSheetTemplate(),'mon-thursday':make(46,13,dayCells),'Friday':make(46,13,dayCells),'Saturday- vacaciones':make(50,13,{...dayCells,'A10':'Summer C.'}),'Sunday':make(49,13,dayCells),'week state':make(34,18,weekCells),'Semanal con suma':make(97,32,semCells),'week con suma':make(34,18,weekCells),'Borrar':make(2,21,borrar),'Camp Verano':make(18,14,camp),'V&A':make(2,6,{})};
 }
 
 function createCierreSheetTemplate(){
