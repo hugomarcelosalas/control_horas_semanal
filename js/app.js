@@ -753,6 +753,22 @@ document.addEventListener('click',async e=>{
 ['vacFilterEmployee','vacFilterYear','vacFilterStart','vacFilterEnd','vacFilterStatus','vacFilterSearch'].forEach(id=>{const el=$(id);if(el)el.addEventListener('input',()=>renderVacationsSection())});
 const clearVacationFilters=$('vacFilterClear');if(clearVacationFilters)clearVacationFilters.onclick=()=>{['vacFilterEmployee','vacFilterYear','vacFilterStart','vacFilterEnd','vacFilterStatus','vacFilterSearch'].forEach(id=>{const el=$(id);if(el)el.value=''});renderVacationsSection()};
 
+
+async function loadPublishedSchedule(){
+ const box=$('publishedScheduleContent');if(!box)return;
+ box.innerHTML='<p class="muted">Cargando el último horario guardado…</p>';
+ try{
+  const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],turnos=h.turnos||[];
+  if(!h.semanaGenerada||!turnos.length){box.innerHTML='<p class="empty-state">Todavía no hay un horario publicado disponible.</p>';return;}
+  const days=(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||''));
+  const dates=[...new Set(turnos.map(t=>String(t.fecha||'')).filter(Boolean))].sort();
+  let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th>'+dates.map(d=>'<th>'+vendorEscape(new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'2-digit'}))+'</th>').join('')+'</tr></thead><tbody>';
+  for(const emp of employees){html+='<tr><th>'+vendorEscape(emp.nombre||emp.username||emp.id)+'</th>';for(const date of dates){const rows=turnos.filter(t=>String(t.empleadoId)===String(emp.id)&&String(t.fecha)===date);html+='<td>'+rows.map(t=>vendorEscape([t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–')+(t.puesto?' · '+t.puesto:''))).join('<br>')+'</td>'}html+='</tr>'}
+  html+='</tbody></table></div>';box.innerHTML=html;
+ }catch(e){box.innerHTML='<p class="error">No se pudo cargar el horario publicado: '+vendorEscape(e.message)+'</p>'}
+}
+document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule()});
+
 function updateSectionTabsVisibility(){
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
   $('importExportPanel')?.classList.toggle('hidden', !isAdmin() || $('importExportPanel').dataset.active !== 'true');
@@ -760,14 +776,16 @@ function updateSectionTabsVisibility(){
 
 function showSection(sectionId){
   if((sectionId==='importExportPanel'||sectionId==='invoicesPanel')&&!isAdmin())return;
+  if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
-  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','vacationsPanel','personalSpacePanel','invoicesPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();if(sectionId==='invoicesPanel'&&isAdmin())setupInvoices();
   if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
+  if(sectionId==='publishedSchedulePanel')loadPublishedSchedule();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
