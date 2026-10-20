@@ -35,7 +35,7 @@
   <button type="button" class="section-tab admin-tab" data-section="employeesPanel">👥 Empleados</button>
   <button type="button" class="section-tab admin-tab" data-section="hugoErikaPanel">🧾 Hugo &amp; Erika</button>
   <button type="button" class="section-tab admin-tab" data-section="importExportPanel">📥 Importar / Exportar</button>
-  <button type="button" class="section-tab" data-section="horariosPanel">📅 Horarios</button>
+  <button type="button" class="section-tab" data-section="horariosPanel">📅 Horario publicado</button>
   <button type="button" class="section-tab" data-section="vacationsPanel">🏖️ Vacaciones</button>
   <button type="button" class="section-tab admin-tab" data-section="invoicesPanel">🧾 Facturas</button>
   <button type="button" class="section-tab" data-section="personalSpacePanel">👤 Mi espacio</button>
@@ -160,6 +160,7 @@
 
       <section id="personalSpacePanel" class="panel hidden"><div class="section-head"><div><h2>👤 Mi espacio</h2><p>Tus documentos personales de trabajo, reunidos en un solo lugar.</p></div></div><div class="personal-space-grid"><div class="personal-space-card"><div class="personal-space-card-icon">📄</div><h3>Mis nóminas</h3><p>Consulta y abre tus nóminas disponibles.</p><div id="payrollBox" class="payroll-box"></div></div><div class="personal-space-card"><div class="personal-space-card-icon">🏖️</div><h3>Mis vacaciones</h3><p>Consulta únicamente tus propios periodos de vacaciones.</p><div id="myVacationsBox" class="my-vacations-list"></div></div><div class="personal-space-card"><div class="personal-space-card-icon">📝</div><h3>Contratos y documentos</h3><p>Consulta tus contratos y otros documentos laborales. Solo administración puede añadirlos o eliminarlos.</p><div id="personalDocumentsBox" class="personal-documents-list"><div class="personal-space-empty">Cargando documentos…</div></div></div></div></section>
 
+      <section id="publishedSchedulePanel" class="panel hidden"><div class="section-head"><div><h2>📅 Último horario publicado</h2><p>Solo lectura. No puedes modificar los turnos.</p></div><button id="refreshPublishedSchedule" class="ghost" type="button">Actualizar</button></div><div id="publishedScheduleContent" class="published-schedule-content"><p class="muted">Cargando horario…</p></div></section>
       <section id="horariosPanel" class="panel hidden"><div class="section-head admin-head"><div><h2>📅 Generador de horarios</h2><p>Cuadrante semanal, turnos, cumpleaños, clima y exportación.</p></div><button id="closeHorarios" class="ghost" type="button">Cerrar horarios</button></div><div class="generator-frame-wrap"><iframe id="generatorFrame" title="Generador de horarios" src="/horarios/" loading="lazy"></iframe></div></section>
 
       <section id="mainPanel" class="panel">
