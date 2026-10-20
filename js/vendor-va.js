@@ -98,8 +98,8 @@
  }
  // Refresh V&A rendering when the group/sheet tabs are switched.
  document.addEventListener('click',e=>{if(e.target.closest('[data-vendor-sheet="V&A"]')||e.target.closest('[data-vendor-group="V&A"]'))setTimeout(renderVA,0)});
- const originalLoad=loadVendorSheets;
- if(typeof originalLoad==='function'&&!originalLoad.__vaWrapped){const wrapped=async function(...args){const r=await originalLoad.apply(this,args);setTimeout(renderVA,0);return r};wrapped.__vaWrapped=true;loadVendorSheets=wrapped}
+ const originalLoad=typeof loadVendorSheets==='function'?loadVendorSheets:null;
+ if(originalLoad&&!originalLoad.__vaWrapped){const wrapped=async function(...args){const r=await originalLoad.apply(this,args);setTimeout(renderVA,0);return r};wrapped.__vaWrapped=true;loadVendorSheets=wrapped}
  const style=document.createElement('style');style.textContent='.va-toolbar button:disabled{opacity:.55;cursor:default}.va-sort-date{background:transparent;border:0;color:inherit;font:inherit;font-weight:700;cursor:pointer;padding:0}.va-toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}.va-table input,.va-table textarea,.va-table select{min-width:115px;width:100%;box-sizing:border-box;padding:8px;border:1px solid #cbd5e1;border-radius:6px;font:inherit}.va-table textarea{min-width:150px}.va-table .va-delivered{background:#dcfce7;color:#166534;border-color:#86efac}.va-table .va-pending{background:#fee2e2;color:#991b1b;border-color:#fca5a5}.va-table a{display:inline-block;margin-top:4px}.va-table td{vertical-align:top}';
  document.head.appendChild(style);
 })();
