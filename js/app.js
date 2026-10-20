@@ -34,7 +34,8 @@ let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
-let vendorSheetsState={},vendorActiveSheet='',vendorSaveTimer=null;
+let vendorSheetsState={},vendorActiveSheet='Cierre',vendorActiveGroup='Venta',vendorSaveTimer=null;
+const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Camp Verano']};
 function vendorEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function vendorColName(n){let out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out}
 function vendorCellClass(sheetName,ref){
@@ -69,9 +70,13 @@ function vendorCellClass(sheetName,ref){
 function renderVendorWorkspace(sheets){
  vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
  const tabs=$('vendorSheetTabs');if(!tabs)return;
- tabs.innerHTML=Object.keys(vendorSheetsState).map(name=>'<button type="button" class="vendor-sheet-tab '+(name===vendorActiveSheet?'active':'')+'" data-vendor-sheet="'+vendorEscape(name)+'">'+vendorEscape(name)+'</button>').join('');
+ const groupNames=Object.keys(vendorGroups);
+ if(!groupNames.includes(vendorActiveGroup))vendorActiveGroup='Venta';
+ if(!vendorGroups[vendorActiveGroup].includes(vendorActiveSheet)||!vendorSheetsState[vendorActiveSheet])vendorActiveSheet=(vendorGroups[vendorActiveGroup].find(n=>vendorSheetsState[n])||Object.keys(vendorSheetsState)[0]);
+ tabs.innerHTML='<div class="vendor-main-tabs">'+groupNames.map(name=>'<button type="button" class="vendor-main-tab '+(name===vendorActiveGroup?'active':'')+'" data-vendor-group="'+name+'">'+name+'</button>').join('')+'</div><div class="vendor-sub-tabs">'+(vendorGroups[vendorActiveGroup]||[]).filter(name=>vendorSheetsState[name]).map(name=>'<button type="button" class="vendor-sheet-tab '+(name===vendorActiveSheet?'active':'')+'" data-vendor-sheet="'+vendorEscape(name)+'">'+vendorEscape(name)+'</button>').join('')+'</div>';
+ tabs.querySelectorAll('[data-vendor-group]').forEach(btn=>btn.onclick=()=>{vendorActiveGroup=btn.dataset.vendorGroup;vendorActiveSheet=(vendorGroups[vendorActiveGroup].find(n=>vendorSheetsState[n])||Object.keys(vendorSheetsState)[0]);renderVendorWorkspace(vendorSheetsState)});
  tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
- tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorSheet===vendorActiveSheet)));
+ tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorGroup?btn.dataset.vendorGroup===vendorActiveGroup:btn.dataset.vendorSheet===vendorActiveSheet)));
  const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
  const isDaily=['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
  box.classList.toggle('vendor-daily-sheet',isDaily);
