@@ -8,7 +8,7 @@ document.getElementById('sectionTabs')?.addEventListener('click',e=>{
   if(!tab)return;
   e.preventDefault();
   const sectionId=tab.dataset.section;
-  if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','invoicesPanel'].includes(sectionId) && window.__CONTROL_HORARIO_USER__?.role!=='admin')return;
+  if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','invoicesPanel','wagesPanel','monthlyHoursPanel'].includes(sectionId) && window.__CONTROL_HORARIO_USER__?.role!=='admin')return;
   if(typeof showSection==='function')showSection(sectionId);
   else {
     document.querySelectorAll('#app main > section.panel').forEach(p=>p.classList.toggle('hidden',p.id!==sectionId));
@@ -35,7 +35,7 @@ let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
 let vendorSheetsState={},vendorActiveSheet='Cierre',vendorActiveGroup='Venta',vendorSaveTimer=null;
-const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Camp Verano']};
+const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Camp Verano'],'V&A':['V&A']};
 function vendorEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function vendorColName(n){let out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out}
 function vendorCellClass(sheetName,ref){
@@ -72,6 +72,7 @@ function renderVendorWorkspace(sheets){
  const tabs=$('vendorSheetTabs');if(!tabs)return;
  const groupNames=Object.keys(vendorGroups);
  if(!groupNames.includes(vendorActiveGroup))vendorActiveGroup='Venta';
+ if(!vendorSheetsState['V&A'])vendorSheetsState['V&A']={rows:20,cols:8,cells:{}};
  if(!vendorGroups[vendorActiveGroup].includes(vendorActiveSheet)||!vendorSheetsState[vendorActiveSheet])vendorActiveSheet=(vendorGroups[vendorActiveGroup].find(n=>vendorSheetsState[n])||Object.keys(vendorSheetsState)[0]);
  tabs.innerHTML='<div class="vendor-main-tabs">'+groupNames.map(name=>'<button type="button" class="vendor-main-tab '+(name===vendorActiveGroup?'active':'')+'" data-vendor-group="'+name+'">'+name+'</button>').join('')+'</div><div class="vendor-sub-tabs">'+(vendorGroups[vendorActiveGroup]||[]).filter(name=>vendorSheetsState[name]).map(name=>'<button type="button" class="vendor-sheet-tab '+(name===vendorActiveSheet?'active':'')+'" data-vendor-sheet="'+vendorEscape(name)+'">'+vendorEscape(name)+'</button>').join('')+'</div>';
  tabs.querySelectorAll('[data-vendor-group]').forEach(btn=>btn.onclick=()=>{vendorActiveGroup=btn.dataset.vendorGroup;vendorActiveSheet=(vendorGroups[vendorActiveGroup].find(n=>vendorSheetsState[n])||Object.keys(vendorSheetsState)[0]);renderVendorWorkspace(vendorSheetsState)});
@@ -769,16 +770,33 @@ async function loadPublishedSchedule(){
 }
 document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule()});
 
+
+function renderWages(){
+ if(!isAdmin())return;db.wages=db.wages||{};const sel=$('wageEmployee');if(!sel)return;
+ const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
+ sel.innerHTML=employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
+ const render=()=>{const user=sel.value,rows=db.wages[user]||[],cur=rows[rows.length-1];$('wageAmount').value=cur?.amount??'';$('wageType').value=cur?.type||'hourly';$('wageNote').value=cur?.note||'';$('wageCurrent').innerHTML=cur?'<p><strong>'+vendorEscape(db.users.find(u=>u.username===user)?.name||user)+'</strong>: '+(cur.type==='special'?'Contrato especial':'Por hora')+' · '+Number(cur.amount).toFixed(2)+' €'+(cur.type==='hourly'?' / hora':'')+' · actualizado '+vendorEscape(new Date(cur.at).toLocaleString('es-ES'))+'</p>':'<p>Sin sueldo configurado.</p>';$('wageHistory').innerHTML=rows.length?'<table class="published-schedule-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Importe</th><th>Descripción</th></tr></thead><tbody>'+rows.slice().reverse().map(x=>'<tr><td>'+vendorEscape(new Date(x.at).toLocaleString('es-ES'))+'</td><td>'+ (x.type==='special'?'Especial':'Por hora')+'</td><td>'+Number(x.amount).toFixed(2)+' €</td><td>'+vendorEscape(x.note||'')+'</td></tr>').join('')+'</tbody></table>':'<p>Sin historial.</p>'};
+ sel.onchange=render;render();
+}
+$('wageForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!isAdmin())return;const username=$('wageEmployee').value;if(!username)return;db.wages=db.wages||{};db.wages[username]=db.wages[username]||[];db.wages[username].push({type:$('wageType').value,amount:Number($('wageAmount').value),note:$('wageNote').value.trim(),at:new Date().toISOString()});await saveDB();$('wageStatus').textContent='Sueldo actualizado y guardado.';renderWages()});
+function renderMonthlyHours(){
+ if(!isAdmin())return;const inp=$('monthlyHoursMonth');if(!inp)return;if(!inp.value)inp.value=dateKey(new Date()).slice(0,7);const month=inp.value;const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);let rows=[];
+ for(const u of employees){let worked=0,vac=0;for(let day=1;day<=new Date(Number(month.slice(0,4)),Number(month.slice(5,7)),0).getDate();day++){const k=month+'-'+String(day).padStart(2,'0');worked+=totalMinutes((db.records?.[u.username]||{})[k]||{});if((db.vacations?.[u.username]||[]).some(v=>!v.cancelled&&k>=v.start&&k<=v.end)&&isWeekday(parseKey(k)))vac+=dailyContractMinutes(u)}rows.push({u,worked,vac})}
+ $('monthlyHoursTable').innerHTML='<div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Vacaciones (aparte)</th></tr></thead><tbody>'+rows.map(x=>'<tr><th>'+vendorEscape(x.u.name)+'</th><td>'+fmtMinutes(x.worked)+'</td><td>'+fmtMinutes(x.vac)+'</td></tr>').join('')+'</tbody></table></div>';
+ $('calculateTips').onclick=()=>{const total=Math.max(0,Number($('tipTotal').value)||0),mins=rows.reduce((s,x)=>s+x.worked,0);$('tipResults').innerHTML=mins?'<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Propina</th></tr></thead><tbody>'+rows.map(x=>'<tr><th>'+vendorEscape(x.u.name)+'</th><td>'+((total*x.worked/mins)/60).toFixed(2)+' €</td></tr>').join('')+'</tbody></table><p>Total repartido según horas trabajadas.</p>':'<p>No hay horas trabajadas para repartir.</p>'};
+}
+$('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
+
 function updateSectionTabsVisibility(){
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
   $('importExportPanel')?.classList.toggle('hidden', !isAdmin() || $('importExportPanel').dataset.active !== 'true');
 }
 
 function showSection(sectionId){
-  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel')&&!isAdmin())return;
+  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel')&&!isAdmin())return;
   if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
-  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
@@ -786,6 +804,8 @@ function showSection(sectionId){
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();if(sectionId==='invoicesPanel'&&isAdmin())setupInvoices();
   if(sectionId==='importExportPanel'&&isAdmin())renderLastBackupLabel();
   if(sectionId==='publishedSchedulePanel')loadPublishedSchedule();
+  if(sectionId==='wagesPanel')renderWages();
+  if(sectionId==='monthlyHoursPanel')renderMonthlyHours();
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
