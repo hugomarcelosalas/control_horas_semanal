@@ -786,9 +786,9 @@ async function renderWages(){
  if(!sel||!filter)return;
  const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
  const oldSelected=[...sel.selectedOptions].map(o=>o.value);
- sel.innerHTML=employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
+ sel.innerHTML='<option value="">Selecciona un empleado</option>'+employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
  oldSelected.forEach(v=>{const o=[...sel.options].find(x=>x.value===v);if(o)o.selected=true});
- if(![...sel.selectedOptions].length&&sel.options.length)sel.options[0].selected=true;
+ 
  const oldFilter=filter.value;
  filter.innerHTML='<option value="">Todos los empleados</option>'+employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
  if(employees.some(u=>u.username===oldFilter))filter.value=oldFilter;
@@ -799,7 +799,7 @@ async function renderWages(){
  };
  const renderCurrent=()=>{
   const usernames=selectedUsers();
-  if(!usernames.length){$('wageCurrent').innerHTML='<p>Selecciona uno o varios empleados.</p>';return}
+  if(!usernames.length){$('wageCurrent').innerHTML='<p>Selecciona un empleado en el formulario para ver su sueldo actual.</p>';return}
   $('wageCurrent').innerHTML=usernames.map(username=>{
    const rows=db.wages[username]||[],cur=rows[rows.length-1],name=employees.find(u=>u.username===username)?.name||username;
    return cur?'<p><strong>'+vendorEscape(name)+'</strong>: '+(cur.type==='special'?'Contrato especial':'Por hora')+' · '+Number(cur.hours||0).toFixed(2)+' hs · '+Number(cur.amount||0).toFixed(2)+' €'+(cur.type==='hourly'?' / hora':'')+' · Extra: '+Number(cur.extra||0).toFixed(2)+' € · Hora festivo: '+Number(cur.holidayRate||0).toFixed(2)+' €/h'+(cur.note?' · '+vendorEscape(cur.note):'')+' · actualizado '+vendorEscape(new Date(cur.at).toLocaleString('es-ES'))+'</p>':'<p><strong>'+vendorEscape(name)+'</strong>: Sin sueldo configurado.</p>';
@@ -839,8 +839,8 @@ async function renderWages(){
 }
 $('wageForm')?.addEventListener('submit',async e=>{
  e.preventDefault();if(!isAdmin())return;
- const usernames=[...$('wageEmployee').selectedOptions].map(o=>o.value);
- if(!usernames.length){$('wageStatus').textContent='Selecciona al menos un empleado.';return}
+ const usernames=[$('wageEmployee').value].filter(Boolean);
+ if(!usernames.length){$('wageStatus').textContent='Selecciona un empleado antes de guardar.';return}
  const hours=Number($('wageHours').value),amount=Number($('wageAmount').value),extra=Number($('wageExtra').value),holidayRate=Number($('wageHolidayRate').value);
  if(!Number.isFinite(hours)||hours<0||!Number.isFinite(amount)||amount<0||!Number.isFinite(extra)||extra<0||!Number.isFinite(holidayRate)||holidayRate<0){$('wageStatus').textContent='Revisa las horas, el importe y el extra.';return}
  db.wages=db.wages||{};
@@ -849,7 +849,7 @@ $('wageForm')?.addEventListener('submit',async e=>{
   db.wages[username]=db.wages[username]||[];
   db.wages[username].push({type,hours,amount,extra,holidayRate,note,at});
  });
- try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference||[]})});db.wages=saved.wages;db.wageReference=saved.wageReference;$('wageStatus').textContent='Actualización guardada para '+usernames.length+' empleado(s).';renderWages()}catch(err){$('wageStatus').textContent='No se pudo guardar el sueldo: '+err.message}
+ try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference||[]})});db.wages=saved.wages;db.wageReference=saved.wageReference;$('wageStatus').textContent='✅ Sueldo/hs guardado correctamente para '+(db.users.find(u=>u.username===usernames[0])?.name||usernames[0])+'.';renderWages()}catch(err){$('wageStatus').textContent='No se pudo guardar el sueldo: '+err.message}
 });
 const tipHourOverrides = window.__tipHourOverrides || (window.__tipHourOverrides = {});
 function parseManualHours(value){
