@@ -773,7 +773,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 
 function renderWages(){
  if(!isAdmin())return;
- db.wages=db.wages||{};
+ db.wages=db.wages||{};db.wageReference=db.wageReference||[];
  const sel=$('wageEmployee'),filter=$('wageHistoryEmployee');
  if(!sel||!filter)return;
  const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
@@ -785,6 +785,10 @@ function renderWages(){
  filter.innerHTML='<option value="">Todos los empleados</option>'+employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
  if(employees.some(u=>u.username===oldFilter))filter.value=oldFilter;
  const selectedUsers=()=>[...sel.selectedOptions].map(o=>o.value);
+ const renderReference=()=>{
+  const refs=db.wageReference||[];
+  $('wageReferenceTable').innerHTML=refs.length?'<table class="published-schedule-table"><thead><tr><th>Hs</th><th>Tipo</th><th>Nómina</th><th>Festivos</th><th>Extra</th><th>Observaciones</th><th></th></tr></thead><tbody>'+refs.map((r,i)=>'<tr><td>'+Number(r.hours||0).toFixed(2)+' hs</td><td>'+vendorEscape(r.type||'Normal')+'</td><td>'+Number(r.payroll||0).toFixed(2)+' €</td><td>'+Number(r.holiday||0).toFixed(2)+' €</td><td>'+Number(r.extra||0).toFixed(2)+' €</td><td>'+vendorEscape(r.note||'')+'</td><td><button type="button" data-ref-delete="'+i+'">Eliminar</button></td></tr>').join('')+'</tbody></table>':'<p>Aún no hay contratos de referencia. Añade las tarifas habituales arriba.</p>';
+ };
  const renderCurrent=()=>{
   const usernames=selectedUsers();
   if(!usernames.length){$('wageCurrent').innerHTML='<p>Selecciona uno o varios empleados.</p>';return}
@@ -798,13 +802,31 @@ function renderWages(){
   const rows=[];
   employees.filter(u=>!chosen||u.username===chosen).forEach(u=>(db.wages[u.username]||[]).forEach(x=>rows.push({...x,employeeName:u.name,username:u.username})));
   rows.sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
-  $('wageHistory').innerHTML=rows.length?'<table class="published-schedule-table"><thead><tr><th>Fecha</th><th>Contrato</th><th>Hs</th><th>Importe</th><th>Extra</th><th>Hora festivo</th><th>Empleado</th><th>Observaciones</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+vendorEscape(new Date(x.at).toLocaleString('es-ES'))+'</td><td>'+(x.type==='special'?'Especial':'Por hora')+'</td><td>'+Number(x.hours||0).toFixed(2)+'</td><td>'+Number(x.amount||0).toFixed(2)+' €'+(x.type==='hourly'?' / h':'')+'</td><td>'+Number(x.extra||0).toFixed(2)+' €</td><td>'+Number(x.holidayRate||0).toFixed(2)+' €/h</td><td>'+vendorEscape(x.employeeName)+'</td><td>'+vendorEscape(x.note||'')+'</td></tr>').join('')+'</tbody></table>':'<p>Sin historial para este filtro.</p>';
+  $('wageHistory').innerHTML=rows.length?'<table class="published-schedule-table"><thead><tr><th>Fecha</th><th>Contrato</th><th>Hs</th><th>Importe</th><th>Extra</th><th>Hora festivo</th><th>Empleado</th><th>Observaciones</th></tr></thead><tbody>'+rows.map(x=>'<tr><td><input aria-label="Fecha del historial" type="datetime-local" data-wage-date-user="'+vendorEscape(x.username)+'" data-wage-date-index="'+(db.wages[x.username]||[]).indexOf(x)+'" value="'+vendorEscape(new Date(x.at).getTime()&&!Number.isNaN(new Date(x.at).getTime())?new Date(new Date(x.at).getTime()-new Date(x.at).getTimezoneOffset()*60000).toISOString().slice(0,16):'')+'"></td><td>'+(x.type==='special'?'Especial':'Por hora')+'</td><td>'+Number(x.hours||0).toFixed(2)+'</td><td>'+Number(x.amount||0).toFixed(2)+' €'+(x.type==='hourly'?' / h':'')+'</td><td>'+Number(x.extra||0).toFixed(2)+' €</td><td>'+Number(x.holidayRate||0).toFixed(2)+' €/h</td><td>'+vendorEscape(x.employeeName)+'</td><td>'+vendorEscape(x.note||'')+'</td></tr>').join('')+'</tbody></table>':'<p>Sin historial para este filtro.</p>';
  };
  const render=()=>{
   const username=selectedUsers()[0],rows=db.wages[username]||[],cur=rows[rows.length-1];
   if(cur){$('wageAmount').value=cur.amount??'';$('wageHours').value=Number(cur.hours||0);$('wageType').value=cur.type||'hourly';$('wageExtra').value=Number(cur.extra||0);$('wageHolidayRate').value=Number(cur.holidayRate||0);$('wageNote').value=cur.note||''}
-  renderCurrent();renderHistory();
+  renderCurrent();renderHistory();renderReference();
  };
+ if(!$('wageDate').value){const now=new Date();$('wageDate').value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+ $('wageReferenceForm')?.addEventListener('submit',async e=>{
+  e.preventDefault();if(!isAdmin())return;
+  db.wageReference=db.wageReference||[];
+  db.wageReference.push({hours:Number($('refHours').value),type:$('refType').value,payroll:Number($('refPayroll').value),holiday:Number($('refHoliday').value),extra:Number($('refExtra').value),note:$('refNote').value.trim(),createdAt:new Date().toISOString()});
+  await saveDB();$('refNote').value='';renderWages();
+ });
+ $('wageReferenceTable')?.addEventListener('click',async e=>{
+  const btn=e.target.closest('[data-ref-delete]');if(!btn||!isAdmin())return;
+  db.wageReference.splice(Number(btn.dataset.refDelete),1);await saveDB();renderWages();
+ });
+ $('wageHistory')?.addEventListener('change',async e=>{
+  const input=e.target.closest('[data-wage-date-user]');if(!input||!isAdmin()||!input.value)return;
+  const username=input.dataset.wageDateUser,index=Number(input.dataset.wageDateIndex);
+  if(!db.wages?.[username]?.[index])return;
+  const date=new Date(input.value);if(Number.isNaN(date.getTime()))return;
+  db.wages[username][index].at=date.toISOString();await saveDB();renderWages();
+ });
  sel.onchange=render;filter.onchange=renderHistory;render();
 }
 $('wageForm')?.addEventListener('submit',async e=>{
@@ -814,7 +836,7 @@ $('wageForm')?.addEventListener('submit',async e=>{
  const hours=Number($('wageHours').value),amount=Number($('wageAmount').value),extra=Number($('wageExtra').value),holidayRate=Number($('wageHolidayRate').value);
  if(!Number.isFinite(hours)||hours<0||!Number.isFinite(amount)||amount<0||!Number.isFinite(extra)||extra<0||!Number.isFinite(holidayRate)||holidayRate<0){$('wageStatus').textContent='Revisa las horas, el importe y el extra.';return}
  db.wages=db.wages||{};
- const at=new Date().toISOString(),type=$('wageType').value,note=$('wageNote').value.trim();
+ const at=$('wageDate').value?new Date($('wageDate').value).toISOString():new Date().toISOString(),type=$('wageType').value,note=$('wageNote').value.trim();
  usernames.forEach(username=>{
   db.wages[username]=db.wages[username]||[];
   db.wages[username].push({type,hours,amount,extra,holidayRate,note,at});
