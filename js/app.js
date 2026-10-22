@@ -772,7 +772,7 @@ async function loadPublishedSchedule(){
 document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule()});
 
 
-function renderWages(){
+async function renderWages(){
  if(!isAdmin())return;
  if(!renderWages.loaded){try{const saved=await api('/api/admin/wages');db.wages=saved.wages||{};db.wageReference=saved.wageReference||[]}catch(e){$('wageStatus').textContent='No se pudieron cargar los sueldos: '+e.message;return}renderWages.loaded=true;}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
  // Eliminar referencias duplicadas exactas generadas por listeners repetidos.
