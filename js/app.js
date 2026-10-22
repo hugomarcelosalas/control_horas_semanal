@@ -975,10 +975,10 @@ function updateSectionTabsVisibility(){
 }
 
 function showSection(sectionId){
-  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel')&&!isAdmin())return;
+  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel'||sectionId==='vendorWorkspace')&&!isAdmin())return;
   if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
-  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel','vendorWorkspace'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
@@ -989,6 +989,7 @@ function showSection(sectionId){
   if(sectionId==='wagesPanel')renderWages();
   if(sectionId==='monthlyHoursPanel')renderMonthlyHours();
   if(sectionId==='personalSpacePanel'){if(isAdmin())renderPersonalSpaceAdminOverview();setupPayrollUI();}
+  if(sectionId==='vendorWorkspace'&&isAdmin()){api('/api/vendor/sheets').then(out=>renderVendorWorkspace(out.sheets||{})).catch(err=>{const box=$('vendorSheetContainer');if(box)box.innerHTML='<p>No se pudo cargar Stock: '+vendorEscape(err.message)+'</p>';});}
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
