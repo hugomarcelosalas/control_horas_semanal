@@ -447,3 +447,6 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 #calendarView .calendar-special-event{margin-top:4px;padding:3px 5px;border-radius:5px;background:#fff7df;border:1px solid #f2df9e;color:#755b17;font-size:11px;overflow-wrap:anywhere}
 .calendar-admin-tools{margin:0 0 12px}.calendar-event-form{margin-top:10px;max-width:520px;padding:14px;border:1px solid #e2e8f0;border-radius:12px;background:#fff}.calendar-event-form h3{margin:0 0 10px}.calendar-event-form form{display:grid;gap:10px}.calendar-event-form label{display:grid;gap:5px}
 @media(max-width:600px){#calendarView .calendar-day-type{font-size:9px;padding:2px}}
+
+/* Marcas pastel y controles en Calendario/vacaciones */
+.vac-cal-day.vac-cal-week-type{background:#eaf5ff;border-color:#c9e3fa}.vac-cal-day.vac-cal-holiday-type{background:#edf8ee;border-color:#cce8cf}.vac-cal-day-top{display:flex;align-items:flex-start;justify-content:space-between;gap:4px}.vac-cal-day-top .calendar-day-type{width:100%;max-width:112px;min-width:0;font-size:10px;padding:2px;border-radius:5px;background:rgba(255,255,255,.85);color:#334155;border:1px solid #d4dce5}.vac-cal-day .calendar-special-event{margin-top:4px;padding:3px 5px;border-radius:5px;background:#fff7df;border:1px solid #f2df9e;color:#755b17;font-size:11px;overflow-wrap:anywhere}
