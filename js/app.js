@@ -946,3 +946,5 @@ document.addEventListener('click',e=>{
   else if(e.target.closest('#balancesBtn')){e.preventDefault();showSection('balancesPanel')}
   else if(e.target.closest('#closeHorarios')){e.preventDefault();showSection('mainPanel')}
 });
+
+$('publishHorarioBtn')?.addEventListener('click',async()=>{if(!isAdmin())return;if(!confirm('¿Publicar el horario actual? Los empleados dejarán de ver el horario anterior y verán este nuevo horario.'))return;const button=$('publishHorarioBtn');button.disabled=true;try{await api('/api/horarios/publish',{method:'POST',body:JSON.stringify({})});alert('Horario publicado. Los empleados ya pueden verlo.');}catch(e){alert('No se pudo publicar el horario: '+e.message)}finally{button.disabled=false}});
