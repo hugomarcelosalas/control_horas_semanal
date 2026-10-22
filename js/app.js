@@ -774,7 +774,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 
 function renderWages(){
  if(!isAdmin())return;
- db.wages=db.wages||{};db.wageReference=db.wageReference||[];
+ if(!renderWages.loaded){try{const saved=await api('/api/admin/wages');db.wages=saved.wages||{};db.wageReference=saved.wageReference||[]}catch(e){$('wageStatus').textContent='No se pudieron cargar los sueldos: '+e.message;return}renderWages.loaded=true;}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
  // Eliminar referencias duplicadas exactas generadas por listeners repetidos.
  const seenRefs=new Set();
  db.wageReference=db.wageReference.filter(r=>{
@@ -821,18 +821,18 @@ function renderWages(){
   e.preventDefault();if(!isAdmin())return;
   db.wageReference=db.wageReference||[];
   db.wageReference.push({hours:Number($('refHours').value),type:$('refType').value,payroll:Number($('refPayroll').value),holiday:Number($('refHoliday').value),extra:Number($('refExtra').value),note:$('refNote').value.trim(),createdAt:new Date().toISOString()});
-  await saveDB();$('refNote').value='';renderWages();
+  try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference})});db.wages=saved.wages;db.wageReference=saved.wageReference;$('refNote').value='';renderWages()}catch(err){$('wageStatus').textContent='No se pudo guardar la referencia: '+err.message}
  };
  $('wageReferenceTable').onclick=async e=>{
   const btn=e.target.closest('[data-ref-delete]');if(!btn||!isAdmin())return;
-  db.wageReference.splice(Number(btn.dataset.refDelete),1);await saveDB();renderWages();
+  const previous=db.wageReference.slice();db.wageReference.splice(Number(btn.dataset.refDelete),1);try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference})});db.wages=saved.wages;db.wageReference=saved.wageReference;renderWages()}catch(err){db.wageReference=previous;alert('No se pudo eliminar: '+err.message)}
  };
  $('wageHistory').onchange=async e=>{
   const input=e.target.closest('[data-wage-date-user]');if(!input||!isAdmin()||!input.value)return;
   const username=input.dataset.wageDateUser,index=Number(input.dataset.wageDateIndex);
   if(!db.wages?.[username]?.[index])return;
   const date=new Date(input.value);if(Number.isNaN(date.getTime()))return;
-  db.wages[username][index].at=date.toISOString();await saveDB();renderWages();
+  const previous=db.wages[username][index].at;db.wages[username][index].at=date.toISOString();try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference||[]})});db.wages=saved.wages;db.wageReference=saved.wageReference;renderWages()}catch(err){db.wages[username][index].at=previous;alert('No se pudo actualizar la fecha: '+err.message)}
  };
  sel.onchange=render;filter.onchange=renderHistory;render();
 }
@@ -848,7 +848,7 @@ $('wageForm')?.addEventListener('submit',async e=>{
   db.wages[username]=db.wages[username]||[];
   db.wages[username].push({type,hours,amount,extra,holidayRate,note,at});
  });
- await saveDB();$('wageStatus').textContent='Actualización guardada para '+usernames.length+' empleado(s).';renderWages();
+ try{const saved=await api('/api/admin/wages',{method:'PUT',body:JSON.stringify({wages:db.wages||{},wageReference:db.wageReference||[]})});db.wages=saved.wages;db.wageReference=saved.wageReference;$('wageStatus').textContent='Actualización guardada para '+usernames.length+' empleado(s).';renderWages()}catch(err){$('wageStatus').textContent='No se pudo guardar el sueldo: '+err.message}
 });
 const tipHourOverrides = window.__tipHourOverrides || (window.__tipHourOverrides = {});
 function parseManualHours(value){
