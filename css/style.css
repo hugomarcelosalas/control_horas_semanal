@@ -429,3 +429,13 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 .published-schedule-content{padding:18px;overflow-x:auto}.published-schedule-period{margin:0 0 14px;color:#334155}.published-schedule-period span{color:#64748b;font-size:12px}.published-schedule-table-wrap{overflow:auto;border:1px solid #dbe3ee;border-radius:10px}.published-schedule-table{border-collapse:collapse;width:100%;min-width:720px;background:#fff;font-size:13px}.published-schedule-table th,.published-schedule-table td{padding:11px 12px;border:1px solid #dbe3ee;text-align:center;vertical-align:top}.published-schedule-table thead th{background:#edf2f8;font-weight:800}.published-schedule-table tbody th{text-align:left;white-space:nowrap;background:#f8fafc}.published-schedule-table td{min-width:100px;line-height:1.6}
 
 .wage-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;align-items:end;margin:18px 0 24px}.wage-form label,.tip-calculator label{display:flex;flex-direction:column;gap:6px}.wage-form input,.wage-form select,.tip-calculator input{min-height:40px;border:1px solid #cbd5e1;border-radius:8px;padding:8px}.tip-calculator{margin-top:24px;padding:18px;border:1px solid #dbe3ee;border-radius:12px;background:#f8fafc}.tip-calculator label{max-width:260px;margin:12px 0}
+
+
+/* Selector de varios empleados: más claro, cómodo y adaptado a móvil */
+#wagesPanel #wageEmployee{display:block;width:100%;min-width:0;min-height:190px;padding:7px;border:1px solid #cbd5e1;border-radius:12px;background:#f8fafc;color:#172033;font:inherit;line-height:1.45;outline:none;box-shadow:inset 0 1px 2px #17203308;}
+#wagesPanel #wageEmployee:focus{border-color:#5b8def;box-shadow:0 0 0 3px #5b8def20;background:#fff;}
+#wagesPanel #wageEmployee option{padding:9px 10px;border-radius:6px;line-height:1.5;}
+#wagesPanel #wageEmployee option:checked{background:#dceafe linear-gradient(0deg,#dceafe,#dceafe);color:#173d78;font-weight:750;}
+#wagesPanel label:has(#wageEmployee){grid-column:span 2;align-self:stretch;}
+#wagesPanel label:has(#wageEmployee)::after{content:"Mantén Ctrl (Windows) o ⌘ (Mac) para seleccionar varios empleados.";display:block;color:#64748b;font-size:11px;font-weight:500;line-height:1.4;margin-top:2px;}
+@media(max-width:600px){#wagesPanel label:has(#wageEmployee){grid-column:1/-1}#wagesPanel #wageEmployee{min-height:210px;font-size:14px}}
