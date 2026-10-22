@@ -107,26 +107,54 @@ async function putDb(db){enforceRolePolicy(db);if(TEST_MODE && !process.env.DATA
 function publicDb(db,viewerRole='admin',viewerUsername=null){if(viewerRole==='vendedor'){const u=db.users.find(x=>x.username===viewerUsername);const {passwordHash,...user}=u||{};return {users:u?[user]:[],vendorSheets:db.vendorSheets||createVendorSheetTemplate(),version:8};}const safe={...db,users:db.users.map(({passwordHash,...u})=>u),payrolls:(db.payrolls||[]).map(({driveFileId,...p})=>p)};safe.dayOffRequests=(db.dayOffRequests||[]).filter(r=>viewerRole==='admin'||r.username===viewerUsername);safe.invoices=viewerRole==='admin'?(db.invoices||[]):[];if(viewerRole!=='admin'){safe.vacations=Object.fromEntries(Object.entries(db.vacations||{}).map(([username,rows])=>[username,(rows||[]).map(({adminObservations,...v})=>v)]));}return safe;}
 function tokenUser(req){const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'');if(!token||revokedTokens.has(token))return null;const parts=token.split('.');if(parts.length!==2)return sessions.get(token)||null;try{const expected=crypto.createHmac('sha256',authSigningSecret()).update(parts[0]).digest(),actual=Buffer.from(parts[1],'base64url');if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return null;const user=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));if(!user.username||!user.role||!Number.isFinite(user.exp)||user.exp<=Math.floor(Date.now()/1000))return null;return {username:user.username,role:user.role,name:user.name,weeklyHours:user.weeklyHours}}catch(e){return null}}
 function requireAuth(req,res,next){const u=tokenUser(req);if(!u)return res.status(401).json({error:'No autorizado'});if(u.role==='vendedor'&&!((req.path==='/api/logout')||(req.path==='/api/state'&&req.method==='GET')||(req.path==='/api/vendor/sheets')))return res.status(403).json({error:'Acceso no permitido'});req.auth=u;next()}
+function gmailOAuthClient(){
+  const clientId=process.env.GOOGLE_CLIENT_ID;
+  const clientSecret=process.env.GOOGLE_CLIENT_SECRET;
+  if(!clientId||!clientSecret) throw new Error('Faltan GOOGLE_CLIENT_ID o GOOGLE_CLIENT_SECRET en Render');
+  return new google.auth.OAuth2(clientId,clientSecret,'https://control-horario-shau.onrender.com/api/admin/gmail/callback');
+}
+function gmailOAuthState(){
+  const payload=Buffer.from(JSON.stringify({purpose:'gmail-notification-setup',exp:Math.floor(Date.now()/1000)+900})).toString('base64url');
+  const signature=crypto.createHmac('sha256',authSigningSecret()).update(payload).digest('base64url');
+  return payload+'.'+signature;
+}
+function validGmailOAuthState(state){
+  try{
+    const parts=String(state||'').split('.');
+    if(parts.length!==2)return false;
+    const expected=crypto.createHmac('sha256',authSigningSecret()).update(parts[0]).digest();
+    const actual=Buffer.from(parts[1],'base64url');
+    if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return false;
+    const payload=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));
+    return payload.purpose==='gmail-notification-setup'&&payload.exp>Math.floor(Date.now()/1000);
+  }catch(e){return false}
+}
 async function sendDayOffNotification(request, employeeName){
-  const apiKey=process.env.RESEND_API_KEY;
-  const from=process.env.RESEND_FROM_EMAIL;
+  const db=await getDb();
+  const refreshToken=db.gmailNotification?.refreshToken||process.env.GMAIL_REFRESH_TOKEN;
+  if(!refreshToken) throw new Error('Gmail no está conectado. El administrador debe completar la conexión en Ajustes de correo.');
+  const auth=gmailOAuthClient();
+  auth.setCredentials({refresh_token:refreshToken});
+  const gmail=google.gmail({version:'v1',auth});
   const to=process.env.DAY_OFF_NOTIFICATION_EMAIL||'costajumpsanpedro@gmail.com';
-  if(!apiKey||!from){console.warn('Notificación de días libres sin configurar: faltan RESEND_API_KEY o RESEND_FROM_EMAIL');return;}
   const priorities={green:'Normal',yellow:'Media',red:'Alta'};
   const esc=value=>String(value??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   const observations=String(request.observations||'').trim()||'Sin observaciones';
   const subject='Nueva solicitud de días libres: '+employeeName;
   const text='Un empleado ha solicitado días libres.\n\nEmpleado: '+employeeName+'\nDesde: '+request.start+'\nHasta: '+request.end+'\nPrioridad: '+(priorities[request.priority]||request.priority)+'\nObservaciones: '+observations+'\n\nRevisa la solicitud en Control Horario.';
   const html='<h2>Nueva solicitud de días libres</h2><p>Un empleado ha enviado una solicitud que está pendiente de revisión.</p><ul><li><b>Empleado:</b> '+esc(employeeName)+'</li><li><b>Desde:</b> '+esc(request.start)+'</li><li><b>Hasta:</b> '+esc(request.end)+'</li><li><b>Prioridad:</b> '+esc(priorities[request.priority]||request.priority)+'</li></ul><p><b>Observaciones:</b><br>'+esc(observations).replace(/\n/g,'<br>')+'</p><p>Entra en Control Horario para revisar la solicitud.</p>';
-  const response=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:'Bearer '+apiKey,'Content-Type':'application/json'},body:JSON.stringify({from,to:[to],subject,text,html})});
-  if(!response.ok){const detail=await response.text();throw new Error('Resend '+response.status+': '+detail.slice(0,500));}
-  return response.json();
+  const mime='To: '+to+'\r\nSubject: =?UTF-8?B?'+Buffer.from(subject,'utf8').toString('base64')+'?=\r\nMIME-Version: 1.0\r\nContent-Type: multipart/alternative; boundary="dayoff_boundary"\r\n\r\n--dayoff_boundary\r\nContent-Type: text/plain; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n'+Buffer.from(text,'utf8').toString('base64')+'\r\n--dayoff_boundary\r\nContent-Type: text/html; charset="UTF-8"\r\nContent-Transfer-Encoding: base64\r\n\r\n'+Buffer.from(html,'utf8').toString('base64')+'\r\n--dayoff_boundary--';
+  const raw=Buffer.from(mime,'utf8').toString('base64url');
+  const response=await gmail.users.messages.send({userId:'me',requestBody:{raw}});
+  return response.data;
 }
 function sanitizeIncoming(db){db.version=8;db.records=db.records||{};db.locks=db.locks||{};db.weekly=db.weekly||{};db.vacations=db.vacations||{};db.hugoErika=Array.isArray(db.hugoErika)?db.hugoErika:[];db.horarios=db.horarios||{fechaInicio:'',semanaGenerada:false,diasSemana:[],empleados:[],turnos:[],cumples:[]};db.balanceVisibility=db.balanceVisibility||{};db.monthLocks=db.monthLocks||{};db.personalDocuments=Array.isArray(db.personalDocuments)?db.personalDocuments:[];delete db.payrolls;db.users=(db.users||[]).map(u=>({...u,active:u.role==='admin'?true:u.active!==false}));return db}
 function same(a,b){return JSON.stringify(a)===JSON.stringify(b)}
 function publicUsers(users){return users.map(({passwordHash,...u})=>u)}
 function auditChanges(old,incoming,actor){const out=[],now=new Date().toISOString(),actorName=actor?.name||actor?.username||'Administrador',add=message=>out.push({at:now,actorName,message});for(const u of incoming.users||[]){const o=(old.users||[]).find(x=>x.username===u.username);if(!o)add('Creó al empleado '+u.name);else if(JSON.stringify({...o,passwordHash:undefined})!==JSON.stringify({...u,passwordHash:undefined}))add('Actualizó al empleado '+u.name)}for(const u of old.users||[]){if(!(incoming.users||[]).some(x=>x.username===u.username))add('Eliminó al empleado '+u.name)}for(const type of ['records','weekly','vacations','locks']){const users=new Set([...Object.keys(old[type]||{}),...Object.keys(incoming[type]||{})]);for(const username of users){const a=old[type]?.[username]||{},b=incoming[type]?.[username]||{};if(JSON.stringify(a)!==JSON.stringify(b)){const name=(incoming.users||old.users||[]).find(x=>x.username===username)?.name||username;add('Modificó '+type+' de '+name)}}}return out}
 
+app.get('/api/admin/gmail/connect',requireAuth,(req,res)=>{if(req.auth.role!=='admin')return res.status(403).send('Solo administración');try{const auth=gmailOAuthClient();const url=auth.generateAuthUrl({access_type:'offline',prompt:'consent',include_granted_scopes:true,scope:['https://www.googleapis.com/auth/gmail.send'],state:gmailOAuthState()});res.redirect(url);}catch(e){res.status(500).send('No se pudo iniciar la conexión de Gmail: '+e.message)}});
+app.get('/api/admin/gmail/callback',async(req,res)=>{try{if(req.query.error)return res.status(400).send('Google canceló o rechazó la autorización. Vuelve a la aplicación e inténtalo otra vez.');if(!validGmailOAuthState(req.query.state))return res.status(400).send('Solicitud de autorización no válida o caducada. Vuelve a iniciar la conexión desde la aplicación.');if(!req.query.code)return res.status(400).send('Google no devolvió el código de autorización.');const auth=gmailOAuthClient();const {tokens}=await auth.getToken(String(req.query.code));if(!tokens.refresh_token)return res.status(400).send('Google no entregó un refresh token. Revoca el acceso de la aplicación en tu cuenta Google y vuelve a conectar con consentimiento.');const db=await getDb();db.gmailNotification={refreshToken:tokens.refresh_token,connectedAt:new Date().toISOString(),email:'costajumpsanpedro@gmail.com'};await putDb(db);res.send('<h2>Gmail conectado</h2><p>La autorización de Gmail se guardó correctamente. Ya puedes cerrar esta pestaña y volver a Control Horario.</p>');}catch(e){console.error('Error al conectar Gmail:',e.message);res.status(500).send('No se pudo completar la conexión de Gmail. Comprueba la configuración OAuth de Google Cloud y los registros de Render.')}});
 app.post('/api/login',async(req,res)=>{try{const username=String(req.body.username||'').trim().toLowerCase(),password=String(req.body.password||'');const db=await getDb();const u=db.users.find(x=>x.username===username);if(!u||u.role!=='admin'&&u.active===false||!bcrypt.compareSync(password,u.passwordHash))return res.status(401).json({error:'Usuario o contraseña incorrectos'});const role=String(u.username).toLowerCase()==='admin'?'admin':String(u.username).toLowerCase()==='vendedor'?'vendedor':'employee';const token=createAuthToken({username:u.username,role,name:u.name,weeklyHours:u.weeklyHours});sessions.set(token,{username:u.username,role,name:u.name,weeklyHours:u.weeklyHours});res.json({token,user:{username:u.username,role,name:u.name,weeklyHours:u.weeklyHours},db:publicDb(db,role,u.username)});}catch(e){res.status(500).json({error:e.message})}});
 app.post('/api/logout',requireAuth,(req,res)=>{const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'');if(token){revokedTokens.add(token);sessions.delete(token)}res.json({ok:true})});
 app.get('/api/state',requireAuth,async(req,res)=>{res.json(publicDb(await getDb(),req.auth.role,req.auth.username))});
