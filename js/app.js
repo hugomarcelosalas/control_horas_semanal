@@ -32,7 +32,7 @@ document.addEventListener('click',e=>{
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
-async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization=`Bearer ${authToken}`;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
+async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization="Bearer "+authToken;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(r.status===401&&path!=="/api/login"&&authToken){authToken=null;currentUser=null;selectedEmployee=null;window.__CONTROL_HORARIO_TOKEN__=null;window.__CONTROL_HORARIO_USER__=null;$("app")?.classList.add("hidden");$("loginScreen")?.classList.remove("hidden");const err=$("loginError");if(err){err.textContent="La sesión ha caducado o se ha reiniciado. Vuelve a iniciar sesión; tus datos guardados siguen en la aplicación.";err.classList.remove("hidden")}}if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
 let vendorSheetsState={},vendorActiveSheet='Cierre',vendorActiveGroup='Venta',vendorSaveTimer=null;
 const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Camp Verano'],'V&A':['V&A']};
@@ -569,32 +569,21 @@ async function renderPersonalSpaceAdminOverview(){
  try{
   const [docs,payrolls]=await Promise.all([api('/api/admin/documents'),api('/api/payrolls')]);
   const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
-  const today=dateKey(new Date());
-  const rows=employees.map(u=>{
-   const ud=docs.filter(d=>d.username===u.username),up=payrolls.filter(p=>p.username===u.username);
-   const vac=(db.vacations?.[u.username]||[]).filter(v=>!v.cancelled);
-   const upcoming=vac.filter(v=>v.end>=today).sort((a,b)=>a.start.localeCompare(b.start))[0];
-   return {u,docs:ud,payrolls:up,vac,upcoming};
-  });
+  const rows=employees.map(u=>({u,docs:docs.filter(d=>d.username===u.username),payrolls:payrolls.filter(p=>p.username===u.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)))}));
   const render=()=>{
    const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all';
-   const visible=rows.filter(r=>{
-    if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;
-    if(f==='payroll'&&!r.payrolls.length)return false;
-    if(f==='documents'&&!r.docs.length)return false;
-    if(f==='vacations'&&!r.vac.length)return false;
-    if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;
-    return true;
-   });
-   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Nóminas</th><th>Documentos</th><th>Vacaciones registradas</th><th>Próximas vacaciones</th><th></th></tr></thead><tbody>'+visible.map(r=>'<tr><td><strong>'+esc(r.u.name)+'</strong></td><td>'+r.payrolls.length+(r.payrolls.length?'<div class="muted">'+esc(r.payrolls.slice().sort((a,b)=>String(b.month).localeCompare(String(a.month)))[0].month||'')+' última</div>':'')+'</td><td>'+r.docs.length+(r.docs.length?'<div class="muted">'+esc([...new Set(r.docs.map(d=>d.type||'Documento'))].join(', '))+'</div>':'')+'</td><td>'+r.vac.length+'</td><td>'+(r.upcoming?esc(fmtDate(r.upcoming.start)+' – '+fmtDate(r.upcoming.end)):'—')+'</td><td><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Ver detalle</button></td></tr>').join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
-   host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{
-    const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;
-    selectedEmployee=u;syncPersonalSpaceEmployee();
-    $('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'});
-   });
+   const visible=rows.filter(r=>{if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;if(f==='payroll'&&!r.payrolls.length)return false;if(f==='documents'&&!r.docs.length)return false;if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;return true});
+   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Contrato</th><th>Documentos</th></tr></thead><tbody>'+visible.map(r=>{
+    const contracts=r.docs.filter(d=>d.type==='Contrato'),otherDocs=r.docs.filter(d=>d.type!=='Contrato');
+    const contractHtml=contracts.length?contracts.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a>'+(d.month?'<small>'+esc(d.month)+'</small>':'')+'</div>').join(''):'<span class="muted">Sin contrato cargado</span>';
+    const payrollHtml=r.payrolls.length?'<div class="personal-space-payroll-months"><strong>Nóminas</strong><div class="personal-space-month-list">'+r.payrolls.map(p=>p.driveUrl?'<a class="personal-space-month" href="'+esc(p.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(p.month)+'</a>':'<span class="personal-space-month">'+esc(p.month)+'</span>').join('')+'</div></div>':'<div class="muted">Sin nóminas</div>';
+    const docsHtml=payrollHtml+(otherDocs.length?'<div class="personal-space-other-docs"><strong>Otros documentos</strong>'+otherDocs.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a><small>'+esc(d.type)+(d.month?' · '+esc(d.month):'')+'</small></div>').join('')+'</div>':'');
+    return '<tr><td><strong>'+esc(r.u.name)+'</strong><div class="muted">'+esc(r.u.username)+'</div><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Gestionar empleado</button></td><td>'+contractHtml+'</td><td>'+docsHtml+'</td></tr>';
+   }).join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
+   host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;selectedEmployee=u;syncPersonalSpaceEmployee();$('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'});});
   };
   $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;render();
- }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen de empleados: '+esc(e.message)+'</p>'}
+ }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen: '+esc(e.message)+'<br>Si aparece «No autorizado», vuelve a iniciar sesión.</p>'}
 }
 function setupPayrollUI(){
   if(isAdmin()&&!$("payrollAdminTools")){
