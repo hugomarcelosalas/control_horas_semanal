@@ -560,6 +560,42 @@ function syncPersonalSpaceEmployee(){
  ['documentEmployee','payrollEmployee'].forEach(id=>{const el=$(id);if(el)el.value=selectedEmployee.username});
  renderMyVacations();loadPayrolls();renderPersonalDocuments();
 }
+async function renderPersonalSpaceAdminOverview(){
+ const overview=$('personalSpaceAdminOverview');if(!overview)return;
+ if(!isAdmin()){overview.classList.add('hidden');return}
+ overview.classList.remove('hidden');
+ const host=$('personalSpaceAdminTable');if(!host)return;
+ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ try{
+  const [docs,payrolls]=await Promise.all([api('/api/admin/documents'),api('/api/payrolls')]);
+  const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
+  const today=dateKey(new Date());
+  const rows=employees.map(u=>{
+   const ud=docs.filter(d=>d.username===u.username),up=payrolls.filter(p=>p.username===u.username);
+   const vac=(db.vacations?.[u.username]||[]).filter(v=>!v.cancelled);
+   const upcoming=vac.filter(v=>v.end>=today).sort((a,b)=>a.start.localeCompare(b.start))[0];
+   return {u,docs:ud,payrolls:up,vac,upcoming};
+  });
+  const render=()=>{
+   const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all';
+   const visible=rows.filter(r=>{
+    if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;
+    if(f==='payroll'&&!r.payrolls.length)return false;
+    if(f==='documents'&&!r.docs.length)return false;
+    if(f==='vacations'&&!r.vac.length)return false;
+    if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;
+    return true;
+   });
+   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Nóminas</th><th>Documentos</th><th>Vacaciones registradas</th><th>Próximas vacaciones</th><th></th></tr></thead><tbody>'+visible.map(r=>'<tr><td><strong>'+esc(r.u.name)+'</strong></td><td>'+r.payrolls.length+(r.payrolls.length?'<div class="muted">'+esc(r.payrolls.slice().sort((a,b)=>String(b.month).localeCompare(String(a.month)))[0].month||'')+' última</div>':'')+'</td><td>'+r.docs.length+(r.docs.length?'<div class="muted">'+esc([...new Set(r.docs.map(d=>d.type||'Documento'))].join(', '))+'</div>':'')+'</td><td>'+r.vac.length+'</td><td>'+(r.upcoming?esc(fmtDate(r.upcoming.start)+' – '+fmtDate(r.upcoming.end)):'—')+'</td><td><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Ver detalle</button></td></tr>').join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
+   host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{
+    const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;
+    selectedEmployee=u;syncPersonalSpaceEmployee();
+    $('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'});
+   });
+  };
+  $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;render();
+ }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen de empleados: '+esc(e.message)+'</p>'}
+}
 function setupPayrollUI(){
   if(isAdmin()&&!$("payrollAdminTools")){
     const panel=$("personalSpacePanel");
