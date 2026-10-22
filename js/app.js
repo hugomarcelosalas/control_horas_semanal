@@ -36,7 +36,24 @@ let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization="Bearer "+authToken;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(r.status===401&&path!=="/api/login"&&authToken){authToken=null;currentUser=null;selectedEmployee=null;window.__CONTROL_HORARIO_TOKEN__=null;window.__CONTROL_HORARIO_USER__=null;$("app")?.classList.add("hidden");$("loginScreen")?.classList.remove("hidden");const err=$("loginError");if(err){err.textContent="La sesión ha caducado o se ha reiniciado. Vuelve a iniciar sesión; tus datos guardados siguen en la aplicación.";err.classList.remove("hidden")}}if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
 async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
 let vendorSheetsState={},vendorActiveSheet='Cierre',vendorActiveGroup='Venta',vendorSaveTimer=null;
-const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Camp Verano'],'V&A':['V&A']};
+const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Calcetines','Pulseras'],'V&A':['V&A']};
+const stockSizes=['XXL','XL','L','M','S','XS','XXS'];
+function stockCell(sheet,row,col){return vendorColName(col)+row}
+function stockGet(sheet,row,col){return sheet.cells?.[stockCell(sheet,row,col)]??''}
+function renderVendorStock(box){
+ const tabNames=['Calcetines','Pulseras'];
+ for(const name of tabNames)if(!vendorSheetsState[name])vendorSheetsState[name]={rows:30,cols:8,cells:{}};
+ const sh=vendorSheetsState[vendorActiveSheet];
+ box.classList.add('vendor-stock-view');
+ let html='<div class="stock-screen"><div class="stock-head"><div><h2>'+vendorEscape(vendorActiveSheet)+'</h2><p>Control de existencias y egresos diarios</p></div><label>Fecha de egresos<input id="stockDate" type="date" value="'+(stockGet(sh,1,8)||dateKey(new Date()))+'"></label></div>';
+ html+='<div class="stock-table-wrap"><table class="stock-table"><thead><tr><th>'+(vendorActiveSheet==='Calcetines'?'Talla':'Artículo')+'</th><th>Stock bajo parque</th><th>Stock bajo escalera</th><th>Stock mostrador</th><th>Stock cumple</th><th>Egreso mostrador (día)</th><th>Egreso cumples (día)</th></tr></thead><tbody>';
+ const items=vendorActiveSheet==='Calcetines'?stockSizes:['Pulseras'];
+ items.forEach((item,i)=>{const row=i+3;html+='<tr><th>'+item+'</th>';for(let c=2;c<=7;c++)html+='<td><input type="number" min="0" step="1" inputmode="numeric" aria-label="'+item+' '+c+'" data-stock-cell="'+stockCell(sh,row,c)+'" value="'+vendorEscape(stockGet(sh,row,c))+'"></td>';html+='</tr>'});
+ html+='</tbody></table></div><p class="stock-note">Los egresos se registran por fecha, separados entre mostrador y cumples. Usa Guardar cambios para conservar el registro.</p></div>';
+ box.innerHTML=html;
+ const dateInput=box.querySelector('#stockDate');dateInput.addEventListener('change',()=>{sh.cells[stockCell(sh,1,8)]=dateInput.value;box.querySelectorAll('[data-stock-cell]').forEach(inp=>{const itemRow=Number(inp.dataset.stockCell.match(/\\d+/)?.[0]||0);const col=inp.dataset.stockCell.match(/^[A-Z]+/)?.[0];const num=col?col.split('').reduce((n,ch)=>n*26+ch.charCodeAt(0)-64,0):0;const baseRow=vendorActiveSheet==='Calcetines'?stockSizes.indexOf(box.querySelector('.stock-table tbody tr:nth-child('+(itemRow-2)+') th')?.textContent)+3:3; if(num>=6&&itemRow>0){inp.value=stockGet(sh,itemRow,num)}});if($('vendorSaveStatus'))$('vendorSaveStatus').textContent='Fecha seleccionada: '+dateInput.value+' · guarda los cambios';});
+ box.querySelectorAll('[data-stock-cell]').forEach(inp=>inp.addEventListener('input',()=>{sh.cells[inp.dataset.stockCell]=inp.value; if($('vendorSaveStatus'))$('vendorSaveStatus').textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}));
+}
 function vendorEscape(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;')}
 function vendorColName(n){let out='';while(n>0){const r=(n-1)%26;out=String.fromCharCode(65+r)+out;n=Math.floor((n-1)/26)}return out}
 function vendorCellClass(sheetName,ref){
@@ -80,6 +97,7 @@ function renderVendorWorkspace(sheets){
  tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
  tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorGroup?btn.dataset.vendorGroup===vendorActiveGroup:btn.dataset.vendorSheet===vendorActiveSheet)));
  const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
+ if(vendorActiveGroup==='Stock'){renderVendorStock(box);return;}else box.classList.remove('vendor-stock-view');
  const isDaily=['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
  box.classList.toggle('vendor-daily-sheet',isDaily);
  let table='<table class="vendor-grid '+(isDaily?'vendor-daily-grid':'')+'"><thead><tr><th class="vendor-index"></th>';
