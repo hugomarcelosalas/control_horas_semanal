@@ -217,7 +217,7 @@ function renderInactiveEmployees(){
 function calendarMarkControl(key,type,scope){
  if(!isAdmin())return '';
  const label=type==='week'?'☀ Horario semana':type==='holiday'?'✦ Horario festivo':'＋ Marcar';
- return '<div class="calendar-mark-wrap" data-mark-wrap="'+scope+'"><button type="button" class="calendar-mark-trigger '+(type?'is-marked':'')+'" data-mark-toggle="'+key+'" aria-label="Marcar '+key+'" aria-expanded="false">'+label+'</button><div class="calendar-mark-menu hidden" data-mark-menu="'+key+'"><button type="button" class="mark-option mark-week" data-mark-set="'+key+'" data-mark-type="week">☀ Horario semana</button><button type="button" class="mark-option mark-holiday" data-mark-set="'+key+'" data-mark-type="holiday">✦ Horario festivo</button><button type="button" class="mark-option mark-clear" data-mark-set="'+key+'" data-mark-type="">× Sin marca</button></div></div>';
+ return '<div class="calendar-mark-wrap" data-mark-wrap="'+scope+'"><button type="button" class="calendar-mark-trigger '+(type?'is-marked mark-type-'+type:'')+'" data-mark-toggle="'+key+'" aria-label="Marcar '+key+'" aria-expanded="false">'+label+'</button><div class="calendar-mark-menu hidden" data-mark-menu="'+key+'"><button type="button" class="mark-option mark-week" data-mark-set="'+key+'" data-mark-type="week">☀ Horario semana</button><button type="button" class="mark-option mark-holiday" data-mark-set="'+key+'" data-mark-type="holiday">✦ Horario festivo</button><button type="button" class="mark-option mark-clear" data-mark-set="'+key+'" data-mark-type="">× Sin marca</button></div></div>';
 }
 function bindCalendarMarkControls(root,renderFn){
  if(!root)return;
