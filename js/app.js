@@ -939,6 +939,7 @@ function showSection(sectionId){
   if(sectionId==='publishedSchedulePanel')loadPublishedSchedule();
   if(sectionId==='wagesPanel')renderWages();
   if(sectionId==='monthlyHoursPanel')renderMonthlyHours();
+  if(sectionId==='personalSpacePanel'){if(isAdmin())renderPersonalSpaceAdminOverview();setupPayrollUI();}
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
 }
 document.addEventListener('click',e=>{
