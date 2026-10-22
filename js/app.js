@@ -772,13 +772,55 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 
 
 function renderWages(){
- if(!isAdmin())return;db.wages=db.wages||{};const sel=$('wageEmployee');if(!sel)return;
+ if(!isAdmin())return;
+ db.wages=db.wages||{};
+ const sel=$('wageEmployee'),filter=$('wageHistoryEmployee');
+ if(!sel||!filter)return;
  const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
+ const oldSelected=[...sel.selectedOptions].map(o=>o.value);
  sel.innerHTML=employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
- const render=()=>{const user=sel.value,rows=db.wages[user]||[],cur=rows[rows.length-1];$('wageAmount').value=cur?.amount??'';$('wageType').value=cur?.type||'hourly';$('wageNote').value=cur?.note||'';$('wageCurrent').innerHTML=cur?'<p><strong>'+vendorEscape(db.users.find(u=>u.username===user)?.name||user)+'</strong>: '+(cur.type==='special'?'Contrato especial':'Por hora')+' · '+Number(cur.amount).toFixed(2)+' €'+(cur.type==='hourly'?' / hora':'')+' · actualizado '+vendorEscape(new Date(cur.at).toLocaleString('es-ES'))+'</p>':'<p>Sin sueldo configurado.</p>';$('wageHistory').innerHTML=rows.length?'<table class="published-schedule-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Importe</th><th>Descripción</th></tr></thead><tbody>'+rows.slice().reverse().map(x=>'<tr><td>'+vendorEscape(new Date(x.at).toLocaleString('es-ES'))+'</td><td>'+ (x.type==='special'?'Especial':'Por hora')+'</td><td>'+Number(x.amount).toFixed(2)+' €</td><td>'+vendorEscape(x.note||'')+'</td></tr>').join('')+'</tbody></table>':'<p>Sin historial.</p>'};
- sel.onchange=render;render();
+ oldSelected.forEach(v=>{const o=[...sel.options].find(x=>x.value===v);if(o)o.selected=true});
+ if(![...sel.selectedOptions].length&&sel.options.length)sel.options[0].selected=true;
+ const oldFilter=filter.value;
+ filter.innerHTML='<option value="">Todos los empleados</option>'+employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
+ if(employees.some(u=>u.username===oldFilter))filter.value=oldFilter;
+ const selectedUsers=()=>[...sel.selectedOptions].map(o=>o.value);
+ const renderCurrent=()=>{
+  const usernames=selectedUsers();
+  if(!usernames.length){$('wageCurrent').innerHTML='<p>Selecciona uno o varios empleados.</p>';return}
+  $('wageCurrent').innerHTML=usernames.map(username=>{
+   const rows=db.wages[username]||[],cur=rows[rows.length-1],name=employees.find(u=>u.username===username)?.name||username;
+   return cur?'<p><strong>'+vendorEscape(name)+'</strong>: '+(cur.type==='special'?'Contrato especial':'Por hora')+' · '+Number(cur.amount||0).toFixed(2)+' €'+(cur.type==='hourly'?' / hora':'')+' · Extra: '+Number(cur.extra||0).toFixed(2)+' €'+(cur.note?' · '+vendorEscape(cur.note):'')+' · actualizado '+vendorEscape(new Date(cur.at).toLocaleString('es-ES'))+'</p>':'<p><strong>'+vendorEscape(name)+'</strong>: Sin sueldo configurado.</p>';
+  }).join('');
+ };
+ const renderHistory=()=>{
+  const chosen=filter.value;
+  const rows=[];
+  employees.filter(u=>!chosen||u.username===chosen).forEach(u=>(db.wages[u.username]||[]).forEach(x=>rows.push({...x,employeeName:u.name,username:u.username})));
+  rows.sort((a,b)=>String(b.at||'').localeCompare(String(a.at||'')));
+  $('wageHistory').innerHTML=rows.length?'<table class="published-schedule-table"><thead><tr><th>Fecha</th><th>Contrato</th><th>Importe</th><th>Extra</th><th>Empleado</th><th>Observaciones</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+vendorEscape(new Date(x.at).toLocaleString('es-ES'))+'</td><td>'+(x.type==='special'?'Especial':'Por hora')+'</td><td>'+Number(x.amount||0).toFixed(2)+' €'+(x.type==='hourly'?' / h':'')+'</td><td>'+Number(x.extra||0).toFixed(2)+' €</td><td>'+vendorEscape(x.employeeName)+'</td><td>'+vendorEscape(x.note||'')+'</td></tr>').join('')+'</tbody></table>':'<p>Sin historial para este filtro.</p>';
+ };
+ const render=()=>{
+  const username=selectedUsers()[0],rows=db.wages[username]||[],cur=rows[rows.length-1];
+  if(cur){$('wageAmount').value=cur.amount??'';$('wageType').value=cur.type||'hourly';$('wageExtra').value=Number(cur.extra||0);$('wageNote').value=cur.note||''}
+  renderCurrent();renderHistory();
+ };
+ sel.onchange=render;filter.onchange=renderHistory;render();
 }
-$('wageForm')?.addEventListener('submit',async e=>{e.preventDefault();if(!isAdmin())return;const username=$('wageEmployee').value;if(!username)return;db.wages=db.wages||{};db.wages[username]=db.wages[username]||[];db.wages[username].push({type:$('wageType').value,amount:Number($('wageAmount').value),note:$('wageNote').value.trim(),at:new Date().toISOString()});await saveDB();$('wageStatus').textContent='Sueldo actualizado y guardado.';renderWages()});
+$('wageForm')?.addEventListener('submit',async e=>{
+ e.preventDefault();if(!isAdmin())return;
+ const usernames=[...$('wageEmployee').selectedOptions].map(o=>o.value);
+ if(!usernames.length){$('wageStatus').textContent='Selecciona al menos un empleado.';return}
+ const amount=Number($('wageAmount').value),extra=Number($('wageExtra').value);
+ if(!Number.isFinite(amount)||amount<0||!Number.isFinite(extra)||extra<0){$('wageStatus').textContent='Revisa el importe y el extra.';return}
+ db.wages=db.wages||{};
+ const at=new Date().toISOString(),type=$('wageType').value,note=$('wageNote').value.trim();
+ usernames.forEach(username=>{
+  db.wages[username]=db.wages[username]||[];
+  db.wages[username].push({type,amount,extra,note,at});
+ });
+ await saveDB();$('wageStatus').textContent='Actualización guardada para '+usernames.length+' empleado(s).';renderWages();
+});
 const tipHourOverrides = window.__tipHourOverrides || (window.__tipHourOverrides = {});
 function parseManualHours(value){
  const s=String(value??'').trim();
