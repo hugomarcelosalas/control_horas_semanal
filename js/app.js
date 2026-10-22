@@ -971,8 +971,13 @@ function renderMonthlyHours(){
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
 
 function updateSectionTabsVisibility(){
-  document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !isAdmin()));
-  $('importExportPanel')?.classList.toggle('hidden', !isAdmin() || $('importExportPanel').dataset.active !== 'true');
+  const admin=isAdmin();
+  document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !admin));
+  $('importExportPanel')?.classList.toggle('hidden', !admin || $('importExportPanel').dataset.active !== 'true');
+  // Never expose admin upload/edit controls in an employee session, including
+  // elements left in the DOM after a role/session change.
+  document.querySelectorAll('#personalSpacePanel .payroll-admin').forEach(el=>el.classList.toggle('hidden',!admin));
+  $('personalSpaceAdminOverview')?.classList.toggle('hidden',!admin);
 }
 
 function showSection(sectionId){
