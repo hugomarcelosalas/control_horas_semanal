@@ -145,9 +145,15 @@ app.put('/api/state',requireAuth,async(req,res)=>{if(req.auth.role==='vendedor')
   if(me.role!=='admin'){
     if(!same(publicUsers(old.users),incoming.users)||!same(old.balanceVisibility,incoming.balanceVisibility))return res.status(403).json({error:'No tienes permiso para cambiar la administración'});
     if(!same(old.locks,incoming.locks)||!same(old.weekly,incoming.weekly))return res.status(403).json({error:'Solo el admin puede modificar bloqueos y la lista semanal'});
-    for(const [username,rows] of Object.entries(incoming.vacations||{})){const oldRows=old.vacations?.[username]||[];incoming.vacations[username]=(rows||[]).map(v=>{const prior=oldRows.find(x=>String(x.id)===String(v.id));if(prior)return {...v,adminObservations:prior.adminObservations||''};const {adminObservations,...clean}=v;return clean;});}
-    incoming.vacations=old.vacations||{};
     for(const username of Object.keys(incoming.records||{})) if(username!==me.username && !same(old.records?.[username]||{},incoming.records?.[username]||{})) return res.status(403).json({error:'No tienes permiso para modificar otros empleados'});
+    // Personal space and company-wide settings are strictly read-only for employees.
+    for(const key of ['users','locks','weekly','vacations','balanceVisibility','monthLocks','hugoErika','vendorSheets','wages','wageReference','invoices','personalDocuments','payrolls','horarios','publishedHorarios','calendarDayTypes','calendarEvents','dayOffRequests','auditLog']) {
+      incoming[key]=old[key]===undefined?undefined:old[key];
+      if(incoming[key]===undefined) delete incoming[key];
+    }
+    // Employees may only submit changes to their own time records.
+    incoming.records=JSON.parse(JSON.stringify(old.records||{}));
+    incoming.records[me.username]=JSON.parse(JSON.stringify((req.body||{}).records?.[me.username]||old.records?.[me.username]||{}));
   }
   const oldByUser=new Map(old.users.map(u=>[u.username,u]));
   incoming.users=(incoming.users||[]).map(u=>({...u,passwordHash:oldByUser.get(u.username)?.passwordHash}));
