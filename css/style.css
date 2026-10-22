@@ -454,13 +454,13 @@ label{color:#47566d;font-size:12px;line-height:1.45}
 
 /* Menú elegante para marcar tipos de día sin desplegables nativos */
 .calendar-mark-wrap{position:relative;display:inline-flex;align-items:flex-start;flex:0 0 auto;max-width:100%;z-index:4}
-.calendar-mark-trigger{display:inline-flex;align-items:center;justify-content:center;gap:4px;max-width:100%;min-height:26px;padding:4px 7px;border:1px solid #dbe4ee;border-radius:999px;background:rgba(255,255,255,.92);color:#64748b;font:600 10px/1.2 inherit;white-space:normal;text-align:center;cursor:pointer;box-shadow:0 1px 2px #17203308}
+.calendar-mark-trigger{display:inline-flex;align-items:center;justify-content:center;gap:4px;max-width:100%;min-height:26px;padding:4px 7px;border:1px solid #dbe4ee;border-radius:999px;background:rgba(255,255,255,.92);color:#64748b;font-family:inherit;font-size:10px;font-weight:600;line-height:1.2;white-space:normal;text-align:center;cursor:pointer;box-shadow:0 1px 2px #17203308}
 .calendar-mark-trigger:hover{border-color:#9bb6d3;background:#fff;color:#334155}
 .calendar-mark-trigger.is-marked{font-weight:750;border-color:transparent}
-.calendar-mark-trigger.is-marked:has(+ .calendar-mark-menu .mark-week){background:#eaf5ff;color:#285b88}
+.calendar-mark-trigger.mark-type-week{background:#eaf5ff;color:#285b88}.calendar-mark-trigger.mark-type-holiday{background:#edf8ee;color:#28633b}
 .calendar-mark-menu{position:absolute;top:calc(100% + 5px);right:0;z-index:50;display:flex;flex-direction:column;gap:4px;width:164px;padding:6px;border:1px solid #dbe4ee;border-radius:13px;background:#fff;box-shadow:0 12px 32px #17203324}
 .calendar-mark-menu.hidden{display:none}
-.calendar-mark-menu .mark-option{width:100%;display:flex;align-items:center;gap:7px;text-align:left;border:0;border-radius:9px;padding:9px 10px;font:600 12px/1.25 inherit;cursor:pointer}
+.calendar-mark-menu .mark-option{width:100%;display:flex;align-items:center;gap:7px;text-align:left;border:0;border-radius:9px;padding:9px 10px;font-family:inherit;font-size:12px;font-weight:600;line-height:1.25;cursor:pointer}
 .calendar-mark-menu .mark-week{background:#eaf5ff;color:#285b88}
 .calendar-mark-menu .mark-holiday{background:#edf8ee;color:#28633b}
 .calendar-mark-menu .mark-clear{background:#f3f5f8;color:#596579}
