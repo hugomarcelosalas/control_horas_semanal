@@ -774,6 +774,12 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 function renderWages(){
  if(!isAdmin())return;
  db.wages=db.wages||{};db.wageReference=db.wageReference||[];
+ // Eliminar referencias duplicadas exactas generadas por listeners repetidos.
+ const seenRefs=new Set();
+ db.wageReference=db.wageReference.filter(r=>{
+  const key=JSON.stringify([Number(r.hours||0),String(r.type||'Normal'),Number(r.payroll||0),Number(r.holiday||0),Number(r.extra||0),String(r.note||'').trim()]);
+  if(seenRefs.has(key))return false;seenRefs.add(key);return true;
+ });
  const sel=$('wageEmployee'),filter=$('wageHistoryEmployee');
  if(!sel||!filter)return;
  const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
@@ -810,23 +816,23 @@ function renderWages(){
   renderCurrent();renderHistory();renderReference();
  };
  if(!$('wageDate').value){const now=new Date();$('wageDate').value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16)}
- $('wageReferenceForm')?.addEventListener('submit',async e=>{
+ $('wageReferenceForm').onsubmit=async e=>{
   e.preventDefault();if(!isAdmin())return;
   db.wageReference=db.wageReference||[];
   db.wageReference.push({hours:Number($('refHours').value),type:$('refType').value,payroll:Number($('refPayroll').value),holiday:Number($('refHoliday').value),extra:Number($('refExtra').value),note:$('refNote').value.trim(),createdAt:new Date().toISOString()});
   await saveDB();$('refNote').value='';renderWages();
- });
- $('wageReferenceTable')?.addEventListener('click',async e=>{
+ };
+ $('wageReferenceTable').onclick=async e=>{
   const btn=e.target.closest('[data-ref-delete]');if(!btn||!isAdmin())return;
   db.wageReference.splice(Number(btn.dataset.refDelete),1);await saveDB();renderWages();
- });
- $('wageHistory')?.addEventListener('change',async e=>{
+ };
+ $('wageHistory').onchange=async e=>{
   const input=e.target.closest('[data-wage-date-user]');if(!input||!isAdmin()||!input.value)return;
   const username=input.dataset.wageDateUser,index=Number(input.dataset.wageDateIndex);
   if(!db.wages?.[username]?.[index])return;
   const date=new Date(input.value);if(Number.isNaN(date.getTime()))return;
   db.wages[username][index].at=date.toISOString();await saveDB();renderWages();
- });
+ };
  sel.onchange=render;filter.onchange=renderHistory;render();
 }
 $('wageForm')?.addEventListener('submit',async e=>{
