@@ -774,7 +774,8 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 
 async function renderWages(){
  if(!isAdmin())return;
- if(!renderWages.loaded){try{const saved=await api('/api/admin/wages');db.wages=saved.wages||{};db.wageReference=saved.wageReference||[]}catch(e){$('wageStatus').textContent='No se pudieron cargar los sueldos: '+e.message;return}renderWages.loaded=true;}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
+ const panel=$('wagesPanel');if(panel)panel.classList.remove('hidden');
+ if(!renderWages.loaded){try{const saved=await api('/api/admin/wages');db.wages=saved.wages||{};db.wageReference=saved.wageReference||[]}catch(e){$('wageStatus').textContent='Error al cargar sueldos: '+e.message;$('wageCurrent').innerHTML='<p class="error">No se pudieron cargar los datos. Recarga la página o vuelve a entrar.</p>';return}renderWages.loaded=true;}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
  // Eliminar referencias duplicadas exactas generadas por listeners repetidos.
  const seenRefs=new Set();
  db.wageReference=db.wageReference.filter(r=>{
