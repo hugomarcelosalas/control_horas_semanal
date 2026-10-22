@@ -570,19 +570,27 @@ async function renderPersonalSpaceAdminOverview(){
   const [docs,payrolls]=await Promise.all([api('/api/admin/documents'),api('/api/payrolls')]);
   const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
   const rows=employees.map(u=>({u,docs:docs.filter(d=>d.username===u.username),payrolls:payrolls.filter(p=>p.username===u.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)))}));
+  const yearSelect=$('spacePayrollYear');
+  if(yearSelect){
+   const selectedYear=yearSelect.value;
+   const years=[...new Set(rows.flatMap(r=>r.payrolls.map(p=>String(p.month||'').slice(0,4)).filter(y=>/^\\d{4}$/.test(y))))].sort((a,b)=>b.localeCompare(a));
+   yearSelect.innerHTML='<option value="">Todos los años</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');
+   if(years.includes(selectedYear))yearSelect.value=selectedYear;
+  }
   const render=()=>{
-   const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all';
-   const visible=rows.filter(r=>{if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;if(f==='payroll'&&!r.payrolls.length)return false;if(f==='documents'&&!r.docs.length)return false;if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;return true});
-   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Contrato</th><th>Documentos</th></tr></thead><tbody>'+visible.map(r=>{
+   const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all',year=yearSelect?.value||'';
+   const visible=rows.filter(r=>{if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;if(f==='payroll'&&!r.payrolls.length)return false;if(f==='documents'&&!r.docs.some(d=>d.type!=='Contrato'))return false;if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;return true});
+   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Contrato</th><th>Documentos</th><th>Nóminas</th></tr></thead><tbody>'+visible.map(r=>{
     const contracts=r.docs.filter(d=>d.type==='Contrato'),otherDocs=r.docs.filter(d=>d.type!=='Contrato');
     const contractHtml=contracts.length?contracts.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a>'+(d.month?'<small>'+esc(d.month)+'</small>':'')+'</div>').join(''):'<span class="muted">Sin contrato cargado</span>';
-    const payrollHtml=r.payrolls.length?'<div class="personal-space-payroll-months"><strong>Nóminas</strong><div class="personal-space-month-list">'+r.payrolls.map(p=>p.driveUrl?'<a class="personal-space-month" href="'+esc(p.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(p.month)+'</a>':'<span class="personal-space-month">'+esc(p.month)+'</span>').join('')+'</div></div>':'<div class="muted">Sin nóminas</div>';
-    const docsHtml=payrollHtml+(otherDocs.length?'<div class="personal-space-other-docs"><strong>Otros documentos</strong>'+otherDocs.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a><small>'+esc(d.type)+(d.month?' · '+esc(d.month):'')+'</small></div>').join('')+'</div>':'');
-    return '<tr><td><strong>'+esc(r.u.name)+'</strong><div class="muted">'+esc(r.u.username)+'</div><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Gestionar empleado</button></td><td>'+contractHtml+'</td><td>'+docsHtml+'</td></tr>';
+    const filteredPayrolls=r.payrolls.filter(p=>!year||String(p.month||'').startsWith(year));
+    const payrollHtml=filteredPayrolls.length?'<div class="personal-space-month-list">'+filteredPayrolls.map(p=>p.driveUrl?'<a class="personal-space-month" href="'+esc(p.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(p.month)+'</a>':'<span class="personal-space-month">'+esc(p.month)+'</span>').join('')+'</div>':'<div class="muted">'+(r.payrolls.length?'Sin nóminas en este año':'Sin nóminas')+'</div>';
+    const docsHtml=otherDocs.length?otherDocs.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a><small>'+esc(d.type)+(d.month?' · '+esc(d.month):'')+'</small></div>').join(''):'<span class="muted">Sin documentos</span>';
+    return '<tr><td><strong>'+esc(r.u.name)+'</strong><div class="muted">'+esc(r.u.username)+'</div><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Gestionar empleado</button></td><td>'+contractHtml+'</td><td>'+docsHtml+'</td><td>'+payrollHtml+'</td></tr>';
    }).join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
    host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;selectedEmployee=u;syncPersonalSpaceEmployee();$('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'});});
   };
-  $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;render();
+  $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;if(yearSelect)yearSelect.onchange=render;render();
  }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen: '+esc(e.message)+'<br>Si aparece «No autorizado», vuelve a iniciar sesión.</p>'}
 }
 function setupPayrollUI(){
