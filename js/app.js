@@ -806,11 +806,28 @@ async function loadPublishedSchedule(){
  try{
   const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],turnos=h.turnos||[];
   if(!h.semanaGenerada||!turnos.length){box.innerHTML=isAdmin()?'<p class="empty-state">No hay un cuadrante publicado todavía. Puedes crear o revisar el cuadrante desde el generador y publicarlo cuando esté listo.</p><button type="button" class="primary" id="openScheduleGenerator">📅 Abrir generador de horarios</button>':'<p class="empty-state">📅 No hay un cuadrante publicado todavía. Cuando el administrador lo publique, podrás verlo aquí.</p>';return;}
-  const days=(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||''));
-  const dates=[...new Set(turnos.map(t=>String(t.fecha||'')).filter(Boolean))].sort();
-  let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th>'+dates.map(d=>'<th>'+vendorEscape(new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'2-digit'}))+'</th>').join('')+'</tr></thead><tbody>';
-  for(const emp of employees){html+='<tr><th>'+vendorEscape(emp.nombre||emp.username||emp.id)+'</th>';for(const date of dates){const rows=turnos.filter(t=>String(t.empleadoId)===String(emp.id)&&String(t.fecha)===date);html+='<td>'+rows.map(t=>vendorEscape([t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–')+(t.puesto?' · '+t.puesto:''))).join('<br>')+'</td>'}html+='</tr>'}
-  html+='</tbody></table></div>';box.innerHTML=html;
+  const dates=[...new Set([...(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||'')),...turnos.map(t=>String(t.fecha||''))].filter(v=>/^\\d{4}-\\d{2}-\\d{2}$/.test(v)))].sort();
+  const weekdayNames=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+  const shiftClass=t=>{const a=String(t.horaInicio||'').replace(':',''),b=String(t.horaFin||'').replace(':','');if(a==='1600'&&b==='2100')return 'shift-sky';if(a==='1100'&&b==='2100')return 'shift-green';return ''};
+  const normalizeRole=t=>String(t.puesto||t.rol||t.area||t.departamento||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+  const roleFor=t=>{const p=normalizeRole(t);if(/cumple|birthday|fiesta/.test(p))return 'cumples';if(/monitor/.test(p))return 'monitores';if(/kiosko|kiosco/.test(p))return 'kiosko';return 'vendedores'};
+  const roleLabel={vendedores:'Vendedores',monitores:'Monitores',kiosko:'Kiosko'};
+  let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="simple-published-schedule">';
+  for(const date of dates){
+   const dayRows=turnos.filter(t=>String(t.fecha||'')===date);
+   const d=new Date(date+'T12:00:00');
+   html+='<section class="simple-schedule-day"><h3>'+weekdayNames[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'</h3><div class="simple-schedule-columns">';
+   const groups=['vendedores','monitores','kiosko'];
+   for(const group of groups){
+    const rows=dayRows.filter(t=>roleFor(t)===group);
+    const birthdays=group==='vendedores'?dayRows.filter(t=>roleFor(t)==='cumples'):[];
+    html+='<div class="simple-schedule-group"><h4>'+roleLabel[group]+'</h4>';
+    if(group==='vendedores')html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong>'+(birthdays.length?birthdays.map(t=>'<div class="simple-birthday-line">'+vendorEscape([t.horaInicio&&t.horaFin?[t.horaInicio,t.horaFin].join('–'):'',t.descripcion||t.detalle||t.nombreCumple||t.cumple||t.observaciones||t.nota||t.puesto].filter(Boolean).join(' · '))+'</div>').join(''):'<span class="muted">—</span>')+'</div>';
+    html+='<ul>'+rows.map(t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));const name=emp?.nombre||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'Empleado';const time=[t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–');const details=[t.puesto&&roleFor(t)!=='vendedores'?t.puesto:'',t.observaciones||t.nota||''].filter(Boolean).join(' · ');return '<li><strong>'+vendorEscape(name)+'</strong> <span class="schedule-shift '+shiftClass(t)+'">'+vendorEscape(time)+'</span>'+(details?' <span class="simple-schedule-detail">'+vendorEscape(details)+'</span>':'')+'</li>'}).join('')+'</ul></div>';
+   }
+   html+='</div></section>';
+  }
+  html+='</div>';box.innerHTML=html;
  }catch(e){box.innerHTML='<p class="error">No se pudo cargar el horario publicado: '+vendorEscape(e.message)+'</p>'}
 }
 document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule();if(e.target.closest('#openScheduleGenerator')&&isAdmin())showSection('horariosPanel')});
