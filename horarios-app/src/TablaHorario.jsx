@@ -420,6 +420,25 @@ useEffect(() => {
               </div>;
             })}</div>
           : <p className="sin-turnos-dia">Sin empleados asignados</p>}
+        {cumples.filter(c => c.fecha === dia.isoFecha).length > 0 && (
+          <div className="simple-categoria simple-eventos">
+            <h4>🎂 Cumples</h4>
+            <ul>{cumples.filter(c => c.fecha === dia.isoFecha)
+              .slice().sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')))
+              .map(c => {
+                const detalles = [
+                  c.tipo || null,
+                  c.cantNinos ? `${c.cantNinos} k` : null,
+                  c.edad ? `${c.edad} años` : null,
+                  c.observaciones || null
+                ].filter(Boolean).join(' · ');
+                return <li key={c.id} className="simple-evento-linea">
+                  <span className="simple-evento-hora">{c.horaInicio || 'Hora por confirmar'}</span>
+                  <strong>{detalles || 'Evento'}</strong>
+                </li>;
+              })}</ul>
+          </div>
+        )}
       </section>
     );
   };
