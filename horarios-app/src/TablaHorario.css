@@ -1189,3 +1189,29 @@ button {
 .simple-eventos-grupo li{margin:0 0 6px}
 .simple-eventos-grupo li strong{font-size:12px;line-height:1.35;font-weight:650;overflow-wrap:anywhere}
 @media(max-width:700px){.vista-simple-semanal .fila-dias-simple{grid-template-columns:minmax(0,1fr)}}
+
+/* Vista simple: un único encabezado Mañana/Tarde por día, turnos con horas y colores */
+.simple-franjas-encabezado{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;text-align:center;color:#64748b;font-size:12px;margin:0 0 10px}
+.simple-franjas-encabezado strong+strong{border-left:1px dashed #dbe3ed}
+.simple-turnos-dia{display:flex;flex-direction:column;gap:12px}
+.simple-puesto{min-width:0}
+.simple-puesto>h4{text-align:center;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-size:12px;margin:0 0 7px}
+.simple-puesto-franjas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.simple-puesto-franjas>div{min-width:0;display:flex;flex-direction:column;align-items:stretch;gap:7px}
+.simple-puesto-franjas>div+div{border-left:1px dashed #dbe3ed;padding-left:10px}
+.simple-turno-persona{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.simple-turno-persona .simple-persona{font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.simple-turno-persona .simple-turno-badge{display:inline-block;white-space:nowrap;border:1px solid #cbd5e1;border-radius:6px;padding:3px 6px;background:#eff6ff;color:#172554;font-size:11px;font-weight:750;line-height:1.25;margin-left:15px}
+.simple-turno-persona .simple-turno-badge.turno-celeste{background:#dff2ff;border-color:#b6e0fb}
+.simple-turno-persona .simple-turno-badge.turno-verde-pastel{background:#e2f7df;border-color:#bce8b5}
+.simple-dia-completo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px;margin-bottom:8px}
+.simple-eventos{margin-top:14px!important;padding:10px 0 0!important;border:0!important;border-top:1px dashed #e2b96f!important}
+.simple-cumples-titulo{text-align:center;text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:#9a5b16;margin:0 0 8px}
+.simple-eventos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.simple-eventos-grupo{min-width:0}
+.simple-eventos-grupo+.simple-eventos-grupo{margin:0!important;padding:0 0 0 10px!important;border:0!important;border-left:1px dashed #f1dfb7!important}
+.simple-eventos-grupo h4{font-size:12px;color:#9a5b16;margin:0 0 6px}
+.simple-eventos-grupo ul{list-style:none;padding:0;margin:0}
+.simple-eventos-grupo li{margin:0 0 6px}
+.simple-eventos-grupo li strong{font-size:12px;line-height:1.35;font-weight:650;overflow-wrap:anywhere}
+@media(max-width:700px){.vista-simple-semanal .fila-dias-simple{grid-template-columns:minmax(0,1fr)}}
