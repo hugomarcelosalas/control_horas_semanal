@@ -380,7 +380,7 @@ useEffect(() => {
     const hs=c=>c.horaEvento||(()=>{const [h,m]=String(c.horaInicio||'').split(':').map(Number);const n=h*60+m+30;return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;})();
     const ev=cumples.filter(c=>c.fecha===dia.isoFecha).sort((a,b)=>hs(a).localeCompare(hs(b)));
     const shiftClass=t=>t.horaInicio==='16:00'&&t.horaFin==='21:00'?'turno-celeste':t.horaInicio==='11:00'&&t.horaFin==='21:00'?'turno-verde-pastel':'';
-    const personRow=(emp,t)=><div className="simple-turno-persona" key={t.id}><span className="simple-persona"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{emp.nombre}</span><span className={`simple-turno-badge ${shiftClass(t)}`}>{t.horaInicio}–{t.horaFin}</span></div>;
+    const personRow=(emp,t)=><div className={`simple-turno-persona ${shiftClass(t)==='turno-verde-pastel'?'simple-dia-completo-persona':''}`} key={t.id}><span className="simple-persona"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{emp.nombre}</span><span className={`simple-turno-badge ${shiftClass(t)}`}>{t.horaInicio}–{t.horaFin}</span></div>;
     const eventos=(titulo,lista)=><div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4>{lista.length?<ul>{lista.map(c=><li key={c.id}><strong>{hs(c)} { [c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}{c.observaciones?` · ${c.observaciones}`:''}</strong></li>)}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;
     return <section className="dia-simple-card" key={dia.clave}>
       <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
