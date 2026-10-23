@@ -421,22 +421,18 @@ useEffect(() => {
             })}</div>
           : <p className="sin-turnos-dia">Sin empleados asignados</p>}
         {cumples.filter(c => c.fecha === dia.isoFecha).length > 0 && (
-          <div className="simple-categoria simple-eventos">
-            <h4>🎂 Cumples</h4>
-            <ul>{cumples.filter(c => c.fecha === dia.isoFecha)
-              .slice().sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')))
-              .map(c => {
-                const detalles = [
-                  c.tipo || null,
-                  c.cantNinos ? `${c.cantNinos} k` : null,
-                  c.edad ? `${c.edad} años` : null,
-                  c.observaciones || null
-                ].filter(Boolean).join(' · ');
-                return <li key={c.id} className="simple-evento-linea">
-                  <span className="simple-evento-hora">{c.horaInicio || 'Hora por confirmar'}</span>
-                  <strong>{detalles || 'Evento'}</strong>
-                </li>;
+          <div className="simple-eventos">
+            {[
+              { clave: 'manana', titulo: 'Mañana', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '11:00' && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) <= '15:00') },
+              { clave: 'tarde', titulo: 'Tarde', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '16:00') }
+            ].map(grupo => grupo.eventos.length > 0 && <div className="simple-eventos-grupo" key={grupo.clave}>
+              <h4>{grupo.titulo}</h4>
+              <ul>{grupo.eventos.slice().sort((a,b)=>(a.horaEvento||a.horaInicio||'').localeCompare(b.horaEvento||b.horaInicio||'')).map(c => {
+                const horaFormulario = c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })();
+                const detalles = [c.tipo || null, c.cantNinos ? `${c.cantNinos} k` : null, c.edad ? `${c.edad} a` : null].filter(Boolean).join(' ');
+                return <li key={c.id} className="simple-evento-linea"><span className="simple-evento-hora">{horaFormulario}</span><strong>{detalles || 'Evento'}{c.observaciones ? ` · ${c.observaciones}` : ''}</strong></li>;
               })}</ul>
+            </div>)}
           </div>
         )}
       </section>
@@ -783,7 +779,7 @@ useEffect(() => {
     setIdCumpleEdit(c.id);
     setCumpleFecha(c.fecha);
     
-    const [h, m] = c.horaInicio.split(':').map(Number);
+    const [h, m] = (c.horaEvento || (() => { const [hi,mi]=String(c.horaInicio||'').split(':').map(Number); const total=hi*60+mi+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()).split(':').map(Number);
     const minutosTotales = (h * 60) + m + 30;
     const horaEnPuntoNum = Math.floor(minutosTotales / 60);
     setCumpleHoraInicio(`${horaEnPuntoNum.toString().padStart(2, '0')}:00`);
@@ -810,6 +806,7 @@ useEffect(() => {
           ? {
               ...c,
               fecha: cumpleFecha,
+              horaEvento: cumpleHoraInicio,
               horaInicio: horaInicioReal,
               horaFin: horaFinCalculada,
               tipo: cumpleTipo,
@@ -823,6 +820,7 @@ useEffect(() => {
       const nuevoCumple = {
         id: Date.now(),
         fecha: cumpleFecha,
+        horaEvento: cumpleHoraInicio,
         horaInicio: horaInicioReal,
         horaFin: horaFinCalculada,
         tipo: cumpleTipo,
