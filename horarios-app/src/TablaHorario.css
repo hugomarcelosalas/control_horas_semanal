@@ -1160,3 +1160,32 @@ button {
 .dia-simple-card .simple-evento-linea strong { min-width:0; overflow-wrap:anywhere; }
 .dia-simple-card .sin-eventos-franja { margin:0; font-size:12px; color:#94a3b8; font-style:italic; }
 @media (max-width:900px) { .dia-simple-card { display:block; } .dia-simple-card .simple-eventos { margin-top:12px; padding:10px 0 0; border-left:0; border-top:1px dashed #e2b96f; } }
+
+/* Vista simple rediseñada: dos días por bloque, puestos por mañana/tarde */
+.vista-simple-semanal{display:flex;flex-direction:column;gap:16px}
+.vista-simple-semanal .fila-dias-simple{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.dia-simple-card{display:flex;flex-direction:column;min-width:0;padding:14px}
+.dia-simple-card>h3{text-align:center;margin:0 0 12px;padding-bottom:9px;border-bottom:2px solid #e2e8f0}
+.simple-franjas-encabezado{display:grid;grid-template-columns:1fr 1fr;gap:10px;text-align:center;color:#64748b;font-size:12px;margin-bottom:10px}
+.simple-franjas-encabezado strong+strong{border-left:1px dashed #dbe3ed}
+.simple-turnos-dia{display:flex;flex-direction:column;gap:12px}
+.simple-puesto{min-width:0}
+.simple-puesto>h4{text-align:center;text-transform:uppercase;letter-spacing:.06em;color:#64748b;font-size:12px;margin:0 0 7px}
+.simple-puesto-franjas{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.simple-puesto-franjas>div{min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.simple-puesto-franjas>div+div{border-left:1px dashed #dbe3ed;padding-left:10px}
+.simple-persona{display:flex;align-items:center;gap:6px;min-width:0;font-size:13px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}
+.simple-persona i{flex:0 0 9px;width:9px;height:9px;border-radius:50%;display:inline-block}
+.simple-vacio{color:#cbd5e1;font-size:13px}
+.simple-dia-completo{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:6px 8px;margin-bottom:8px}
+.simple-completo-etiqueta{color:#166534;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;width:100%}
+.dia-simple-card .simple-eventos{margin-top:14px!important;padding:10px 0 0!important;border:0!important;border-top:1px dashed #e2b96f!important}
+.simple-cumples-titulo{text-align:center;text-transform:uppercase;letter-spacing:.06em;font-size:12px;color:#9a5b16;margin:0 0 8px}
+.simple-eventos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.simple-eventos-grupo{min-width:0}
+.simple-eventos-grupo+.simple-eventos-grupo{margin:0!important;padding:0 0 0 10px!important;border:0!important;border-left:1px dashed #f1dfb7!important}
+.simple-eventos-grupo h4{font-size:12px;color:#9a5b16;margin:0 0 6px}
+.simple-eventos-grupo ul{list-style:none;padding:0;margin:0}
+.simple-eventos-grupo li{margin:0 0 6px}
+.simple-eventos-grupo li strong{font-size:12px;line-height:1.35;font-weight:650;overflow-wrap:anywhere}
+@media(max-width:700px){.vista-simple-semanal .fila-dias-simple{grid-template-columns:minmax(0,1fr)}}
