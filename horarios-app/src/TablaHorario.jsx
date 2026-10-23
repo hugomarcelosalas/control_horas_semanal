@@ -375,66 +375,27 @@ useEffect(() => {
   };
 
   const renderDiaSimple = (dia) => {
-    const turnosDia = turnos
-      .filter(t => t.fecha === dia.isoFecha && empleados.some(emp => String(emp.id) === String(t.empleadoId)))
-      .slice()
-      .sort((a, b) => String(a.horaInicio || '').localeCompare(String(b.horaInicio || '')));
-    const empleadosDia = [...new Set(turnosDia.map(t => String(t.empleadoId)))]
-      .map(id => empleados.find(emp => String(emp.id) === id))
-      .filter(Boolean);
-    const categorias = [
-      { clave: 'vendedor', titulo: 'Vendedores' },
-      { clave: 'monitor', titulo: 'Monitores' },
-      { clave: 'kiosko', titulo: 'Kiosko' },
-      { clave: 'otros', titulo: 'Otros' }
-    ];
-    return (
-      <section className="dia-simple-card" key={dia.clave}>
-        <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
-        {empleadosDia.length
-          ? <div className="simple-categorias">{categorias.map(categoria => {
-              const grupo = empleadosDia
-                .filter(emp => {
-                  const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id));
-                  return categoria.clave === 'otros'
-                    ? turnosEmpleado.every(t => !['vendedor', 'monitor', 'kiosko'].includes(t.ubicacion || 'vendedor'))
-                    : turnosEmpleado.some(t => (t.ubicacion || 'vendedor') === categoria.clave);
-                })
-                .sort((a, b) => {
-                  const horaA = turnosDia.find(t => String(t.empleadoId) === String(a.id) && (categoria.clave === 'otros' || (t.ubicacion || 'vendedor') === categoria.clave))?.horaInicio || '99:99';
-                  const horaB = turnosDia.find(t => String(t.empleadoId) === String(b.id) && (categoria.clave === 'otros' || (t.ubicacion || 'vendedor') === categoria.clave))?.horaInicio || '99:99';
-                  return horaA.localeCompare(horaB) || a.nombre.localeCompare(b.nombre, 'es');
-                });
-              if (!grupo.length) return null;
-              return <div className="simple-categoria" key={categoria.clave}>
-                <h4>{categoria.titulo}</h4>
-                <ul>{grupo.map(emp => {
-                  const turnosEmpleado = turnosDia.filter(t => String(t.empleadoId) === String(emp.id) &&
-                    (categoria.clave === 'otros' ? !['vendedor', 'monitor', 'kiosko'].includes(t.ubicacion || 'vendedor') : (t.ubicacion || 'vendedor') === categoria.clave));
-                  return <li key={emp.id}>
-                    <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
-                    <strong>{emp.nombre}</strong>
-                    <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id} className={`simple-turno-badge ${t.horaInicio === "16:00" && t.horaFin === "21:00" ? "turno-celeste" : t.horaInicio === "11:00" && t.horaFin === "21:00" ? "turno-verde-pastel" : ""}`}>{t.horaInicio}–{t.horaFin}</span>)}</span>
-                  </li>;
-                })}</ul>
-              </div>;
-            })}</div>
-          : <p className="sin-turnos-dia">Sin empleados asignados</p>}
-        <div className="simple-eventos">
-          {[
-            { clave: 'manana', titulo: 'Mañana', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '11:00' && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) <= '15:00') },
-            { clave: 'tarde', titulo: 'Tarde', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '16:00') }
-          ].map(grupo => <div className="simple-eventos-grupo" key={grupo.clave}>
-            <h4>{grupo.titulo}</h4>
-            {grupo.eventos.length ? <ul>{grupo.eventos.slice().sort((a,b)=>(a.horaEvento||a.horaInicio||'').localeCompare(b.horaEvento||b.horaInicio||'')).map(c => {
-              const horaFormulario = c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })();
-              const detalles = [c.tipo || null, c.cantNinos ? `${c.cantNinos} k` : null, c.edad ? `${c.edad} a` : null].filter(Boolean).join(' ');
-              return <li key={c.id} className="simple-evento-linea"><span className="simple-evento-hora">{horaFormulario}</span><strong>{detalles || 'Evento'}{c.observaciones ? ` · ${c.observaciones}` : ''}</strong></li>;
-            })}</ul> : <p className="sin-eventos-franja">Sin eventos</p>}
-          </div>)}
-        </div>
-      </section>
-    );
+    const turnosDia=turnos.filter(t=>t.fecha===dia.isoFecha&&empleados.some(e=>String(e.id)===String(t.empleadoId)));
+    const cats=[{clave:'vendedor',titulo:'Vendedores'},{clave:'monitor',titulo:'Monitores'},{clave:'kiosko',titulo:'Kiosko'},{clave:'otros',titulo:'Otros'}];
+    const hs=c=>c.horaEvento||(()=>{const [h,m]=String(c.horaInicio||'').split(':').map(Number);const n=h*60+m+30;return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;})();
+    const ev=cumples.filter(c=>c.fecha===dia.isoFecha).sort((a,b)=>hs(a).localeCompare(hs(b)));
+    const completo=t=>String(t.horaInicio||'')<='11:00'&&String(t.horaFin||'')>='20:00';
+    const eventos=(titulo,lista)=><div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4>{lista.length?<ul>{lista.map(c=><li key={c.id}><strong>{hs(c)} { [c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}{c.observaciones?` · ${c.observaciones}`:''}</strong></li>)}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;
+    return <section className="dia-simple-card" key={dia.clave}>
+      <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
+      <div className="simple-franjas-encabezado"><strong>Mañana</strong><strong>Tarde</strong></div>
+      <div className="simple-turnos-dia">{cats.map(cat=>{
+        const personas=empleados.filter(e=>turnosDia.some(t=>String(t.empleadoId)===String(e.id)&&(cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave)));
+        if(!personas.length)return null;
+        const ts=e=>turnosDia.filter(t=>String(t.empleadoId)===String(e.id)&&(cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave));
+        const full=personas.filter(e=>ts(e).some(completo));
+        const morning=personas.filter(e=>!ts(e).some(completo)&&ts(e).some(t=>String(t.horaInicio||'')<'16:00'));
+        const afternoon=personas.filter(e=>!ts(e).some(completo)&&ts(e).some(t=>String(t.horaInicio||'')>='16:00'));
+        const person=e=><span className="simple-persona" key={e.id}><i style={{backgroundColor:e.color||'#cbd5e1'}}/>{e.nombre}</span>;
+        return <div className="simple-puesto" key={cat.clave}><h4>{cat.titulo}</h4>{full.length>0&&<div className="simple-dia-completo"><span className="simple-completo-etiqueta">Día completo</span>{full.map(person)}</div>}<div className="simple-puesto-franjas"><div>{morning.length?morning.map(person):<span className="simple-vacio">—</span>}</div><div>{afternoon.length?afternoon.map(person):<span className="simple-vacio">—</span>}</div></div></div>;
+      })}</div>
+      <div className="simple-eventos"><h4 className="simple-cumples-titulo">Cumples</h4><div className="simple-eventos-columnas">{eventos('Mañana',ev.filter(c=>hs(c)>='11:00'&&hs(c)<='15:00'))}{eventos('Tarde',ev.filter(c=>hs(c)>='16:00'))}</div></div>
+    </section>;
   };
 
   const franjasHorarias = generarFranjasHorarias();
@@ -1446,12 +1407,10 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
               </>}
               {subVista === 'simple' && (
                 <div className="vista-simple-semanal">
-                  <div className="fila-dias-simple fila-dias-superior">
-                    {diasSemana.slice(0, 4).map(dia => renderDiaSimple(dia))}
-                  </div>
-                  <div className="fila-dias-simple fila-dias-inferior">
-                    {diasSemana.slice(4, 7).map(dia => renderDiaSimple(dia))}
-                  </div>
+                  <div className="fila-dias-simple">{diasSemana.slice(0, 2).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple">{diasSemana.slice(2, 4).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple">{diasSemana.slice(4, 6).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}</div>
                 </div>
               )}
               {subVista === 'mia' && (() => {
