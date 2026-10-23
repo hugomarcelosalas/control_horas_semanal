@@ -1264,3 +1264,11 @@ button {
 /* Timeline sutil: la hora de inicio desplaza cada fila hacia la derecha */
 .simple-turno-persona:not(.simple-dia-completo-persona){max-width:calc(100% - 4px)}
 .simple-eventos-grupo li{max-width:calc(100% - 4px);transition:margin-left .15s ease}
+
+/* Turno como barra de duración y nombre/horas en la misma línea */
+.dia-simple-card .simple-turno-persona{display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px!important;width:100%;min-width:0}
+.dia-simple-card .simple-turno-persona>.simple-persona{flex:0 0 auto;max-width:58%;white-space:normal}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge{flex:0 1 auto;min-width:68px;max-width:100%;margin-left:0!important;box-sizing:border-box;text-align:center;overflow:hidden;text-overflow:clip;font-size:10px;padding:3px 4px}
+.dia-simple-card .simple-turno-badge small{font-size:9px;font-weight:600}
+.dia-simple-card .simple-dia-completo .simple-turno-persona{justify-content:center}
+.dia-simple-card .simple-dia-completo .simple-turno-persona>.simple-persona{max-width:55%}
