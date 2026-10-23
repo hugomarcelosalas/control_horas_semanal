@@ -1272,3 +1272,6 @@ button {
 .dia-simple-card .simple-turno-badge small{font-size:9px;font-weight:600}
 .dia-simple-card .simple-dia-completo .simple-turno-persona{justify-content:center}
 .dia-simple-card .simple-dia-completo .simple-turno-persona>.simple-persona{max-width:55%}
+
+.dia-simple-card .simple-horas-semana{display:block;color:#64748b;font-size:9px;font-weight:700;white-space:nowrap}
+.dia-simple-card .simple-turno-persona>.simple-persona{display:block;flex:0 0 auto;max-width:58%}
