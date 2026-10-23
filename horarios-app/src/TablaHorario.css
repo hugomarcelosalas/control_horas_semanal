@@ -1308,3 +1308,42 @@ button {
   white-space:nowrap;
   font-size:inherit;
 }
+
+
+/* Barra de turno: nombre y rango horario siempre en una sola línea */
+.dia-simple-card .simple-turno-persona>.simple-turno-badge {
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  min-height:22px;
+  height:22px;
+  padding:2px 5px!important;
+  gap:5px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge .simple-turno-nombre {
+  display:inline-flex!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  align-items:center!important;
+  gap:4px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  overflow-wrap:normal!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge .simple-turno-horas-texto {
+  display:inline-block!important;
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+  font-size:inherit!important;
+  line-height:1!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge .simple-turno-nombre i {
+  flex:0 0 7px!important;
+  width:7px!important;
+  height:7px!important;
+}
