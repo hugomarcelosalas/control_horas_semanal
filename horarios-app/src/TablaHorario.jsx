@@ -375,24 +375,25 @@ useEffect(() => {
   };
 
   const renderDiaSimple = (dia) => {
-    const turnosDia=turnos.filter(t=>t.fecha===dia.isoFecha&&empleados.some(e=>String(e.id)===String(t.empleadoId)));
+    const turnosDia=turnos.filter(t=>t.fecha===dia.isoFecha&&empleados.some(e=>String(e.id)===String(t.empleadoId))).slice().sort((a,b)=>String(a.horaInicio||'').localeCompare(String(b.horaInicio||'')));
     const cats=[{clave:'vendedor',titulo:'Vendedores'},{clave:'monitor',titulo:'Monitores'},{clave:'kiosko',titulo:'Kiosko'},{clave:'otros',titulo:'Otros'}];
     const hs=c=>c.horaEvento||(()=>{const [h,m]=String(c.horaInicio||'').split(':').map(Number);const n=h*60+m+30;return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;})();
     const ev=cumples.filter(c=>c.fecha===dia.isoFecha).sort((a,b)=>hs(a).localeCompare(hs(b)));
-    const completo=t=>String(t.horaInicio||'')<='11:00'&&String(t.horaFin||'')>='20:00';
+    const shiftClass=t=>t.horaInicio==='16:00'&&t.horaFin==='21:00'?'turno-celeste':t.horaInicio==='11:00'&&t.horaFin==='21:00'?'turno-verde-pastel':'';
+    const personRow=(emp,t)=><div className="simple-turno-persona" key={t.id}><span className="simple-persona"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{emp.nombre}</span><span className={`simple-turno-badge ${shiftClass(t)}`}>{t.horaInicio}–{t.horaFin}</span></div>;
     const eventos=(titulo,lista)=><div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4>{lista.length?<ul>{lista.map(c=><li key={c.id}><strong>{hs(c)} { [c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}{c.observaciones?` · ${c.observaciones}`:''}</strong></li>)}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;
     return <section className="dia-simple-card" key={dia.clave}>
       <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
       <div className="simple-franjas-encabezado"><strong>Mañana</strong><strong>Tarde</strong></div>
       <div className="simple-turnos-dia">{cats.map(cat=>{
-        const personas=empleados.filter(e=>turnosDia.some(t=>String(t.empleadoId)===String(e.id)&&(cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave)));
-        if(!personas.length)return null;
-        const ts=e=>turnosDia.filter(t=>String(t.empleadoId)===String(e.id)&&(cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave));
-        const full=personas.filter(e=>ts(e).some(completo));
-        const morning=personas.filter(e=>!ts(e).some(completo)&&ts(e).some(t=>String(t.horaInicio||'')<'16:00'));
-        const afternoon=personas.filter(e=>!ts(e).some(completo)&&ts(e).some(t=>String(t.horaInicio||'')>='16:00'));
-        const person=e=><span className="simple-persona" key={e.id}><i style={{backgroundColor:e.color||'#cbd5e1'}}/>{e.nombre}</span>;
-        return <div className="simple-puesto" key={cat.clave}><h4>{cat.titulo}</h4>{full.length>0&&<div className="simple-dia-completo"><span className="simple-completo-etiqueta">Día completo</span>{full.map(person)}</div>}<div className="simple-puesto-franjas"><div>{morning.length?morning.map(person):<span className="simple-vacio">—</span>}</div><div>{afternoon.length?afternoon.map(person):<span className="simple-vacio">—</span>}</div></div></div>;
+        const catTurnos=turnosDia.filter(t=>cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave);
+        if(!catTurnos.length)return null;
+        const completos=catTurnos.filter(t=>t.horaInicio==='11:00'&&t.horaFin==='21:00');
+        const resto=catTurnos.filter(t=>!(t.horaInicio==='11:00'&&t.horaFin==='21:00'));
+        const manana=resto.filter(t=>String(t.horaInicio||'')<'16:00');
+        const tarde=resto.filter(t=>String(t.horaInicio||'')>='16:00');
+        const renderTurnos=lista=>lista.length?lista.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;}):<span className="simple-vacio">—</span>;
+        return <div className="simple-puesto" key={cat.clave}><h4>{cat.titulo}</h4>{completos.length>0&&<div className="simple-dia-completo">{completos.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;})}</div>}<div className="simple-puesto-franjas"><div>{renderTurnos(manana)}</div><div>{renderTurnos(tarde)}</div></div></div>;
       })}</div>
       <div className="simple-eventos"><h4 className="simple-cumples-titulo">Cumples</h4><div className="simple-eventos-columnas">{eventos('Mañana',ev.filter(c=>hs(c)>='11:00'&&hs(c)<='15:00'))}{eventos('Tarde',ev.filter(c=>hs(c)>='16:00'))}</div></div>
     </section>;
