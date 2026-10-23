@@ -1260,3 +1260,7 @@ button {
 .vista-simple-semanal .simple-eventos-grupo li strong,.vista-simple-semanal .sin-eventos-franja{font-size:10px}
 @media(max-width:1050px){.vista-simple-semanal .fila-dias-simple.fila-tres-dias{grid-template-columns:repeat(2,minmax(0,1fr))!important}.vista-simple-semanal .fila-dias-simple.fila-un-dia{width:calc((100% - 10px)/2)}}
 @media(max-width:700px){.vista-simple-semanal .fila-dias-simple.fila-tres-dias{grid-template-columns:minmax(0,1fr)!important}.vista-simple-semanal .fila-dias-simple.fila-un-dia{width:100%}}
+
+/* Timeline sutil: la hora de inicio desplaza cada fila hacia la derecha */
+.simple-turno-persona:not(.simple-dia-completo-persona){max-width:calc(100% - 4px)}
+.simple-eventos-grupo li{max-width:calc(100% - 4px);transition:margin-left .15s ease}
