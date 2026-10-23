@@ -420,21 +420,19 @@ useEffect(() => {
               </div>;
             })}</div>
           : <p className="sin-turnos-dia">Sin empleados asignados</p>}
-        {cumples.filter(c => c.fecha === dia.isoFecha).length > 0 && (
-          <div className="simple-eventos">
-            {[
-              { clave: 'manana', titulo: 'Mañana', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '11:00' && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) <= '15:00') },
-              { clave: 'tarde', titulo: 'Tarde', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '16:00') }
-            ].map(grupo => grupo.eventos.length > 0 && <div className="simple-eventos-grupo" key={grupo.clave}>
-              <h4>{grupo.titulo}</h4>
-              <ul>{grupo.eventos.slice().sort((a,b)=>(a.horaEvento||a.horaInicio||'').localeCompare(b.horaEvento||b.horaInicio||'')).map(c => {
-                const horaFormulario = c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })();
-                const detalles = [c.tipo || null, c.cantNinos ? `${c.cantNinos} k` : null, c.edad ? `${c.edad} a` : null].filter(Boolean).join(' ');
-                return <li key={c.id} className="simple-evento-linea"><span className="simple-evento-hora">{horaFormulario}</span><strong>{detalles || 'Evento'}{c.observaciones ? ` · ${c.observaciones}` : ''}</strong></li>;
-              })}</ul>
-            </div>)}
-          </div>
-        )}
+        <div className="simple-eventos">
+          {[
+            { clave: 'manana', titulo: 'Mañana', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '11:00' && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) <= '15:00') },
+            { clave: 'tarde', titulo: 'Tarde', eventos: cumples.filter(c => c.fecha === dia.isoFecha && (c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })()) >= '16:00') }
+          ].map(grupo => <div className="simple-eventos-grupo" key={grupo.clave}>
+            <h4>{grupo.titulo}</h4>
+            {grupo.eventos.length ? <ul>{grupo.eventos.slice().sort((a,b)=>(a.horaEvento||a.horaInicio||'').localeCompare(b.horaEvento||b.horaInicio||'')).map(c => {
+              const horaFormulario = c.horaEvento || (() => { const [h,m]=String(c.horaInicio||'').split(':').map(Number); const total=h*60+m+30; return `${String(Math.floor(total/60)).padStart(2,'0')}:${String(total%60).padStart(2,'0')}`; })();
+              const detalles = [c.tipo || null, c.cantNinos ? `${c.cantNinos} k` : null, c.edad ? `${c.edad} a` : null].filter(Boolean).join(' ');
+              return <li key={c.id} className="simple-evento-linea"><span className="simple-evento-hora">{horaFormulario}</span><strong>{detalles || 'Evento'}{c.observaciones ? ` · ${c.observaciones}` : ''}</strong></li>;
+            })}</ul> : <p className="sin-eventos-franja">Sin eventos</p>}
+          </div>)}
+        </div>
       </section>
     );
   };
