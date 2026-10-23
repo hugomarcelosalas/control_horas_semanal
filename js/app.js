@@ -800,6 +800,19 @@ document.addEventListener('click',async e=>{
 const clearVacationFilters=$('vacFilterClear');if(clearVacationFilters)clearVacationFilters.onclick=()=>{['vacFilterEmployee','vacFilterYear','vacFilterStart','vacFilterEnd','vacFilterStatus','vacFilterSearch'].forEach(id=>{const el=$(id);if(el)el.value=''});renderVacationsSection()};
 
 
+async function loadScheduleWeeklyHoursSummary(){
+ const box=$('scheduleWeeklyHoursSummary');if(!box||!isAdmin())return;
+ box.innerHTML='<p class="muted">Calculando horas del cuadrante…</p>';
+ try{
+  const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[];const shifts=h.turnos||[];
+  if(!h.semanaGenerada||!shifts.length){box.innerHTML='<p class="muted">Publica o genera un cuadrante para ver las horas semanales por empleado.</p>';return;}
+  const dates=[...(h.diasSemana||[])].map(d=>typeof d==='string'?d:(d.isoFecha||d.fecha||d.date||d.dia||'')).filter(Boolean);
+  const duration=t=>{const [a,b]=[String(t.horaInicio||'').split(':').map(Number),String(t.horaFin||'').split(':').map(Number)];return Math.max(0,(b[0]*60+(b[1]||0)-a[0]*60-(a[1]||0))/60);};
+  const totals=employees.map(e=>({name:e.nombre||e.name||'Empleado',hours:shifts.filter(t=>String(t.empleadoId)===String(e.id)&&(!dates.length||dates.includes(String(t.fecha)))).reduce((s,t)=>s+duration(t),0)})).filter(e=>e.hours>0).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  box.innerHTML='<div class="schedule-weekly-hours-head"><h3>🕒 Horas semanales del cuadrante</h3><span>Según los turnos asignados</span></div>'+(totals.length?'<div class="schedule-weekly-hours-grid">'+totals.map(e=>'<div class="schedule-weekly-hours-item"><span>'+vendorEscape(e.name)+'</span><strong>'+Number(e.hours.toFixed(1)).toLocaleString('es-ES')+' h</strong></div>').join('')+'</div>':'<p class="muted">Todavía no hay turnos asignados.</p>');
+ }catch(err){box.innerHTML='<p class="muted">No se pudieron cargar las horas del cuadrante.</p>';console.error(err);}
+}
+document.addEventListener('click',e=>{const tab=e.target.closest('[data-section="employeesPanel"]');if(tab)setTimeout(loadScheduleWeeklyHoursSummary,0);},true);
 async function loadPublishedSchedule(){
  const box=$('publishedScheduleContent');if(!box)return;
  box.innerHTML='<p class="muted">Cargando el último horario guardado…</p>';
