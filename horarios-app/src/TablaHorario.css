@@ -1230,3 +1230,13 @@ button {
 .dia-simple-card .simple-eventos{position:static!important;float:none!important;grid-column:1 / -1!important;width:100%!important;clear:both!important}
 .dia-simple-card .simple-turnos-dia{display:flex!important;flex-direction:column!important;width:100%!important}
 .dia-simple-card .simple-puesto{width:100%!important}
+
+/* Corrección definitiva del orden: puestos primero, Cumples al final */
+.dia-simple-card{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+.dia-simple-card>.simple-franjas-encabezado{order:1!important;display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:100%!important}
+.dia-simple-card>.simple-turnos-dia{order:2!important;display:flex!important;flex-direction:column!important;width:100%!important}
+.dia-simple-card>.simple-eventos{order:3!important;display:block!important;position:static!important;float:none!important;grid-column:auto!important;grid-row:auto!important;width:100%!important;align-self:stretch!important}
+.dia-simple-card>.simple-turnos-dia .simple-puesto{display:flex!important;flex-direction:column!important;width:100%!important}
+.dia-simple-card>.simple-turnos-dia .simple-puesto-franjas{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:100%!important}
+.dia-simple-card .simple-dia-completo{display:flex!important;flex-direction:column!important;align-items:center!important}
+.dia-simple-card .simple-dia-completo .simple-turno-persona{align-items:center!important}
