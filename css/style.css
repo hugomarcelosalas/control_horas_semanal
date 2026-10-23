@@ -491,3 +491,12 @@ body:has(#vendorWorkspace:not(.hidden)) #app main{width:100%;max-width:none;marg
 .simple-birthday-line{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
 .simple-schedule-detail{color:#64748b;font-size:13px}
 @media(max-width:760px){.simple-schedule-day{padding:14px}.simple-schedule-columns{grid-template-columns:1fr;gap:18px}.simple-schedule-day>h3{font-size:18px}}
+
+.schedule-weekly-hours-summary{margin:14px 0 20px;padding:14px 16px;border:1px solid #dbe5ef;border-radius:12px;background:#f8fafc}
+.schedule-weekly-hours-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.schedule-weekly-hours-head h3{margin:0;font-size:15px}
+.schedule-weekly-hours-head>span{font-size:12px;color:#64748b}
+.schedule-weekly-hours-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:8px}
+.schedule-weekly-hours-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;background:#fff;border:1px solid #e2e8f0}
+.schedule-weekly-hours-item span{font-size:13px;font-weight:600}
+.schedule-weekly-hours-item strong{white-space:nowrap;font-size:14px;color:#166534}
