@@ -805,7 +805,7 @@ async function loadPublishedSchedule(){
  box.innerHTML='<p class="muted">Cargando el último horario guardado…</p>';
  try{
   const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],turnos=h.turnos||[];
-  if(!h.semanaGenerada||!turnos.length){box.innerHTML='<p class="empty-state">Todavía no hay un horario publicado disponible.</p>';return;}
+  if(!h.semanaGenerada||!turnos.length){box.innerHTML=isAdmin()?'<p class="empty-state">No hay un cuadrante publicado todavía. Puedes crear o revisar el cuadrante desde el generador y publicarlo cuando esté listo.</p><button type="button" class="primary" id="openScheduleGenerator">📅 Abrir generador de horarios</button>':'<p class="empty-state">📅 No hay un cuadrante publicado todavía. Cuando el administrador lo publique, podrás verlo aquí.</p>';return;}
   const days=(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||''));
   const dates=[...new Set(turnos.map(t=>String(t.fecha||'')).filter(Boolean))].sort();
   let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th>'+dates.map(d=>'<th>'+vendorEscape(new Date(d+'T12:00:00').toLocaleDateString('es-ES',{weekday:'short',day:'2-digit',month:'2-digit'}))+'</th>').join('')+'</tr></thead><tbody>';
@@ -813,7 +813,7 @@ async function loadPublishedSchedule(){
   html+='</tbody></table></div>';box.innerHTML=html;
  }catch(e){box.innerHTML='<p class="error">No se pudo cargar el horario publicado: '+vendorEscape(e.message)+'</p>'}
 }
-document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule()});
+document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule();if(e.target.closest('#openScheduleGenerator')&&isAdmin())showSection('horariosPanel')});
 
 
 async function renderWages(){
