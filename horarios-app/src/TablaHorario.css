@@ -1347,3 +1347,89 @@ button {
   width:7px!important;
   height:7px!important;
 }
+
+
+/* Vista simple pulida: día completo, marcadores de turno y cumples en tarjetas */
+.dia-simple-card .simple-turno-persona>.simple-turno-badge.turno-dia-completo {
+  background:#dcfce7!important;
+  border:1px solid #86efac!important;
+  color:#14532d!important;
+}
+.dia-simple-card .simple-turno-persona:not(.simple-dia-completo-persona) {
+  width:100%!important;
+  max-width:none!important;
+  box-sizing:border-box;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge {
+  min-width:0!important;
+  max-width:100%!important;
+  flex:0 0 auto!important;
+  overflow:hidden!important;
+  border-radius:7px!important;
+  box-shadow:0 1px 2px rgba(15,23,42,.06);
+}
+.dia-simple-card .simple-turno-nombre {
+  font-size:10px!important;
+  font-weight:750!important;
+}
+.dia-simple-card .simple-marca-turno {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 13px;
+  width:13px;
+  height:13px;
+  border-radius:4px;
+  background:#fbbf24;
+  color:#713f12;
+  font-size:10px;
+  line-height:1;
+  margin-left:1px;
+}
+.dia-simple-card .simple-marca-turno.necesario {
+  background:#fee2e2;
+  color:#991b1b;
+  border:1px solid #fca5a5;
+}
+.dia-simple-card .simple-eventos-grupo ul {
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.dia-simple-card .simple-eventos-grupo li {
+  list-style:none;
+  margin:0!important;
+  max-width:100%!important;
+}
+.dia-simple-card .simple-cumple-badge {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:3px 6px;
+  padding:6px 8px;
+  border:1px solid #f2cf78;
+  border-radius:7px;
+  background:#fffbeb;
+  color:#78350f;
+  box-shadow:0 1px 2px rgba(120,53,15,.06);
+  font-size:10px;
+  line-height:1.25;
+}
+.dia-simple-card .simple-cumple-badge strong {
+  font-size:11px;
+  white-space:nowrap;
+  color:#92400e;
+}
+.dia-simple-card .simple-cumple-badge span {
+  font-weight:750;
+}
+.dia-simple-card .simple-cumple-badge small {
+  flex-basis:100%;
+  font-size:10px;
+  color:#92400e;
+  overflow-wrap:anywhere;
+}
+.dia-simple-card .simple-eventos-grupo h4 {
+  padding-bottom:4px;
+  border-bottom:1px solid #f3e8c8;
+}
