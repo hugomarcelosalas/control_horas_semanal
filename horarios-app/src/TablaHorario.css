@@ -1240,3 +1240,23 @@ button {
 .dia-simple-card>.simple-turnos-dia .simple-puesto-franjas{display:grid!important;grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;width:100%!important}
 .dia-simple-card .simple-dia-completo{display:flex!important;flex-direction:column!important;align-items:center!important}
 .dia-simple-card .simple-dia-completo .simple-turno-persona{align-items:center!important}
+
+/* Vista compacta para tres días por fila */
+.vista-simple-semanal .fila-dias-simple.fila-tres-dias{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:10px!important;align-items:stretch}
+.vista-simple-semanal .fila-dias-simple.fila-un-dia{display:grid!important;grid-template-columns:minmax(0,1fr)!important;width:calc((100% - 20px)/3)}
+.vista-simple-semanal .dia-simple-card{padding:10px!important;min-width:0}
+.vista-simple-semanal .dia-simple-card>h3{font-size:16px;margin-bottom:8px;padding-bottom:6px}
+.vista-simple-semanal .simple-franjas-encabezado{font-size:10px;gap:5px;margin-bottom:7px}
+.vista-simple-semanal .simple-puesto>h4{font-size:10px;margin-bottom:5px}
+.vista-simple-semanal .simple-puesto-franjas{gap:5px}
+.vista-simple-semanal .simple-puesto-franjas>div+div{padding-left:5px}
+.vista-simple-semanal .simple-turno-persona{gap:3px}
+.vista-simple-semanal .simple-turno-persona .simple-persona{font-size:11px;gap:4px}
+.vista-simple-semanal .simple-turno-persona .simple-turno-badge{font-size:10px;padding:2px 4px;margin-left:10px}
+.vista-simple-semanal .simple-dia-completo{padding:6px!important;gap:5px!important}
+.vista-simple-semanal .simple-cumples-titulo{font-size:10px;margin-bottom:6px}
+.vista-simple-semanal .simple-eventos-columnas{gap:6px}
+.vista-simple-semanal .simple-eventos-grupo h4{font-size:10px}
+.vista-simple-semanal .simple-eventos-grupo li strong,.vista-simple-semanal .sin-eventos-franja{font-size:10px}
+@media(max-width:1050px){.vista-simple-semanal .fila-dias-simple.fila-tres-dias{grid-template-columns:repeat(2,minmax(0,1fr))!important}.vista-simple-semanal .fila-dias-simple.fila-un-dia{width:calc((100% - 10px)/2)}}
+@media(max-width:700px){.vista-simple-semanal .fila-dias-simple.fila-tres-dias{grid-template-columns:minmax(0,1fr)!important}.vista-simple-semanal .fila-dias-simple.fila-un-dia{width:100%}}
