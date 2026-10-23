@@ -414,7 +414,7 @@ useEffect(() => {
                   return <li key={emp.id}>
                     <span className="punto-empleado" style={{backgroundColor:emp.color || '#cbd5e1'}} />
                     <strong>{emp.nombre}</strong>
-                    <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id}>{t.horaInicio}–{t.horaFin}</span>)}</span>
+                    <span className="simple-turno-horas">{turnosEmpleado.map(t => <span key={t.id} className={`simple-turno-badge ${t.horaInicio === "16:00" && t.horaFin === "21:00" ? "turno-celeste" : t.horaInicio === "11:00" && t.horaFin === "21:00" ? "turno-verde-pastel" : ""}`}>{t.horaInicio}–{t.horaFin}</span>)}</span>
                   </li>;
                 })}</ul>
               </div>;
