@@ -1219,3 +1219,14 @@ button {
 /* Cumples en flujo vertical, justo después de Kiosko */
 .dia-simple-card .simple-eventos{display:block;width:100%;clear:both;grid-column:1 / -1;margin-top:14px!important;padding:10px 0 0!important;border:0!important;border-top:1px dashed #e2b96f!important}
 .dia-simple-card .simple-eventos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
+/* Una sola columna por franja: empleados siempre en vertical */
+.simple-puesto-franjas>div{display:flex!important;flex-direction:column!important;align-items:stretch!important;gap:8px!important}
+.simple-turno-persona{width:100%;display:flex!important;flex-direction:column!important;align-items:flex-start!important}
+.simple-dia-completo{display:flex!important;flex-direction:column!important;align-items:center!important;text-align:center!important;gap:8px!important;padding:10px!important}
+.simple-dia-completo .simple-turno-persona{align-items:center!important;text-align:center!important}
+.simple-dia-completo .simple-turno-persona .simple-turno-badge{margin-left:0!important}
+.simple-dia-completo .simple-persona{justify-content:center}
+.dia-simple-card .simple-eventos{position:static!important;float:none!important;grid-column:1 / -1!important;width:100%!important;clear:both!important}
+.dia-simple-card .simple-turnos-dia{display:flex!important;flex-direction:column!important;width:100%!important}
+.dia-simple-card .simple-puesto{width:100%!important}
