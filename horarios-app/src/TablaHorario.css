@@ -1111,3 +1111,10 @@ button {
   .fila-dias-superior { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .fila-dias-inferior { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 }
+
+
+/* Colores solicitados para la Vista simple del generador */
+.dia-simple-card .simple-turno-horas { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:5px; }
+.dia-simple-card .simple-turno-badge { display:inline-block; white-space:nowrap; border:1px solid #cbd5e1; border-radius:6px; padding:3px 7px; background:#eff6ff; color:#172554; font-size:12px; font-weight:700; line-height:1.3; }
+.dia-simple-card .simple-turno-badge.turno-celeste { background:#dff2ff; border-color:#b6e0fb; }
+.dia-simple-card .simple-turno-badge.turno-verde-pastel { background:#e2f7df; border-color:#bce8b5; }
