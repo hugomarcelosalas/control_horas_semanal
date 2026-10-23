@@ -1409,10 +1409,9 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
               </>}
               {subVista === 'simple' && (
                 <div className="vista-simple-semanal">
-                  <div className="fila-dias-simple">{diasSemana.slice(0, 2).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple">{diasSemana.slice(2, 4).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple">{diasSemana.slice(4, 6).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(0, 3).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(3, 6).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple fila-un-dia">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}</div>
                 </div>
               )}
               {subVista === 'mia' && (() => {
