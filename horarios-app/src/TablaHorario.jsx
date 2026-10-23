@@ -379,8 +379,10 @@ useEffect(() => {
     const cats=[{clave:'vendedor',titulo:'Vendedores'},{clave:'monitor',titulo:'Monitores'},{clave:'kiosko',titulo:'Kiosko'},{clave:'otros',titulo:'Otros'}];
     const hs=c=>c.horaEvento||(()=>{const [h,m]=String(c.horaInicio||'').split(':').map(Number);const n=h*60+m+30;return `${String(Math.floor(n/60)).padStart(2,'0')}:${String(n%60).padStart(2,'0')}`;})();
     const ev=cumples.filter(c=>c.fecha===dia.isoFecha).sort((a,b)=>hs(a).localeCompare(hs(b)));
+    const duracionHoras=t=>{const [h1,m1]=String(t.horaInicio||'0:0').split(':').map(Number);const [h2,m2]=String(t.horaFin||'0:0').split(':').map(Number);return (h2*60+m2-h1*60-m1)/60;};
+    const esDiaCompleto=t=>duracionHoras(t)>6;
     const shiftClass=t=>t.horaInicio==='16:00'&&t.horaFin==='21:00'?'turno-celeste':t.horaInicio==='11:00'&&t.horaFin==='21:00'?'turno-verde-pastel':'';
-    const personRow=(emp,t)=><div className={`simple-turno-persona ${shiftClass(t)==='turno-verde-pastel'?'simple-dia-completo-persona':''}`} key={t.id}><span className="simple-persona"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{emp.nombre}</span><span className={`simple-turno-badge ${shiftClass(t)}`}>{t.horaInicio}–{t.horaFin}</span></div>;
+    const personRow=(emp,t)=><div className={`simple-turno-persona ${esDiaCompleto(t)?'simple-dia-completo-persona':''}`} key={t.id}><span className="simple-persona"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{emp.nombre}</span><span className={`simple-turno-badge ${shiftClass(t)}`}>{t.horaInicio}–{t.horaFin}</span></div>;
     const eventos=(titulo,lista)=><div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4>{lista.length?<ul>{lista.map(c=><li key={c.id}><strong>{hs(c)} { [c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}{c.observaciones?` · ${c.observaciones}`:''}</strong></li>)}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;
     return <section className="dia-simple-card" key={dia.clave}>
       <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
@@ -388,10 +390,10 @@ useEffect(() => {
       <div className="simple-turnos-dia">{cats.map(cat=>{
         const catTurnos=turnosDia.filter(t=>cat.clave==='otros'?!['vendedor','monitor','kiosko'].includes(t.ubicacion||'vendedor'):(t.ubicacion||'vendedor')===cat.clave);
         if(!catTurnos.length)return null;
-        const completos=catTurnos.filter(t=>t.horaInicio==='11:00'&&t.horaFin==='21:00');
-        const resto=catTurnos.filter(t=>!(t.horaInicio==='11:00'&&t.horaFin==='21:00'));
-        const manana=resto.filter(t=>String(t.horaInicio||'')<'16:00');
-        const tarde=resto.filter(t=>String(t.horaInicio||'')>='16:00');
+        const completos=catTurnos.filter(esDiaCompleto);
+        const resto=catTurnos.filter(t=>!esDiaCompleto(t));
+        const manana=resto.filter(t=>String(t.horaInicio||'')<'15:00');
+        const tarde=resto.filter(t=>String(t.horaInicio||'')>='15:00');
         const renderTurnos=lista=>lista.length?lista.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;}):<span className="simple-vacio">—</span>;
         return <div className="simple-puesto" key={cat.clave}><h4>{cat.titulo}</h4>{completos.length>0&&<div className="simple-dia-completo">{completos.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;})}</div>}<div className="simple-puesto-franjas"><div>{renderTurnos(manana)}</div><div>{renderTurnos(tarde)}</div></div></div>;
       })}</div>
