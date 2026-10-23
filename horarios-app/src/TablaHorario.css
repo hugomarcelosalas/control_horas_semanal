@@ -1215,3 +1215,7 @@ button {
 .simple-eventos-grupo li{margin:0 0 6px}
 .simple-eventos-grupo li strong{font-size:12px;line-height:1.35;font-weight:650;overflow-wrap:anywhere}
 @media(max-width:700px){.vista-simple-semanal .fila-dias-simple{grid-template-columns:minmax(0,1fr)}}
+
+/* Cumples en flujo vertical, justo después de Kiosko */
+.dia-simple-card .simple-eventos{display:block;width:100%;clear:both;grid-column:1 / -1;margin-top:14px!important;padding:10px 0 0!important;border:0!important;border-top:1px dashed #e2b96f!important}
+.dia-simple-card .simple-eventos-columnas{display:grid;grid-template-columns:1fr 1fr;gap:12px}
