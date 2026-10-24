@@ -849,7 +849,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSche
 async function renderWages(){
  if(!isAdmin())return;
  const panel=$('wagesPanel');if(panel)panel.classList.remove('hidden');
- if(!renderWages.loaded){try{const saved=await api('/api/admin/wages');db.wages=saved.wages||{};db.wageReference=saved.wageReference||[]}catch(e){$('wageStatus').textContent='Error al cargar sueldos: '+e.message;$('wageCurrent').innerHTML='<p class="error">No se pudieron cargar los datos. Recarga la página o vuelve a entrar.</p>';return}renderWages.loaded=true;}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
+ try{const saved=await api('/api/admin/wages');if(!saved||typeof saved!=='object'||!saved.wages||typeof saved.wages!=='object'||!Array.isArray(saved.wageReference))throw new Error('La API devolvió un formato de datos inesperado');db.wages=saved.wages;db.wageReference=saved.wageReference;renderWages.loaded=true;}catch(e){$('wageStatus').textContent='Error al cargar sueldos: '+e.message;$('wageCurrent').innerHTML='<p class="error">No se pudieron cargar los datos guardados. No se han borrado; vuelve a intentarlo o recarga la página.</p>';return}db.wages=db.wages||{};db.wageReference=db.wageReference||[];
  // Eliminar referencias duplicadas exactas generadas por listeners repetidos.
  const seenRefs=new Set();
  db.wageReference=db.wageReference.filter(r=>{
