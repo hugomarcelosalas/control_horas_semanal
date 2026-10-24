@@ -1862,3 +1862,38 @@ button {
 /* Texto legible en cumpleaños X: menor tamaño, sin alterar el contenido */
 .dia-simple-card .simple-cumple-badge span {font-size:9px!important;letter-spacing:-.25px}
 .dia-simple-card .simple-cumple-badge strong {font-size:10px!important}
+
+
+/* Resumen semanal en matriz: cada empleado conserva su color y los eventos solo muestran color */
+.resumen-semanal-simple {
+  min-width:0;
+  align-self:stretch;
+  padding:16px 12px;
+  border:1px solid #dbe5ef;
+  border-radius:14px;
+  background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+}
+.resumen-semanal-simple h3 {margin:0 0 18px;text-align:center;font-size:16px;color:#24364b}
+.resumen-semana-matriz {display:flex;flex-direction:column;gap:7px}
+.resumen-matriz-cabecera,
+.resumen-matriz-fila {
+  display:grid;
+  grid-template-columns:minmax(66px,1.1fr) repeat(7,minmax(12px,1fr));
+  gap:6px;
+  align-items:center;
+}
+.resumen-matriz-cabecera {margin-bottom:4px;text-align:center;color:#64748b;font-size:11px;font-weight:800}
+.resumen-matriz-fila {min-height:23px}
+.resumen-matriz-nombre {min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;color:#475569;font-weight:650}
+.resumen-matriz-celda {display:block;width:100%;height:22px;border-radius:5px;background:#eef2f7;box-shadow:inset 0 0 0 1px rgba(100,116,139,.08)}
+.resumen-matriz-separador {margin-top:8px;padding-top:10px;border-top:1px solid #e5edf5;color:#8a5b22;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em}
+.resumen-matriz-fila-eventos .resumen-matriz-celda {height:25px;border-radius:6px}
+.fila-domingo-resumen {display:grid!important;grid-template-columns:minmax(0,1fr) minmax(280px,.9fr)!important;gap:14px!important;align-items:stretch!important}
+@media(max-width:700px) {
+ .fila-domingo-resumen {grid-template-columns:minmax(0,1fr)!important;gap:12px!important}
+ .resumen-semanal-simple {padding:14px 12px}
+ .resumen-matriz-cabecera,.resumen-matriz-fila {grid-template-columns:minmax(74px,1.1fr) repeat(7,minmax(18px,1fr));gap:7px}
+ .resumen-matriz-nombre {font-size:11px}
+ .resumen-matriz-celda {height:20px}
+}
