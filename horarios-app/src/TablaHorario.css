@@ -1433,3 +1433,59 @@ button {
   padding-bottom:4px;
   border-bottom:1px solid #f3e8c8;
 }
+
+
+/* Evitar que las barras de turno desborden los límites de cada día */
+.dia-simple-card .simple-puesto-franjas,
+.dia-simple-card .simple-puesto-franjas>div,
+.dia-simple-card .simple-dia-completo {
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.dia-simple-card .simple-turno-persona {
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  height:24px;
+  overflow:hidden!important;
+  box-sizing:border-box!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge {
+  top:0;
+  bottom:0;
+  min-width:0!important;
+  max-width:100%!important;
+  height:22px!important;
+  box-sizing:border-box!important;
+}
+.dia-simple-card .simple-dia-completo .simple-turno-persona {
+  height:24px!important;
+  overflow:hidden!important;
+}
+.dia-simple-card .simple-eventos-grupo,
+.dia-simple-card .simple-eventos-grupo ul {
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  padding-left:0!important;
+}
+.dia-simple-card .simple-eventos-grupo li {
+  position:relative!important;
+  width:100%!important;
+  min-width:0!important;
+  box-sizing:border-box!important;
+  overflow:hidden!important;
+}
+.dia-simple-card .simple-cumple-badge {
+  max-width:100%!important;
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+}
+.dia-simple-card .simple-cumple-badge strong,
+.dia-simple-card .simple-cumple-badge span {
+  min-width:0;
+  overflow-wrap:anywhere;
+}
