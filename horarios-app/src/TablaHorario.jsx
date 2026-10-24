@@ -1164,7 +1164,7 @@ useEffect(() => {
                   >
                     ✏️ Volver a Admin
                   </button>}
-                  {subVista === 'simple' && <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'landscape')} className="btn-exportar">📄 PDF Vista simple</button>}
+                  {subVista === 'simple' && <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'portrait')} className="btn-exportar">📄 PDF Vista simple</button>}
                   <button 
                     onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'landscape')} 
                     className="btn-exportar"
@@ -1424,9 +1424,6 @@ useEffect(() => {
               </>}
               {subVista === 'simple' && (
                 <div className="vista-simple-semanal" ref={vistaSimplePDFRef}>
-                  <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(0, 3).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(3, 6).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple fila-un-dia fila-domingo-resumen">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}
                   <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
                     <h3>Semana</h3>
                     <div className="resumen-semana-matriz">
@@ -1455,7 +1452,7 @@ useEffect(() => {
                     </div>
                     <p className="resumen-semana-leyenda">M mañana · T tarde · C más de 6 h</p>
                   </aside>
-                </div>
+                  {diasSemana.map(dia => <div className="dia-simple-en-cuadricula" key={dia.isoFecha}>{renderDiaSimple(dia)}</div>)}
                 </div>
               )}
               {subVista === 'mia' && (() => {
