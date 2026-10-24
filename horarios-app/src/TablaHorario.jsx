@@ -397,7 +397,7 @@ useEffect(() => {
         const manana=resto.filter(t=>String(t.horaInicio||'')<'15:00');
         const tarde=resto.filter(t=>String(t.horaInicio||'')>='15:00');
         const renderTurnos=lista=>lista.length?lista.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;}):<span className="simple-vacio">—</span>;
-        return <div className="simple-puesto" key={cat.clave}><h4>{cat.titulo}</h4>{completos.length>0&&<div className="simple-dia-completo">{completos.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;})}</div>}<div className="simple-puesto-franjas"><div>{renderTurnos(manana)}</div><div>{renderTurnos(tarde)}</div></div></div>;
+        return <div className={`simple-puesto simple-puesto-${cat.clave}`} key={cat.clave}><h4>{cat.titulo}</h4>{completos.length>0&&<div className="simple-dia-completo">{completos.map(t=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return emp?personRow(emp,t):null;})}</div>}<div className="simple-puesto-franjas"><div>{renderTurnos(manana)}</div><div>{renderTurnos(tarde)}</div></div></div>;
       })}</div>
 
       <div className="simple-eventos"><h4 className="simple-cumples-titulo">Cumples</h4><div className="simple-eventos-columnas">{eventos('Mañana',ev.filter(c=>hs(c)>='11:00'&&hs(c)<='15:00'))}{eventos('Tarde',ev.filter(c=>hs(c)>='16:00'))}</div>{ev.some(c=>c.observaciones)&&<footer className="simple-observaciones-dia">{ev.filter(c=>c.observaciones).map(c=><p key={c.id}><b>* {hs(c)}</b> {c.observaciones}</p>)}</footer>}</div>
