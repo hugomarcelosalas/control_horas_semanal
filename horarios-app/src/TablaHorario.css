@@ -1489,3 +1489,58 @@ button {
   min-width:0;
   overflow-wrap:anywhere;
 }
+
+
+/* Cumple: hora, tipo, cantidad y edad en una sola línea; observaciones debajo y fuera */
+.dia-simple-card .simple-cumple-contenido {
+  position:relative;
+  min-width:0;
+  max-width:100%;
+  box-sizing:border-box;
+}
+.dia-simple-card .simple-cumple-badge {
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:4px!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  padding:5px 6px!important;
+  min-height:27px;
+  width:100%;
+  box-sizing:border-box!important;
+}
+.dia-simple-card .simple-cumple-badge strong,
+.dia-simple-card .simple-cumple-badge span {
+  flex:0 0 auto!important;
+  white-space:nowrap!important;
+  overflow-wrap:normal!important;
+  font-size:10px!important;
+}
+.dia-simple-card .simple-cumple-observacion {
+  display:block!important;
+  margin:3px 0 2px 4px!important;
+  color:#64748b!important;
+  font-size:10px!important;
+  line-height:1.25!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+}
+.dia-simple-card .simple-eventos-grupo li {
+  height:auto!important;
+  min-height:30px!important;
+  overflow:visible!important;
+  margin-bottom:4px!important;
+}
+.dia-simple-card .simple-eventos-grupo ul {
+  overflow:visible!important;
+}
+@media(max-width:700px) {
+  .vista-simple-semanal .fila-dias-simple.fila-tres-dias {
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia {width:100%!important}
+  .dia-simple-card .simple-cumple-badge {gap:3px!important;padding:5px!important}
+  .dia-simple-card .simple-cumple-badge strong,
+  .dia-simple-card .simple-cumple-badge span {font-size:10px!important}
+}
