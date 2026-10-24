@@ -1948,3 +1948,36 @@ button {
     box-sizing:border-box!important;
   }
 }
+
+
+/* Override específico: domingo y resumen en una sola fila en escritorio */
+@media (min-width: 701px) {
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) minmax(0,1.05fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen > .dia-simple-card {
+    width:auto!important;
+    max-width:none!important;
+    grid-column:1!important;
+  }
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen > .resumen-semanal-simple {
+    grid-column:2!important;
+    width:100%!important;
+    max-width:100%!important;
+  }
+}
+@media (max-width:700px) {
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen {
+    display:flex!important;
+    flex-direction:column!important;
+    width:100%!important;
+  }
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen > .dia-simple-card,
+  .vista-simple-semanal .fila-dias-simple.fila-un-dia.fila-domingo-resumen > .resumen-semanal-simple {
+    width:100%!important;
+    grid-column:auto!important;
+  }
+}
