@@ -1743,3 +1743,13 @@ button {
     font-size:10px!important;
   }
 }
+
+
+/* Colores pastel para cumpleaños según cantidad de niños */
+.dia-simple-card .simple-cumple-badge {
+  border-width:1px!important;
+  border-style:solid!important;
+  box-shadow:0 1px 3px rgba(15,23,42,.07)!important;
+}
+.dia-simple-card .simple-cumple-badge strong,
+.dia-simple-card .simple-cumple-badge span {color:inherit!important}
