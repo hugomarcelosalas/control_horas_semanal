@@ -847,49 +847,59 @@ useEffect(() => {
   };
 
   const exportarPDFPersonalizado = async (refObjetivo, orientacion) => {
-    const elemento = refObjetivo.current;
-    if (!elemento) return;
+    const elemento = refObjetivo?.current;
+    if (!elemento) {
+      alert('No se encontró el horario que quieres exportar. Cambia a la vista del horario e inténtalo de nuevo.');
+      return;
+    }
 
-    const canvas = await html2canvas(elemento, {
-      scale: 2,
-      useCORS: true,
-      backgroundColor: '#ffffff',
-      logging: false
-    });
+    try {
+      // Capturar el contenido completo, aunque esté dentro de una zona desplazable.
+      const canvas = await html2canvas(elemento, {
+        scale: Math.min(2, window.devicePixelRatio || 1.5),
+        useCORS: true,
+        allowTaint: false,
+        backgroundColor: '#ffffff',
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: Math.max(document.documentElement.clientWidth, elemento.scrollWidth, elemento.offsetWidth),
+        windowHeight: Math.max(document.documentElement.clientHeight, elemento.scrollHeight, elemento.offsetHeight),
+        onclone: (doc) => {
+          const objetivo = doc.querySelector(refObjetivo === vistaSimplePDFRef ? '.vista-simple-semanal' : '.area-impresion');
+          if (objetivo) {
+            objetivo.style.overflow = 'visible';
+            objetivo.style.maxWidth = 'none';
+            objetivo.style.height = 'auto';
+            objetivo.style.maxHeight = 'none';
+          }
+          doc.querySelectorAll('[data-html2canvas-ignore="true"]').forEach(n => n.style.display = 'none');
+        }
+      });
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.90);
-    const pdf = new jsPDF(orientacion, 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+      if (!canvas.width || !canvas.height) throw new Error('La captura del horario está vacía.');
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const pdf = new jsPDF(orientacion, 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgProps = pdf.getImageProperties(imgData);
+      const margen = 4;
+      const ratio = Math.min((pdfWidth - margen * 2) / imgProps.width, (pdfHeight - margen * 2) / imgProps.height);
+      const widthFinal = imgProps.width * ratio;
+      const heightFinal = imgProps.height * ratio;
+      pdf.addImage(imgData, 'JPEG', (pdfWidth - widthFinal) / 2, (pdfHeight - heightFinal) / 2, widthFinal, heightFinal);
 
-    const imgProps = pdf.getImageProperties(imgData);
-    const margen = 2;
-    const anchoUtil = pdfWidth - margen * 2;
-    const altoUtil = pdfHeight - margen * 2;
-    const ratio = Math.min(anchoUtil / imgProps.width, altoUtil / imgProps.height);
-
-    const widthFinal = imgProps.width * ratio;
-    const heightFinal = imgProps.height * ratio;
-    const x = (pdfWidth - widthFinal) / 2;
-    const y = (pdfHeight - heightFinal) / 2;
-
-    pdf.addImage(imgData, 'JPEG', x, y, widthFinal, heightFinal);
-const fechaInicioPDF = diasSemana[0]?.isoFecha;
-const fechaFinPDF = diasSemana[6]?.isoFecha;
-
-const anioMes = fechaInicioPDF
-  ? fechaInicioPDF.substring(0, 7)
-  : '0000-00';
-
-const diaInicial = fechaInicioPDF
-  ? fechaInicioPDF.substring(8, 10)
-  : '00';
-
-const diaFinal = fechaFinPDF
-  ? fechaFinPDF.substring(8, 10)
-  : '00';
-
-pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
+      const inicio = diasSemana[0]?.isoFecha;
+      const fin = diasSemana[6]?.isoFecha;
+      const nombre = inicio && fin
+        ? `Horario ${inicio.slice(0, 7)} ${inicio.slice(8, 10)} a ${fin.slice(8, 10)}.pdf`
+        : 'Horario semanal.pdf';
+      pdf.save(nombre);
+    } catch (error) {
+      console.error('Error al exportar el horario a PDF:', error);
+      alert('No se pudo generar el PDF. Recarga la página e inténtalo otra vez. Si sigue fallando, avísame.');
+    }
+  };
 
   const colorEmpSeleccionado = empleados.find(e => String(e.id) === String(turnoEmpId))?.color || '#ffffff';
 
