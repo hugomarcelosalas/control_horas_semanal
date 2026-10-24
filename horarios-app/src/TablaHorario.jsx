@@ -1426,7 +1426,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                         {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
                           const ts=turnos.filter(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
                           if(!ts.length)return <span key={d.isoFecha} className="resumen-matriz-celda" title="Sin turno"/>;
-                          const horas=ts.reduce((s,t)=>s+Math.max(0,duracionHoras(t)),0);
+                          const horas=ts.reduce((s,t)=>{const [ih,im]=String(t.horaInicio||'0:0').split(':').map(Number);const [fh,fm]=String(t.horaFin||'0:0').split(':').map(Number);return s+Math.max(0,(fh*60+(fm||0)-ih*60-(im||0))/60);},0);
                           const primerInicio=ts.map(t=>String(t.horaInicio||'11:00')).sort()[0];
                           const marca=horas>6?'C':primerInicio<'15:00'?'M':'T';
                           return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-turno" style={{background:emp.color||'#94a3b8'}} title={emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')}>{marca}</span>;
