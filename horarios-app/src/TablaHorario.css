@@ -2081,3 +2081,14 @@ button {
   font-size: 12px !important;
   line-height: 1 !important;
 }
+
+
+/* Iconos de encargado y necesidad dentro de las celdas de la matriz semanal */
+.resumen-matriz-turno { gap: 2px; }
+.resumen-matriz-marcador {
+  display: inline-block;
+  position: static;
+  font-size: 10px;
+  line-height: 1;
+  vertical-align: middle;
+}
