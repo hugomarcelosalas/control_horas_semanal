@@ -1476,7 +1476,9 @@ useEffect(() => {
                           const horas=ts.reduce((s,t)=>{const [ih,im]=String(t.horaInicio||'0:0').split(':').map(Number);const [fh,fm]=String(t.horaFin||'0:0').split(':').map(Number);return s+Math.max(0,(fh*60+(fm||0)-ih*60-(im||0))/60);},0);
                           const primerInicio=ts.map(t=>String(t.horaInicio||'11:00')).sort()[0];
                           const marca=horas>6?'C':primerInicio<'15:00'?'M':'T';
-                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-turno" style={{background:emp.color||'#94a3b8'}} title={emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')}>{marca}</span>;
+                          const encargado = ts.some(t => Boolean(t.encargado));
+                          const necesario = ts.some(t => Boolean(t.siEsNecesario));
+                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-turno" style={{background:emp.color||'#94a3b8'}} title={emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')}>{marca}{necesario && <span title="Si hace falta" aria-label="Si hace falta" className="resumen-matriz-marcador">⚠️</span>}{encargado && <span title="Encargado" aria-label="Encargado" className="resumen-matriz-marcador">★</span>}</span>;
                         })}
                       </div>)}
                       <div className="resumen-matriz-separador"><span>Eventos · niños por día</span></div>
