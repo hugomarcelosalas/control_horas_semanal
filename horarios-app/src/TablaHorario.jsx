@@ -1438,7 +1438,7 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                         {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
                           const lista=cumples.filter(x=>x.fecha===d.isoFecha);
                           const n=lista.reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);
-                          const bg=!lista.length?'#eef2f7':n<15?'#bae6fd':n<=20?'#fde68a':'#fca5a5';
+                          const bg=!lista.length?'#eef2f7':n<10?'#bbf7d0':n<20?'#86efac':n<35?'#d9f99d':n<50?'#fef08a':n<65?'#fed7aa':n<80?'#fdba74':n<90?'#fca5a5':'#f87171';
                           return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?n+' niños en total':'Sin eventos'}>{lista.length?n:''}</span>;
                         })}
                       </div>
