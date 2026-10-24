@@ -1417,16 +1417,28 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(0, 3).map(dia => renderDiaSimple(dia))}</div>
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(3, 6).map(dia => renderDiaSimple(dia))}</div>
                   <div className="fila-dias-simple fila-un-dia fila-domingo-resumen">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}
-                  <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
-                    <h3>Semana</h3>
-                    <div className="resumen-semana-dias"><span></span>{diasSemana.map((d,i)=><span key={d.isoFecha}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
-                    {[
-                      {key:'vendedor',label:'Vendedores',color:'#a855f7'},
-                      {key:'monitor',label:'Monitores',color:'#22c55e'},
-                      {key:'kiosko',label:'Kiosko',color:'#f59e0b'},
-                      {key:'cumple',label:'Cumples',color:'#38bdf8'}
-                    ].map(cat=><div className="resumen-semana-fila" key={cat.key}><span className="resumen-semana-label">{cat.label}</span>{diasSemana.map(d=>{const ts=turnos.filter(t=>t.fecha===d.isoFecha&&(t.ubicacion||'vendedor')===cat.key);const cs=cumples.filter(x=>x.fecha===d.isoFecha);const activo=cat.key==='cumple'?cs.length>0:ts.length>0;const tonos=cat.key==='cumple'?(cs.some(x=>(Number(x.cantNinos)||0)>20)?'#fecaca':cs.some(x=>(Number(x.cantNinos)||0)>=15)?'#fde68a':'#bae6fd'):activo?cat.color:'#eef2f7';return <span key={d.isoFecha} className="resumen-semana-celda" style={{background:activo?tonos:'#eef2f7'}}/>})}</div>)}
-                    <div className="resumen-semana-turnos">{diasSemana.map(d=><div key={d.isoFecha} className="resumen-semana-columna">{turnos.filter(t=>t.fecha===d.isoFecha).slice(0,14).map((t,i)=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return <i key={t.id||i} style={{background:emp?.color||'#cbd5e1',height:Math.max(8,Math.min(48,(Number(String(t.horaFin||'21:00').slice(0,2))-Number(String(t.horaInicio||'11:00').slice(0,2)))*4))}}/>})}{cumples.filter(x=>x.fecha===d.isoFecha).map((x,i)=><i key={'c'+i} style={{background:(Number(x.cantNinos)||0)>20?'#fca5a5':(Number(x.cantNinos)||0)>=15?'#fcd34d':'#7dd3fc',height:12}}/>)}</div>)}</div>
+                  <aside className="resumen-semanal-simple" aria-label="Vista visual de la semana">
+                    <h3>Semana de un vistazo</h3>
+                    <div className="resumen-semana-matriz">
+                      <div className="resumen-matriz-cabecera"><span></span>{[6,0,1,2,3,4,5].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
+                      {empleados.map(emp=><div className="resumen-matriz-fila" key={emp.id}>
+                        <span className="resumen-matriz-nombre" title={emp.nombre}>{String(emp.nombre||'').trim().split(/\s+/)[0]}</span>
+                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return (ai===0?0:ai)-(bi===0?0:bi)}).map(d=>{
+                          const trabaja=turnos.some(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
+                          return <span key={d.isoFecha} className="resumen-matriz-celda" style={{background:trabaja?(emp.color||'#94a3b8'):'#eef2f7'}} title={trabaja?emp.nombre+' trabaja':'Sin turno'}/>;
+                        })}
+                      </div>)}
+                      <div className="resumen-matriz-separador"><span>Cumples</span></div>
+                      <div className="resumen-matriz-fila resumen-matriz-fila-eventos">
+                        <span className="resumen-matriz-nombre">Eventos</span>
+                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return (ai===0?0:ai)-(bi===0?0:bi)}).map(d=>{
+                          const lista=cumples.filter(x=>x.fecha===d.isoFecha);
+                          const n=Math.max(0,...lista.map(x=>Number(x.cantNinos)||0));
+                          const bg=!lista.length?'#eef2f7':n>20?'#fca5a5':n>=15?'#fde68a':'#bae6fd';
+                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?lista.length+' evento(s)':'Sin eventos'}/>;
+                        })}
+                      </div>
+                    </div>
                   </aside>
                 </div>
                 </div>
