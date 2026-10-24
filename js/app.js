@@ -858,7 +858,7 @@ async function renderWages(){
  });
  const sel=$('wageEmployee'),filter=$('wageHistoryEmployee');
  if(!sel||!filter)return;
- const employees=db.users.filter(u=>u.role==='employee'&&u.active!==false);
+ const employees=(Array.isArray(db.users)?db.users:[]).filter(u=>String(u.username||'').toLowerCase()!=='admin'&&String(u.username||'').toLowerCase()!=='vendedor'&&String(u.role||'').toLowerCase()!=='admin'&&String(u.role||'').toLowerCase()!=='vendedor');
  const oldSelected=[...sel.selectedOptions].map(o=>o.value);
  sel.innerHTML='<option value="">Selecciona un empleado</option>'+employees.map(u=>'<option value="'+vendorEscape(u.username)+'">'+vendorEscape(u.name)+'</option>').join('');
  oldSelected.forEach(v=>{const o=[...sel.options].find(x=>x.value===v);if(o)o.selected=true});
