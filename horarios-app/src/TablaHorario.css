@@ -1897,3 +1897,24 @@ button {
  .resumen-matriz-nombre {font-size:11px}
  .resumen-matriz-celda {height:20px}
 }
+
+
+/* Celdas semanales tipo cuadrícula: color del empleado + M/T/C */
+.resumen-matriz-turno {
+ display:flex!important;align-items:center;justify-content:center;
+ color:#172033;font-size:11px;font-weight:850;
+ border:1px solid rgba(51,65,85,.14);
+ text-shadow:0 1px 0 rgba(255,255,255,.55);
+}
+.resumen-matriz-fila-eventos .resumen-matriz-evento {
+ display:flex;align-items:center;justify-content:center;
+ color:#263548;font-size:10px;font-weight:800;
+ border:1px solid rgba(51,65,85,.1);
+}
+.resumen-semana-leyenda {margin:12px 0 0;text-align:center;font-size:10px;color:#64748b}
+.resumen-matriz-celda {min-width:0;overflow:hidden}
+@media(max-width:700px) {
+ .resumen-matriz-turno {font-size:10px}
+ .resumen-matriz-fila-eventos .resumen-matriz-evento {font-size:9px}
+ .resumen-semana-leyenda {font-size:10px}
+}
