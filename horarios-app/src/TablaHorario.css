@@ -1981,3 +1981,39 @@ button {
     grid-column:auto!important;
   }
 }
+
+
+/* Vista simple: el resumen ocupa la primera celda antes del lunes */
+@media (min-width: 701px) {
+  .vista-simple-semanal {
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    align-items:stretch;
+    gap:10px!important;
+  }
+  .vista-simple-semanal > .resumen-semanal-simple,
+  .vista-simple-semanal > .dia-simple-en-cuadricula {
+    min-width:0!important;
+    width:100%!important;
+    max-width:100%!important;
+    box-sizing:border-box!important;
+  }
+  .vista-simple-semanal > .resumen-semanal-simple { grid-column:1; grid-row:1; }
+  .vista-simple-semanal > .dia-simple-en-cuadricula { display:flex; }
+  .vista-simple-semanal > .dia-simple-en-cuadricula > * { width:100%; min-width:0; }
+}
+@media (max-width:700px) {
+  .vista-simple-semanal {
+    display:flex!important;
+    flex-direction:column!important;
+    gap:12px!important;
+    width:100%!important;
+  }
+  .vista-simple-semanal > .resumen-semanal-simple,
+  .vista-simple-semanal > .dia-simple-en-cuadricula {
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+}
