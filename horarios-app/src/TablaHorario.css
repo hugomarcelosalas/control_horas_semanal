@@ -1632,3 +1632,65 @@ button {
   .dia-simple-card .simple-aforo-track {height:5px}
   .dia-simple-card .simple-cumple-badge {padding:5px 4px!important;gap:3px!important}
 }
+
+
+/* Las barras pueden cruzar la división mañana/tarde, pero siguen dentro de su día */
+.dia-simple-card .simple-puesto-franjas,
+.dia-simple-card .simple-puesto-franjas>div {
+  overflow:visible!important;
+}
+.dia-simple-card .simple-puesto {
+  overflow:visible!important;
+}
+.dia-simple-card .simple-turno-persona {
+  overflow:visible!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge {
+  max-width:none!important;
+}
+.dia-simple-card .simple-turno-persona>.simple-turno-badge .simple-turno-nombre {
+  min-width:max-content!important;
+}
+.dia-simple-card .simple-eventos-grupo,
+.dia-simple-card .simple-eventos-grupo ul {
+  overflow:visible!important;
+}
+.dia-simple-card .simple-eventos-grupo li {
+  overflow:visible!important;
+}
+.dia-simple-card .simple-cumple-contenido {
+  overflow:visible!important;
+  min-width:0!important;
+}
+.dia-simple-card .simple-cumple-badge {
+  min-width:120px!important;
+  width:max-content!important;
+  max-width:min(260px, 100%)!important;
+  padding:7px 9px!important;
+  min-height:34px!important;
+  gap:5px!important;
+  font-size:11px!important;
+  border-radius:9px!important;
+  box-shadow:0 2px 4px rgba(120,53,15,.09)!important;
+}
+.dia-simple-card .simple-cumple-badge strong,
+.dia-simple-card .simple-cumple-badge span {
+  font-size:11px!important;
+}
+@media(max-width:700px) {
+  .dia-simple-card .simple-cumple-badge {
+    min-width:120px!important;
+    max-width:230px!important;
+    min-height:34px!important;
+    padding:7px 8px!important;
+    font-size:11px!important;
+  }
+  .dia-simple-card .simple-turno-persona>.simple-turno-badge {
+    font-size:10px!important;
+  }
+}
+@media print {
+  .vista-simple-semanal {width:100%!important}
+  .vista-simple-semanal .fila-dias-simple {break-inside:avoid}
+  .dia-simple-card {break-inside:avoid;box-shadow:none!important}
+}
