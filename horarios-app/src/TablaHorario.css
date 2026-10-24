@@ -1788,3 +1788,77 @@ button {
   .dia-simple-card .simple-cumple-badge strong,
   .dia-simple-card .simple-cumple-badge span {font-size:9px!important}
 }
+
+
+/* Resumen semanal minimalista, junto al domingo: solo marcas de color */
+.fila-domingo-resumen {
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(180px,.62fr)!important;
+  gap:12px!important;
+  align-items:stretch!important;
+}
+.resumen-semanal-simple {
+  min-width:0;
+  align-self:stretch;
+  padding:14px 10px;
+  border:1px solid #dbe5ef;
+  border-radius:12px;
+  background:linear-gradient(180deg,#fff 0%,#f8fbff 100%);
+  box-shadow:0 2px 8px rgba(15,23,42,.05);
+}
+.resumen-semanal-simple h3 {
+  margin:0 0 18px;
+  text-align:center;
+  font-size:15px;
+  color:#24364b;
+}
+.resumen-semana-dias,
+.resumen-semana-fila {
+  display:grid;
+  grid-template-columns:minmax(54px,1fr) repeat(7,minmax(9px,1fr));
+  gap:4px;
+  align-items:center;
+}
+.resumen-semana-dias {margin-bottom:9px;color:#64748b;font-size:10px;font-weight:800;text-align:center}
+.resumen-semana-fila {margin:12px 0}
+.resumen-semana-label {font-size:10px;color:#64748b;line-height:1.15}
+.resumen-semana-celda {display:block;height:25px;border-radius:5px;opacity:.95}
+.resumen-semana-turnos {
+  margin-top:18px;
+  padding-top:12px;
+  border-top:1px solid #e5edf5;
+  display:grid;
+  grid-template-columns:repeat(7,minmax(9px,1fr));
+  gap:4px;
+  min-height:150px;
+}
+.resumen-semana-columna {
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:flex-end;
+  align-items:center;
+  gap:3px;
+}
+.resumen-semana-columna i {
+  display:block;
+  width:70%;
+  max-width:13px;
+  min-height:5px;
+  border-radius:4px;
+  opacity:.82;
+}
+@media(max-width:700px) {
+  .fila-domingo-resumen {grid-template-columns:minmax(0,1fr)!important;gap:10px!important}
+  .resumen-semanal-simple {padding:12px 10px}
+  .resumen-semana-dias,.resumen-semana-fila {grid-template-columns:minmax(75px,1fr) repeat(7,minmax(16px,1fr));gap:6px}
+  .resumen-semana-label {font-size:11px}
+  .resumen-semana-celda {height:19px}
+  .resumen-semana-turnos {min-height:100px}
+}
+@media(min-width:701px) {
+  .fila-domingo-resumen>.dia-simple-card {min-width:0}
+}
+/* Texto legible en cumpleaños X: menor tamaño, sin alterar el contenido */
+.dia-simple-card .simple-cumple-badge span {font-size:9px!important;letter-spacing:-.25px}
+.dia-simple-card .simple-cumple-badge strong {font-size:10px!important}
