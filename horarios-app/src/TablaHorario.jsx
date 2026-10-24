@@ -1416,7 +1416,19 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                 <div className="vista-simple-semanal" ref={vistaSimplePDFRef}>
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(0, 3).map(dia => renderDiaSimple(dia))}</div>
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(3, 6).map(dia => renderDiaSimple(dia))}</div>
-                  <div className="fila-dias-simple fila-un-dia">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}</div>
+                  <div className="fila-dias-simple fila-un-dia fila-domingo-resumen">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}
+                  <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
+                    <h3>Semana</h3>
+                    <div className="resumen-semana-dias"><span></span>{diasSemana.map((d,i)=><span key={d.isoFecha}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
+                    {[
+                      {key:'vendedor',label:'Vendedores',color:'#a855f7'},
+                      {key:'monitor',label:'Monitores',color:'#22c55e'},
+                      {key:'kiosko',label:'Kiosko',color:'#f59e0b'},
+                      {key:'cumple',label:'Cumples',color:'#38bdf8'}
+                    ].map(cat=><div className="resumen-semana-fila" key={cat.key}><span className="resumen-semana-label">{cat.label}</span>{diasSemana.map(d=>{const ts=turnos.filter(t=>t.fecha===d.isoFecha&&(t.ubicacion||'vendedor')===cat.key);const cs=cumples.filter(x=>x.fecha===d.isoFecha);const activo=cat.key==='cumple'?cs.length>0:ts.length>0;const tonos=cat.key==='cumple'?(cs.some(x=>(Number(x.cantNinos)||0)>20)?'#fecaca':cs.some(x=>(Number(x.cantNinos)||0)>=15?'#fde68a':true)?'#fde68a':'#bae6fd'):activo?cat.color:'#eef2f7';return <span key={d.isoFecha} className="resumen-semana-celda" style={{background:activo?tonos:'#eef2f7'}}/>})}</div>)}
+                    <div className="resumen-semana-turnos">{diasSemana.map(d=><div key={d.isoFecha} className="resumen-semana-columna">{turnos.filter(t=>t.fecha===d.isoFecha).slice(0,14).map((t,i)=>{const emp=empleados.find(e=>String(e.id)===String(t.empleadoId));return <i key={t.id||i} style={{background:emp?.color||'#cbd5e1',height:Math.max(8,Math.min(48,(Number(String(t.horaFin||'21:00').slice(0,2))-Number(String(t.horaInicio||'11:00').slice(0,2)))*4))}}/>})}{cumples.filter(x=>x.fecha===d.isoFecha).map((x,i)=><i key={'c'+i} style={{background:(Number(x.cantNinos)||0)>20?'#fca5a5':(Number(x.cantNinos)||0)>=15?'#fcd34d':'#7dd3fc',height:12}}/>)}</div>)}</div>
+                  </aside>
+                </div>
                 </div>
               )}
               {subVista === 'mia' && (() => {
