@@ -2017,3 +2017,46 @@ button {
     box-sizing:border-box!important;
   }
 }
+
+
+/* Fondos suaves por categoría en la vista simple */
+.vista-simple-semanal .dia-simple-card .simple-puesto {
+  border-radius:12px;
+  padding:8px 7px 9px;
+  border:1px solid transparent;
+}
+.vista-simple-semanal .dia-simple-card .simple-puesto-vendedor {
+  background:#fff9d9;
+  border-color:#f8e7a1;
+}
+.vista-simple-semanal .dia-simple-card .simple-puesto-vendedor > h4 {color:#a16207}
+.vista-simple-semanal .dia-simple-card .simple-puesto-monitor {
+  background:#eafbea;
+  border-color:#c6f3c7;
+}
+.vista-simple-semanal .dia-simple-card .simple-puesto-monitor > h4 {color:#15803d}
+.vista-simple-semanal .dia-simple-card .simple-puesto-kiosko {
+  background:#fff0f0;
+  border-color:#fecaca;
+}
+.vista-simple-semanal .dia-simple-card .simple-puesto-kiosko > h4 {color:#b91c1c}
+.vista-simple-semanal .dia-simple-card .simple-puesto-otros {
+  background:#f1f5f9;
+  border-color:#e2e8f0;
+}
+.vista-simple-semanal .dia-simple-card .simple-puesto-otros > h4 {color:#64748b}
+.vista-simple-semanal .dia-simple-card .simple-puesto + .simple-puesto {margin-top:2px}
+.vista-simple-semanal .dia-simple-card .simple-puesto-franjas > div + div {border-left-color:rgba(100,116,139,.18)}
+.vista-simple-semanal .dia-simple-card .simple-puesto .simple-dia-completo {margin-bottom:7px}
+.vista-simple-semanal .dia-simple-card .simple-eventos {
+  background:#f1f5f9;
+  border:1px solid #e2e8f0!important;
+  border-top:1px solid #e2e8f0!important;
+  border-radius:12px;
+  padding:10px 8px!important;
+}
+.vista-simple-semanal .dia-simple-card .simple-eventos .simple-cumples-titulo,
+.vista-simple-semanal .dia-simple-card .simple-eventos .simple-eventos-grupo h4 {color:#64748b}
+@media(max-width:700px) {
+ .vista-simple-semanal .dia-simple-card .simple-puesto {padding:8px 6px}
+}
