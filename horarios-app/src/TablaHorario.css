@@ -723,3 +723,24 @@ button {
   .dia-simple-card { padding: 10px; }
   .dias-mios-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+
+/* Marcadores dentro de cada casilla: no flotan fuera de la cuadrícula */
+.marcadores-turno-en-celda {
+  position: static !important;
+  display: inline-flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 3px !important;
+  margin-left: 4px !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+  vertical-align: middle;
+}
+.marcadores-turno-en-celda span {
+  display: inline-block !important;
+  position: static !important;
+  font-size: 12px !important;
+  line-height: 1 !important;
+}
