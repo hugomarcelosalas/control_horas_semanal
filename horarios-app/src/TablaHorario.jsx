@@ -854,40 +854,80 @@ useEffect(() => {
     }
 
     try {
-      // Capturar el contenido completo, aunque esté dentro de una zona desplazable.
-      const canvas = await html2canvas(elemento, {
-        scale: Math.min(2, window.devicePixelRatio || 1.5),
-        useCORS: true,
-        allowTaint: false,
-        backgroundColor: '#ffffff',
-        logging: false,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: Math.max(document.documentElement.clientWidth, elemento.scrollWidth, elemento.offsetWidth),
-        windowHeight: Math.max(document.documentElement.clientHeight, elemento.scrollHeight, elemento.offsetHeight),
-        onclone: (doc) => {
-          const objetivo = doc.querySelector(refObjetivo === vistaSimplePDFRef ? '.vista-simple-semanal' : '.area-impresion');
-          if (objetivo) {
-            objetivo.style.overflow = 'visible';
-            objetivo.style.maxWidth = 'none';
-            objetivo.style.height = 'auto';
-            objetivo.style.maxHeight = 'none';
-          }
-          doc.querySelectorAll('[data-html2canvas-ignore="true"]').forEach(n => n.style.display = 'none');
-        }
-      });
-
-      if (!canvas.width || !canvas.height) throw new Error('La captura del horario está vacía.');
-      const imgData = canvas.toDataURL('image/jpeg', 0.92);
       const pdf = new jsPDF(orientacion, 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgProps = pdf.getImageProperties(imgData);
-      const margen = 4;
-      const ratio = Math.min((pdfWidth - margen * 2) / imgProps.width, (pdfHeight - margen * 2) / imgProps.height);
-      const widthFinal = imgProps.width * ratio;
-      const heightFinal = imgProps.height * ratio;
-      pdf.addImage(imgData, 'JPEG', (pdfWidth - widthFinal) / 2, (pdfHeight - heightFinal) / 2, widthFinal, heightFinal);
+      const margen = 8;
+      const anchoUtil = pdfWidth - margen * 2;
+      const altoUtil = pdfHeight - margen * 2;
+
+      const agregarElementoComoPagina = async (nodo, nuevaPagina) => {
+        if (!nodo) return;
+        const canvas = await html2canvas(nodo, {
+          scale: 2,
+          useCORS: true,
+          allowTaint: false,
+          backgroundColor: '#ffffff',
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: Math.max(document.documentElement.clientWidth, nodo.scrollWidth, nodo.offsetWidth),
+          windowHeight: Math.max(document.documentElement.clientHeight, nodo.scrollHeight, nodo.offsetHeight),
+          onclone: (doc) => {
+            const original = nodo;
+            const clonado = doc.querySelector('[data-pdf-capture-target="true"]');
+            if (clonado) {
+              clonado.style.width = original.offsetWidth + 'px';
+              clonado.style.maxWidth = 'none';
+              clonado.style.height = 'auto';
+              clonado.style.maxHeight = 'none';
+              clonado.style.overflow = 'visible';
+              clonado.style.boxSizing = 'border-box';
+            }
+            doc.querySelectorAll('[data-html2canvas-ignore="true"]').forEach(n => n.style.display = 'none');
+          }
+        });
+        if (!canvas.width || !canvas.height) return;
+        const img = canvas.toDataURL('image/jpeg', 0.94);
+        const props = pdf.getImageProperties(img);
+        const ratio = Math.min(anchoUtil / props.width, altoUtil / props.height);
+        const w = props.width * ratio;
+        const h = props.height * ratio;
+        if (nuevaPagina) pdf.addPage();
+        pdf.addImage(img, 'JPEG', (pdfWidth - w) / 2, margen, w, h);
+      };
+
+      if (refObjetivo === vistaSimplePDFRef) {
+        // Para móvil: una página de resumen y una página amplia por cada día.
+        const hijos = Array.from(elemento.children);
+        const resumen = hijos.find(n => n.classList.contains('resumen-semanal-simple'));
+        const dias = hijos.filter(n => n.classList.contains('dia-simple-en-cuadricula'));
+        const capturas = [resumen, ...dias].filter(Boolean);
+        if (!capturas.length) throw new Error('No se encontraron el resumen ni los días del horario.');
+        for (let i = 0; i < capturas.length; i++) {
+          const nodo = capturas[i];
+          nodo.setAttribute('data-pdf-capture-target', 'true');
+          try {
+            await agregarElementoComoPagina(nodo, i > 0);
+          } finally {
+            nodo.removeAttribute('data-pdf-capture-target');
+          }
+        }
+      } else {
+        const canvas = await html2canvas(elemento, {
+          scale: 2, useCORS: true, allowTaint: false, backgroundColor: '#ffffff',
+          logging: false, scrollX: 0, scrollY: 0,
+          windowWidth: Math.max(document.documentElement.clientWidth, elemento.scrollWidth, elemento.offsetWidth),
+          windowHeight: Math.max(document.documentElement.clientHeight, elemento.scrollHeight, elemento.offsetHeight)
+        });
+        if (!canvas.width || !canvas.height) throw new Error('La captura del horario está vacía.');
+        const img = canvas.toDataURL('image/jpeg', 0.94);
+        const props = pdf.getImageProperties(img);
+        const ratio = Math.min(anchoUtil / props.width, altoUtil / props.height);
+        const w = props.width * ratio;
+        const h = props.height * ratio;
+        pdf.addImage(img, 'JPEG', (pdfWidth - w) / 2, margen, w, h);
+      }
 
       const inicio = diasSemana[0]?.isoFecha;
       const fin = diasSemana[6]?.isoFecha;
