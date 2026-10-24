@@ -1417,28 +1417,33 @@ pdf.save(`Horario ${anioMes} ${diaInicial} a ${diaFinal}.pdf`);  };
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(0, 3).map(dia => renderDiaSimple(dia))}</div>
                   <div className="fila-dias-simple fila-tres-dias">{diasSemana.slice(3, 6).map(dia => renderDiaSimple(dia))}</div>
                   <div className="fila-dias-simple fila-un-dia fila-domingo-resumen">{diasSemana.slice(6, 7).map(dia => renderDiaSimple(dia))}
-                  <aside className="resumen-semanal-simple" aria-label="Vista visual de la semana">
-                    <h3>Semana de un vistazo</h3>
+                  <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
+                    <h3>Semana</h3>
                     <div className="resumen-semana-matriz">
-                      <div className="resumen-matriz-cabecera"><span></span>{[6,0,1,2,3,4,5].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
+                      <div className="resumen-matriz-cabecera"><span></span>{[1,2,3,4,5,6,0].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
                       {empleados.map(emp=><div className="resumen-matriz-fila" key={emp.id}>
                         <span className="resumen-matriz-nombre" title={emp.nombre}>{String(emp.nombre||'').trim().split(/\s+/)[0]}</span>
-                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return (ai===0?0:ai)-(bi===0?0:bi)}).map(d=>{
-                          const trabaja=turnos.some(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
-                          return <span key={d.isoFecha} className="resumen-matriz-celda" style={{background:trabaja?(emp.color||'#94a3b8'):'#eef2f7'}} title={trabaja?emp.nombre+' trabaja':'Sin turno'}/>;
+                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
+                          const ts=turnos.filter(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
+                          if(!ts.length)return <span key={d.isoFecha} className="resumen-matriz-celda" title="Sin turno"/>;
+                          const horas=ts.reduce((s,t)=>s+Math.max(0,duracionHoras(t)),0);
+                          const primerInicio=ts.map(t=>String(t.horaInicio||'11:00')).sort()[0];
+                          const marca=horas>6?'C':primerInicio<'15:00'?'M':'T';
+                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-turno" style={{background:emp.color||'#94a3b8'}} title={emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')}>{marca}</span>;
                         })}
                       </div>)}
-                      <div className="resumen-matriz-separador"><span>Cumples</span></div>
+                      <div className="resumen-matriz-separador"><span>Eventos · niños por día</span></div>
                       <div className="resumen-matriz-fila resumen-matriz-fila-eventos">
-                        <span className="resumen-matriz-nombre">Eventos</span>
-                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return (ai===0?0:ai)-(bi===0?0:bi)}).map(d=>{
+                        <span className="resumen-matriz-nombre">Cumples</span>
+                        {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
                           const lista=cumples.filter(x=>x.fecha===d.isoFecha);
-                          const n=Math.max(0,...lista.map(x=>Number(x.cantNinos)||0));
-                          const bg=!lista.length?'#eef2f7':n>20?'#fca5a5':n>=15?'#fde68a':'#bae6fd';
-                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?lista.length+' evento(s)':'Sin eventos'}/>;
+                          const n=lista.reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);
+                          const bg=!lista.length?'#eef2f7':n<15?'#bae6fd':n<=20?'#fde68a':'#fca5a5';
+                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?n+' niños en total':'Sin eventos'}>{lista.length?n:''}</span>;
                         })}
                       </div>
                     </div>
+                    <p className="resumen-semana-leyenda">M mañana · T tarde · C más de 6 h</p>
                   </aside>
                 </div>
                 </div>
