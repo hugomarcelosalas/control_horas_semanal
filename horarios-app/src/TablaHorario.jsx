@@ -1147,12 +1147,12 @@ useEffect(() => {
                                           <div className="texto-bloque-celda">
                                             {elementoActivo.tipo === 'turno' ? (
                                               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno">{elementoActivo.siEsNecesario && <span title="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado">★</span>}</span>}</strong>
+                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno marcadores-turno-en-celda">{elementoActivo.siEsNecesario && <span title="Si hace falta" aria-label="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado" aria-label="Encargado">★</span>}</span>}</strong>
                                                 <small>({elementoActivo.ubicacion})</small>
                                               </div>
                                             ) : (
                                               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno">{elementoActivo.siEsNecesario && <span title="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado">★</span>}</span>}</strong>
+                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno marcadores-turno-en-celda">{elementoActivo.siEsNecesario && <span title="Si hace falta" aria-label="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado" aria-label="Encargado">★</span>}</span>}</strong>
                                                 {elementoActivo.observaciones && <small>{elementoActivo.observaciones}</small>}
                                               </div>
                                             )}
@@ -1291,12 +1291,12 @@ useEffect(() => {
                                             <div className="texto-bloque-celda">
                                               {elementoActivo.tipo === 'turno' ? (
                                               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno">{elementoActivo.siEsNecesario && <span title="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado">★</span>}</span>}</strong>
+                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno marcadores-turno-en-celda">{elementoActivo.siEsNecesario && <span title="Si hace falta" aria-label="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado" aria-label="Encargado">★</span>}</span>}</strong>
                                                 <small>({elementoActivo.ubicacion})</small>
                                               </div>
                                             ) : (
                                               <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno">{elementoActivo.siEsNecesario && <span title="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado">★</span>}</span>}</strong>
+                                                <strong>{elementoActivo.nombre}{elementoActivo.tipo === 'turno' && <span className="marcadores-turno marcadores-turno-en-celda">{elementoActivo.siEsNecesario && <span title="Si hace falta" aria-label="Si hace falta">⚠️</span>}{elementoActivo.encargado && <span title="Encargado" aria-label="Encargado">★</span>}</span>}</strong>
                                                 {elementoActivo.observaciones && <small>{elementoActivo.observaciones}</small>}
                                               </div>
                                             )}
