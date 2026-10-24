@@ -34,7 +34,7 @@ let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{}
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
 async function api(path,options={}){const headers={"Content-Type":"application/json",...(options.headers||{})};if(authToken)headers.Authorization="Bearer "+authToken;const r=await fetch(path,{...options,headers});const data=await r.json().catch(()=>({}));if(r.status===401&&path!=="/api/login"&&authToken){authToken=null;currentUser=null;selectedEmployee=null;window.__CONTROL_HORARIO_TOKEN__=null;window.__CONTROL_HORARIO_USER__=null;$("app")?.classList.add("hidden");$("loginScreen")?.classList.remove("hidden");const err=$("loginError");if(err){err.textContent="La sesión ha caducado o se ha reiniciado. Vuelve a iniciar sesión; tus datos guardados siguen en la aplicación.";err.classList.remove("hidden")}}if(!r.ok)throw new Error(data.error||"Error de conexión");return data;}
-async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;}catch(e){alert(e.message)}}
+async function saveDB(){db.version=8;try{const r=await api('/api/state',{method:'PUT',body:JSON.stringify(db)});db=r.db||db;return true;}catch(e){alert("No se han podido guardar los cambios en el servidor. Mantén esta ventana abierta e inténtalo de nuevo. Detalle: "+e.message);return false;}}
 let vendorSheetsState={},vendorActiveSheet='Cierre',vendorActiveGroup='Venta',vendorSaveTimer=null;
 const vendorGroups={Venta:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday','week state','Semanal con suma','week con suma','Borrar'],Stock:['Calcetines','Pulseras'],'V&A':['V&A']};
 const stockSizes=['XXL','XL','L','M','S','XS','XXS'];
@@ -277,7 +277,7 @@ function setupManualTimeInputs(){
  });
 }
 $("entryTime").oninput=updateWorkedPreview;$("exitTime").oninput=updateWorkedPreview;setupManualTimeInputs();$("closeModal").onclick=()=>$("dayModal").classList.add("hidden");$("dayModal").onclick=e=>{if(e.target.id==="dayModal")$("dayModal").classList.add("hidden")};
-$("dayForm").onsubmit=e=>{
+$("dayForm").onsubmit=async e=>{
  e.preventDefault();
  if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}
  const entry=normalizeTimeValue($("entryTime").value),exit=normalizeTimeValue($("exitTime").value);
@@ -286,9 +286,9 @@ $("dayForm").onsubmit=e=>{
  ensureUserData(selectedEmployee.username);
  const r={entry,exit,extraHours:Number($("extraHours").value)||0,comments:$("comments").value.trim()};
  if(!r.entry&&!r.exit&&!r.extraHours&&!r.comments)delete db.records[selectedEmployee.username][selectedDate];else db.records[selectedEmployee.username][selectedDate]=r;
- saveDB();$("dayModal").classList.add("hidden");render()
+ const saved=await saveDB();if(!saved)return;$("dayModal").classList.add("hidden");render()
 };
-$("deleteDay").onclick=()=>{if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}if(!confirm("¿Seguro que quieres borrar este registro diario?"))return;delete db.records[selectedEmployee.username][selectedDate];saveDB();$("dayModal").classList.add("hidden");render()};
+$("deleteDay").onclick=async()=>{if(!canEditDay(selectedDate)){alert("Este día está bloqueado por el administrador.");return}if(!confirm("¿Seguro que quieres borrar este registro diario?"))return;delete db.records[selectedEmployee.username][selectedDate];const saved=await saveDB();if(!saved)return;$("dayModal").classList.add("hidden");render()};
 function toggleDayLock(k){if(!isAdmin())return;ensureUserData(selectedEmployee.username);db.locks[selectedEmployee.username][k]=isDayLocked(k)?false:true;saveDB();render()}
 
 function renderWeekly(){const rows=weeklyRows();let h=`<div class="weekly-head"><div><h3>Historial</h3><p>Balance = Esta semana − Contrato + Anterior.</p></div><button id="addWeeklyBtn" class="primary">+ Añadir línea</button></div>`;if(!rows.length)h+='<div class="empty-state">No hay líneas semanales todavía.</div>';else h+=`<div class="weekly-list">${rows.map(r=>{const bal=hoursToMinutes(r.worked)-hoursToMinutes(r.contract)+hoursToMinutes(r.previous);return `<div class="weekly-row ${classBalance(bal)} ${r.locked?"weekly-locked":""}"><div class="weekly-dates"><strong>${fmtDate(r.start)}</strong><span>→</span><strong>${fmtDate(r.end)}</strong>${r.locked?"<span class='lock-pill'>🔒 Bloqueado</span>":""}</div><div><span>Anterior</span><strong>${fmtMinutes(hoursToMinutes(r.previous))}</strong></div><div><span>Contrato</span><strong>${fmtMinutes(hoursToMinutes(r.contract))}</strong></div><div><span>Esta semana</span><strong>${fmtMinutes(hoursToMinutes(r.worked))}</strong></div><div><span>Balance</span><strong class="${classBalance(bal)}">${fmtMinutes(bal)}</strong></div>${isAdmin()?`<div class="weekly-admin"><button class="small-btn edit-weekly" data-id="${r.id}">Editar</button><button class="small-btn lock-weekly" data-id="${r.id}">${r.locked?"🔓 Abrir semana":"🔒 Cerrar semana"}</button></div>`:""}</div>`}).join("")}</div>`;$("weeklyView").innerHTML=h;$("addWeeklyBtn")?.addEventListener("click",()=>{if(!isAdmin()){alert("Solo el administrador puede añadir líneas al historial.");return}openWeekly()});document.querySelectorAll(".edit-weekly").forEach(b=>b.onclick=()=>openWeekly(b.dataset.id));document.querySelectorAll(".lock-weekly").forEach(b=>b.onclick=()=>toggleWeeklyLock(b.dataset.id))}
