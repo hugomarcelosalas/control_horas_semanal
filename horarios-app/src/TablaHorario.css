@@ -1693,3 +1693,53 @@ button {
   .vista-simple-semanal .fila-dias-simple {break-inside:avoid}
   .dia-simple-card {break-inside:avoid;box-shadow:none!important}
 }
+
+
+/* Aforo cambia gradualmente de verde a rojo conforme se llena */
+.dia-simple-card .simple-aforo-track span {
+  transition:width .25s ease, background-color .25s ease;
+}
+/* Cumples: X dura una hora y XT dos; colores distintos y texto legible */
+.dia-simple-card .simple-cumple-badge.simple-cumple-x {
+  background:#eff6ff!important;
+  border-color:#60a5fa!important;
+  color:#1e40af!important;
+  min-width:112px!important;
+  width:112px!important;
+  max-width:100%!important;
+  padding:6px 5px!important;
+  gap:4px!important;
+  font-size:10px!important;
+}
+.dia-simple-card .simple-cumple-badge.simple-cumple-xt {
+  background:#fff7ed!important;
+  border-color:#fb923c!important;
+  color:#9a3412!important;
+  min-width:145px!important;
+  width:145px!important;
+  max-width:100%!important;
+  padding:6px 7px!important;
+  gap:5px!important;
+  font-size:10px!important;
+}
+.dia-simple-card .simple-cumple-badge.simple-cumple-x strong,
+.dia-simple-card .simple-cumple-badge.simple-cumple-x span,
+.dia-simple-card .simple-cumple-badge.simple-cumple-xt strong,
+.dia-simple-card .simple-cumple-badge.simple-cumple-xt span {
+  font-size:10px!important;
+  white-space:nowrap!important;
+}
+@media(max-width:700px) {
+  .dia-simple-card .simple-cumple-badge.simple-cumple-x {
+    min-width:108px!important;
+    width:108px!important;
+    padding:6px 4px!important;
+    font-size:9px!important;
+  }
+  .dia-simple-card .simple-cumple-badge.simple-cumple-xt {
+    min-width:138px!important;
+    width:138px!important;
+    padding:6px 5px!important;
+    font-size:10px!important;
+  }
+}
