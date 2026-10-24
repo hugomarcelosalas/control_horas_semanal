@@ -1753,3 +1753,38 @@ button {
 }
 .dia-simple-card .simple-cumple-badge strong,
 .dia-simple-card .simple-cumple-badge span {color:inherit!important}
+
+
+/* Ancho proporcional a duración real y sin desbordar el límite del día */
+.dia-simple-card .simple-cumple-contenido {
+  box-sizing:border-box!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+}
+.dia-simple-card .simple-cumple-badge {
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  overflow:hidden!important;
+  white-space:nowrap!important;
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  justify-content:flex-start!important;
+  gap:3px!important;
+  padding:6px 5px!important;
+}
+.dia-simple-card .simple-cumple-badge strong,
+.dia-simple-card .simple-cumple-badge span {
+  font-size:10px!important;
+  flex:0 1 auto!important;
+  min-width:0!important;
+  white-space:nowrap!important;
+  letter-spacing:-.15px!important;
+}
+@media(max-width:700px) {
+  .dia-simple-card .simple-cumple-badge {padding:5px 3px!important;gap:2px!important}
+  .dia-simple-card .simple-cumple-badge strong,
+  .dia-simple-card .simple-cumple-badge span {font-size:9px!important}
+}
