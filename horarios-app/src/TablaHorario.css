@@ -1664,8 +1664,7 @@ button {
 }
 .dia-simple-card .simple-cumple-badge {
   min-width:120px!important;
-  width:max-content!important;
-  max-width:min(260px, 100%)!important;
+  max-width:260px!important;
   padding:7px 9px!important;
   min-height:34px!important;
   gap:5px!important;
