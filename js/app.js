@@ -1,6 +1,7 @@
 const $=id=>document.getElementById(id);
 // Estado de vacaciones inicializado antes de registrar manejadores de clics.
 let vacationsViewMode='calendar';
+let myVacationsSortDirection='asc';
 let vacationsMonth=new Date();vacationsMonth.setDate(1);
 let calendarEventDraftOpen=false;
 // Navegación registrada al inicio para que no dependa de la inicialización de otros módulos.
@@ -665,13 +666,14 @@ function inferVacationWeek(username,v){const year=Number(v.year)||Number(String(
 function renderMyVacations(){
  const box=$('myVacationsBox');if(!box||!currentUser)return;
  const target=isAdmin()?selectedEmployee:currentUser;if(!target)return;
- const mine=(db.vacations?.[target.username]||[]).slice().sort((a,b)=>Number(a.year||String(a.start||'').slice(0,4))-Number(b.year||String(b.start||'').slice(0,4))||Number(a.week||0)-Number(b.week||0)||String(a.start||'').localeCompare(String(b.start||'')));
- const actions=isAdmin()?'<div class="my-vacations-admin-actions"><button type="button" class="primary" id="addPendingVacationBlock">+ Añadir bloque pendiente</button></div>':'';
- box.innerHTML=actions+(mine.length?'<div class="my-vacations-list">'+mine.map(v=>{
+ const mine=(db.vacations?.[target.username]||[]).slice().sort((a,b)=>{const ap=!a.start&&!a.end,bp=!b.start&&!b.end;if(ap!==bp)return ap?1:-1;const byDate=String(a.start||'').localeCompare(String(b.start||''))||String(a.end||'').localeCompare(String(b.end||''));return myVacationsSortDirection==='asc'?byDate:-byDate;});
+ const actions=(isAdmin()?'<button type="button" class="primary" id="addPendingVacationBlock">+ Añadir bloque pendiente</button>':'')+'<button type="button" class="ghost" id="toggleMyVacationsSort">Orden '+(myVacationsSortDirection==='asc'?'ascendente ↑':'descendente ↓')+'</button>';
+ box.innerHTML='<div class="my-vacations-admin-actions">'+actions+'</div>'+(mine.length?'<div class="my-vacations-list">'+mine.map(v=>{
   const pending=!v.start&&!v.end,valid=!!v.start&&!!v.end,n=valid?workingDaysInclusive(parseKey(v.start),parseKey(v.end)):0;
   const year=Number(v.year)||Number(String(v.start||'').slice(0,4))||new Date().getFullYear(),week=Number(v.week)||inferVacationWeek(target.username,v);
   return '<div class="my-vacation-row '+(pending?'my-vacation-pending ':'')+(v.cancelled?'vac-list-cancelled':'')+'"><div class="my-vacation-info"><strong>'+(pending?'🟢 Bloque de vacaciones pendiente de asignar fechas':escapeHtml(fmtDate(v.start)+' → '+fmtDate(v.end))+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':''))+'</strong><span>Año '+year+' · Semana '+week+' de 4</span>'+(valid?'<span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(target))+' horas</span>':'<span class="my-vacation-pending-note">Vacaciones que corresponden; todavía sin fechas asignadas ni firma.</span>')+(isAdmin()&&v.adminObservations?'<small class="vac-admin-observation"><b>Observaciones:</b> '+escapeHtml(v.adminObservations)+'</small>':'')+'</div>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+(v.pdfData?'<button type="button" class="small-btn" data-my-vac-pdf="'+escapeHtml(v.id)+'">Ver PDF</button>':'')+(isAdmin()?'<div class="vacation-actions"><button type="button" class="small-btn" data-space-vac-edit="'+escapeHtml(v.id)+'">Asignar fechas / Editar</button><button type="button" class="small-btn danger-small" data-space-vac-delete="'+escapeHtml(v.id)+'">Eliminar</button></div>':'')+'</div>';
  }).join('')+'</div>':'<div class="personal-space-empty">Todavía no hay vacaciones registradas para '+escapeHtml(target.name)+'.</div>');
+ const sortButton=$('toggleMyVacationsSort');if(sortButton)sortButton.onclick=()=>{myVacationsSortDirection=myVacationsSortDirection==='asc'?'desc':'asc';renderMyVacations()};
  const add=$('addPendingVacationBlock');
  if(add)add.onclick=async()=>{if(!isAdmin())return;const rows=db.vacations[target.username]=db.vacations[target.username]||[],year=new Date().getFullYear();const used=new Set(rows.filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4))||year)===year).map(v=>Number(v.week)||inferVacationWeek(target.username,v)));let week=[1,2,3,4].find(n=>!used.has(n));if(!week){week=1;alert('Este empleado ya tiene cuatro bloques para '+year+'. Se añadirá otro bloque en la semana 1.')}const row={id:'v_pending_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),start:'',end:'',year,week,pending:true};rows.push(row);try{const saved=await saveDB();if(!saved){rows.splice(rows.indexOf(row),1);renderMyVacations();return}renderMyVacations()}catch(e){rows.splice(rows.indexOf(row),1);renderMyVacations();alert('No se pudo guardar el bloque: '+e.message)}};
  box.querySelectorAll('[data-my-vac-pdf]').forEach(b=>b.onclick=()=>{const v=mine.find(x=>String(x.id)===b.dataset.myVacPdf);if(v?.pdfData)openVacationPdf(v)});
@@ -700,9 +702,9 @@ function renderVacationsSection(){
  $('vacCalendarBtn').classList.toggle('primary',vacationsViewMode==='calendar');$('vacCalendarBtn').classList.toggle('ghost',vacationsViewMode!=='calendar');
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
- const visibleRows=filteredVacationRows();
+ const visibleRows=filteredVacationRows().filter(v=>!v.isPendingBlock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||'')));
  // El calendario y la lista muestran las vacaciones de todos los empleados activos; solo administración puede editar.
- const calendarRows=allVacationRows().filter(v=>!v.isDayOffRequest||isAdmin()||v.username===currentUser?.username);
+ const calendarRows=allVacationRows().filter(v=>v.isDayOffRequest?(!isAdmin()&&v.username!==currentUser?.username?false:true):(/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||''))));
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');db.calendarDayTypes=db.calendarDayTypes||{};db.calendarEvents=Array.isArray(db.calendarEvents)?db.calendarEvents:[];
  $('vacationCalendarAdminTools')?.classList.toggle('hidden',!isAdmin()||vacationsViewMode!=='calendar');
