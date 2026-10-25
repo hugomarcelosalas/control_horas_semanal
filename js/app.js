@@ -1002,6 +1002,17 @@ function renderMonthlyHours(){
  });
 }
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
+// Enlazado delegado como respaldo: mantiene operativo el calculador aunque se vuelva a renderizar la sección.
+document.addEventListener('click',e=>{
+ const btn=e.target.closest('#calculateTips');if(!btn)return;
+ const table=$('monthlyHoursTable'),result=$('tipResults');if(!table||!result)return;
+ const rows=Array.from(table.querySelectorAll('.tip-hours-manual')).map(input=>({name:input.getAttribute('aria-label')?.replace(/^Horas para propinas de /,'' )||'Empleado',minutes:parseManualHours(input.value)}));
+ const invalid=rows.find(x=>x.minutes===null);if(invalid){result.innerHTML='<p class="error">Revisa las horas: utiliza HH:MM, por ejemplo 97:30.</p>';return;}
+ const valid=rows.filter(x=>x.minutes>0),totalMinutes=valid.reduce((sum,x)=>sum+x.minutes,0),moneyInput=Number(String($('tipTotal')?.value||'0').replace(',','.')),totalCents=Math.max(0,Math.round((Number.isFinite(moneyInput)?moneyInput:0)*100));
+ if(!totalMinutes){result.innerHTML='<p>No hay horas trabajadas para repartir.</p>';return;}
+ const allocations=valid.map((x,index)=>{const exact=totalCents*x.minutes/totalMinutes;return {...x,index,cents:Math.floor(exact),remainder:exact-Math.floor(exact)}});let remaining=totalCents-allocations.reduce((sum,x)=>sum+x.cents,0);allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(x=>allocations[x.index].cents++);
+ result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(x=>'<tr><th>'+vendorEscape(x.name)+'</th><td>'+fmtMinutes(x.minutes)+'</td><td>'+(x.cents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+(totalCents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' € · <strong>Total horas:</strong> '+fmtMinutes(totalMinutes)+'</p>';
+},true);
 
 function renderDailyWorkAudit(){
  const auditPanel=$('dailyWorkPanel');
