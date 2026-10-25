@@ -960,7 +960,9 @@ function renderMonthlyHours(){
   }
   rows.push({u,worked,vac});
  }
- const totalWorked=rows.reduce((sum,x)=>sum+x.worked,0),totalVacation=rows.reduce((sum,x)=>sum+x.vac,0);\n $('monthlyHoursTable').innerHTML='<div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas este mes</th><th>Vacaciones (aparte)</th></tr></thead><tbody>'+rows.map(x=>'<tr><th>'+vendorEscape(x.u.name)+'</th><td>'+fmtMinutes(x.worked)+'</td><td>'+fmtMinutes(x.vac)+'</td></tr>').join('')+'</tbody><tfoot><tr><th>TOTAL</th><th>'+fmtMinutes(totalWorked)+'</th><th>'+fmtMinutes(totalVacation)+'</th></tr></tfoot></table></div><p class="muted">Las horas trabajadas se muestran siempre según los registros del mes. Las vacaciones se muestran aparte y no se suman a las horas trabajadas.</p>\n $('tipResults').innerHTML='';
+ const totalWorked=rows.reduce((sum,x)=>sum+x.worked,0),totalVacation=rows.reduce((sum,x)=>sum+x.vac,0);
+ $('monthlyHoursTable').innerHTML='<div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas este mes</th><th>Vacaciones (aparte)</th></tr></thead><tbody>'+rows.map(x=>'<tr><th>'+vendorEscape(x.u.name)+'</th><td>'+fmtMinutes(x.worked)+'</td><td>'+fmtMinutes(x.vac)+'</td></tr>').join('')+'</tbody><tfoot><tr><th>TOTAL</th><th>'+fmtMinutes(totalWorked)+'</th><th>'+fmtMinutes(totalVacation)+'</th></tr></tfoot></table></div><p class="muted">Las horas trabajadas se muestran siempre según los registros del mes. Las vacaciones se muestran aparte y no se suman a las horas trabajadas.</p>';
+ $('tipResults').innerHTML='';
  const calculate=()=>{
   const totalInput=Number(String($('tipTotal')?.value||'0').replace(',','.'));
   const totalCents=Math.max(0,Math.round((Number.isFinite(totalInput)?totalInput:0)*100));
@@ -975,7 +977,8 @@ function renderMonthlyHours(){
   result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(a=>'<tr><th>'+vendorEscape(a.x.u.name)+'</th><td>'+fmtMinutes(a.x.worked)+'</td><td>'+money(a.cents)+'</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+money(totalCents)+' · <strong>Total horas trabajadas:</strong> '+fmtMinutes(mins)+'</p>';
   return {month,totalCents,mins,allocations,distributed:totalCents};
  };
- $('calculateTips').onclick=calculate;\n $('tipTotal').oninput=()=>{if(String($('tipTotal').value||'').trim()==='0'||String($('tipTotal').value||'').trim()===''){$('tipResults').innerHTML='';return;}calculate();};
+ $('calculateTips').onclick=calculate;
+ $('tipTotal').oninput=()=>{if(String($('tipTotal').value||'').trim()==='0'||String($('tipTotal').value||'').trim()===''){$('tipResults').innerHTML='';return;}calculate();};
  $('exportTipsPdf').onclick=()=>{
   const report=calculate();if(!report)return;
   const monthLabel=new Date(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});
