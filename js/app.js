@@ -174,7 +174,7 @@ function render(){
  $("rangeBox")?.classList.toggle("hidden",activeView==="weekly");
  $("selectedEmployeeDailyChart")?.classList.toggle("hidden",activeView==="weekly");
  document.querySelectorAll(".tab").forEach(b=>b.classList.toggle("active",b.dataset.view===activeView));
- if(activeView==="calendar")renderCalendar();if(activeView==="list")renderList();if(activeView==="balance")renderBalance();if(activeView==="weekly")renderWeekly();if(activeView==="vacations")renderVacations();renderMyVacations();
+ if(activeView==="calendar")renderCalendar();if(activeView==="list")renderList();if(activeView==="balance")renderBalance();if(activeView==="weekly")renderWeekly();if(activeView==="vacations")renderVacations();renderMyVacations();renderDailyWorkAudit();
  const ml=$("toggleMonthLock");if(ml){const key=`${currentDate.getFullYear()}-${pad(currentDate.getMonth()+1)}-01`,prev=isPreviousMonth(key),locked=isMonthLocked(key);ml.classList.toggle("hidden",!isAdmin()||!prev);ml.textContent=locked?"🔓 Abrir mes":"🔒 Cerrar mes";ml.onclick=toggleCurrentMonthLock;}
 }
 function excelDownload(name,rows,sheet='Resumen'){if(!window.XLSX)return alert('No se pudo cargar el exportador Excel. Recarga la página.');const wb=XLSX.utils.book_new(),ws=XLSX.utils.aoa_to_sheet(rows);XLSX.utils.book_append_sheet(wb,ws,sheet.slice(0,31));XLSX.writeFile(wb,name)}
