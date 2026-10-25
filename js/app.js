@@ -1003,6 +1003,35 @@ function renderMonthlyHours(){
 }
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
 
+function renderDailyWorkAudit(){
+ if(!isAdmin())return;
+ const dateInput=$('dailyWorkDate'),employeeSelect=$('dailyWorkEmployee');
+ if(!dateInput||!employeeSelect)return;
+ if(!dateInput.value)dateInput.value=dateKey(new Date());
+ const employees=(db.users||[]).filter(u=>u.role==='employee').slice().sort((a,b)=>a.name.localeCompare(b.name,'es'));
+ const prior=employeeSelect.value;
+ employeeSelect.innerHTML='<option value="">Todos los empleados</option>'+employees.map(u=>'<option value="'+escapeHtml(u.username)+'">'+escapeHtml(u.name)+(u.active===false?' (inactivo)':'')+'</option>').join('');
+ if(employees.some(u=>u.username===prior))employeeSelect.value=prior;
+ const date=dateInput.value;
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){ $('dailyWorkSummary').textContent='Selecciona una fecha válida.';$('dailyWorkResults').innerHTML='';return; }
+ const chosen=employeeSelect.value;
+ const rows=employees.filter(u=>!chosen||u.username===chosen).map(u=>{
+  const r=(db.records?.[u.username]||{})[date];
+  if(!r)return null;
+  const normal=workMinutes(r),extra=extraMinutes(r),total=normal+extra;
+  if(total<=0&&!String(r.entry||'').trim()&&!String(r.exit||'').trim())return null;
+  return {u,r,normal,extra,total};
+ }).filter(Boolean).sort((a,b)=>a.u.name.localeCompare(b.u.name,'es'));
+ const total=rows.reduce((s,r)=>s+r.total,0);
+ $('dailyWorkSummary').textContent=new Date(date+'T12:00:00').toLocaleDateString('es-ES',{weekday:'long',day:'numeric',month:'long',year:'numeric'})+' · '+rows.length+' empleado(s) · '+fmtMinutes(total)+' horas registradas en total';
+ if(!rows.length){$('dailyWorkResults').innerHTML='<p class="empty-state">No hay jornadas registradas para esta fecha y filtro.</p>';return;}
+ $('dailyWorkResults').innerHTML='<div class="table-wrap"><table class="data-table"><thead><tr><th>Empleado</th><th>Entrada</th><th>Salida</th><th>Horas de jornada</th><th>Horas extra</th><th>Total</th></tr></thead><tbody>'+rows.map(x=>'<tr><td>'+escapeHtml(x.u.name)+(x.u.active===false?' <span class="muted">(inactivo)</span>':'')+'</td><td>'+escapeHtml(x.r.entry||'—')+'</td><td>'+escapeHtml(x.r.exit||'—')+'</td><td>'+fmtMinutes(x.normal)+'</td><td>'+fmtMinutes(x.extra)+'</td><td><strong>'+fmtMinutes(x.total)+'</strong></td></tr>').join('')+'</tbody><tfoot><tr><th colspan="3">Total</th><th>'+fmtMinutes(rows.reduce((s,x)=>s+x.normal,0))+'</th><th>'+fmtMinutes(rows.reduce((s,x)=>s+x.extra,0))+'</th><th>'+fmtMinutes(total)+'</th></tr></tfoot></table></div>';
+}
+$('dailyWorkSearch')?.addEventListener('click',renderDailyWorkAudit);
+$('dailyWorkDate')?.addEventListener('change',renderDailyWorkAudit);
+$('dailyWorkEmployee')?.addEventListener('change',renderDailyWorkAudit);
+
+
 function updateSectionTabsVisibility(){
   const admin=isAdmin();
   document.querySelectorAll('.section-tab.admin-tab').forEach(t=>t.classList.toggle('hidden', !admin));
@@ -1014,10 +1043,10 @@ function updateSectionTabsVisibility(){
 }
 
 function showSection(sectionId){
-  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel'||sectionId==='vendorWorkspace')&&!isAdmin())return;
+  if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel'||sectionId==='vendorWorkspace'||sectionId==='dailyWorkPanel')&&!isAdmin())return;
   if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
-  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel','vendorWorkspace'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
+  ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel','vendorWorkspace','dailyWorkPanel'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
   updateSectionTabsVisibility();
@@ -1027,6 +1056,7 @@ function showSection(sectionId){
   if(sectionId==='publishedSchedulePanel')loadPublishedSchedule();
   if(sectionId==='wagesPanel')renderWages();
   if(sectionId==='monthlyHoursPanel')renderMonthlyHours();
+  if(sectionId==='dailyWorkPanel'&&isAdmin())renderDailyWorkAudit();
   if(sectionId==='personalSpacePanel'){if(isAdmin())renderPersonalSpaceAdminOverview();setupPayrollUI();}
   if(sectionId==='vendorWorkspace'&&isAdmin()){api('/api/vendor/sheets').then(out=>renderVendorWorkspace(out.sheets||{})).catch(err=>{const box=$('vendorSheetContainer');if(box)box.innerHTML='<p>No se pudo cargar Stock: '+vendorEscape(err.message)+'</p>';});}
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
