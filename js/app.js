@@ -703,9 +703,9 @@ function renderVacationsSection(){
  $('vacCalendarBtn').classList.toggle('primary',vacationsViewMode==='calendar');$('vacCalendarBtn').classList.toggle('ghost',vacationsViewMode!=='calendar');
  $('vacListBtn').classList.toggle('primary',vacationsViewMode==='list');$('vacListBtn').classList.toggle('ghost',vacationsViewMode!=='list');
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
- const visibleRows=filteredVacationRows().filter(v=>!v.isPendingBlock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||'')));
+ const visibleRows=filteredVacationRows().filter(v=>!v.isPendingBlock&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.start||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.end||'')));
  // El calendario y la lista muestran las vacaciones de todos los empleados activos; solo administración puede editar.
- const calendarRows=allVacationRows().filter(v=>v.isDayOffRequest?(!isAdmin()&&v.username!==currentUser?.username?false:true):(!v.isPendingBlock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||''))));
+ const calendarRows=allVacationRows().filter(v=>v.isDayOffRequest?(!isAdmin()&&v.username!==currentUser?.username?false:true):(!v.isPendingBlock&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.start||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.end||''))));
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');db.calendarDayTypes=db.calendarDayTypes||{};db.calendarEvents=Array.isArray(db.calendarEvents)?db.calendarEvents:[];
  $('vacationCalendarAdminTools')?.classList.toggle('hidden',!isAdmin()||vacationsViewMode!=='calendar');
@@ -1002,18 +1002,48 @@ function renderMonthlyHours(){
  });
 }
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
-// Enlazado delegado como respaldo: mantiene operativo el calculador aunque se vuelva a renderizar la sección.
+// Único manejador del cálculo de propinas: toma las horas fichadas del mes, excluyendo vacaciones.
 document.addEventListener('click',e=>{
- const btn=e.target.closest('#calculateTips');if(!btn)return;e.preventDefault();e.stopImmediatePropagation();
- const table=$('monthlyHoursTable'),result=$('tipResults');if(!table||!result)return;
- const rows=Array.from(table.querySelectorAll('.tip-hours-manual')).map(input=>({name:input.getAttribute('aria-label')?.replace(/^Horas para propinas de /,'' )||'Empleado',minutes:parseManualHours(input.value)}));
- const invalid=rows.find(x=>x.minutes===null);if(invalid){result.innerHTML='<p class="error">Revisa las horas: utiliza HH:MM, por ejemplo 97:30.</p>';return;}
- const valid=rows.filter(x=>x.minutes>0),totalMinutes=valid.reduce((sum,x)=>sum+x.minutes,0),moneyInput=Number(String($('tipTotal')?.value||'0').replace(',','.')),totalCents=Math.max(0,Math.round((Number.isFinite(moneyInput)?moneyInput:0)*100));
- if(!totalMinutes){result.innerHTML='<p>No hay horas trabajadas para repartir.</p>';return;}
- const allocations=valid.map((x,index)=>{const exact=totalCents*x.minutes/totalMinutes;return {...x,index,cents:Math.floor(exact),remainder:exact-Math.floor(exact)}});let remaining=totalCents-allocations.reduce((sum,x)=>sum+x.cents,0);allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(x=>allocations[x.index].cents++);
- result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(x=>'<tr><th>'+vendorEscape(x.name)+'</th><td>'+fmtMinutes(x.minutes)+'</td><td>'+(x.cents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+(totalCents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' € · <strong>Total horas:</strong> '+fmtMinutes(totalMinutes)+'</p>';
+ const btn=e.target.closest('#calculateTips');
+ if(!btn)return;
+ e.preventDefault();
+ e.stopImmediatePropagation();
+ const table=$('monthlyHoursTable'),result=$('tipResults'),month=$('monthlyHoursMonth')?.value;
+ if(!table||!result||!month)return;
+ const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false);
+ const rows=employees.map(u=>{
+  const key=month+':'+u.username;
+  const input=table.querySelector('[data-tip-hours-key="'+CSS.escape(key)+'"]');
+  let minutes;
+  if(input){
+   minutes=parseManualHours(input.value);
+   if(minutes===null){input.setCustomValidity('Introduce las horas como HH:MM, por ejemplo 97:30.');input.reportValidity();return null;}
+   input.setCustomValidity('');
+  }else minutes=0;
+  // Si no hay una edición manual activa, calcula directamente desde los registros diarios guardados.
+  if(!Object.prototype.hasOwnProperty.call(tipHourOverrides,key)){
+   minutes=0;
+   const [year,monthNum]=month.split('-').map(Number);
+   const lastDay=new Date(year,monthNum,0).getDate();
+   for(let day=1;day<=lastDay;day++){
+    const date=month+'-'+String(day).padStart(2,'0');
+    minutes+=totalMinutes((db.records?.[u.username]||{})[date]||{});
+   }
+   if(input)input.value=fmtMinutes(minutes);
+  }
+  return {name:u.name,minutes:Math.max(0,minutes),username:u.username};
+ });
+ if(rows.some(x=>x===null))return;
+ const valid=rows.filter(x=>x.minutes>0),totalMinutes=valid.reduce((sum,x)=>sum+x.minutes,0);
+ const amount=Number(String($('tipTotal')?.value||'0').replace(',','.'));
+ const totalCents=Math.max(0,Math.round((Number.isFinite(amount)?amount:0)*100));
+ if(!totalMinutes){result.innerHTML='<p>No hay horas fichadas en los registros diarios del mes seleccionado. Comprueba el mes y que las jornadas estén guardadas.</p>';return;}
+ const allocations=valid.map((x,index)=>{const exact=totalCents*x.minutes/totalMinutes;const cents=Math.floor(exact);return {...x,index,cents,remainder:exact-cents};});
+ let remaining=totalCents-allocations.reduce((sum,x)=>sum+x.cents,0);
+ allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(x=>allocations[x.index].cents++);
+ const money=c=>(c/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+ result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(x=>'<tr><th>'+vendorEscape(x.name)+'</th><td>'+fmtMinutes(x.minutes)+'</td><td>'+money(x.cents)+'</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+money(totalCents)+' · <strong>Total horas trabajadas:</strong> '+fmtMinutes(totalMinutes)+'</p>';
 },true);
-
 function renderDailyWorkAudit(){
  const auditPanel=$('dailyWorkPanel');
  if(auditPanel)auditPanel.classList.toggle('hidden',!isAdmin());
