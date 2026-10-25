@@ -500,3 +500,10 @@ body:has(#vendorWorkspace:not(.hidden)) #app main{width:100%;max-width:none;marg
 .schedule-weekly-hours-item{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 10px;border-radius:8px;background:#fff;border:1px solid #e2e8f0}
 .schedule-weekly-hours-item span{font-size:13px;font-weight:600}
 .schedule-weekly-hours-item strong{white-space:nowrap;font-size:14px;color:#166534}
+
+
+/* Bloques de vacaciones que corresponden pero aún no tienen fechas asignadas */
+.my-vacations-admin-actions{display:flex;justify-content:flex-start;margin:0 0 12px}
+.my-vacation-pending{background:#e6f7e9!important;border:1px solid #86d49a!important;border-left:5px solid #22a447!important;border-radius:10px;padding:12px}
+.my-vacation-pending .my-vacation-info strong{color:#176534}
+.my-vacation-pending-note{color:#24733d!important;font-weight:600}
