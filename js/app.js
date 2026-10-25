@@ -963,6 +963,29 @@ function renderMonthlyHours(){
  }
  $('monthlyHoursTable').innerHTML='<div class="published-schedule-table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas para propinas (editable HH:MM)</th><th>Vacaciones (aparte)</th></tr></thead><tbody>'+rows.map(x=>'<tr><th>'+vendorEscape(x.u.name)+'</th><td><input class="tip-hours-manual" data-tip-hours-key="'+vendorEscape(x.overrideKey)+'" aria-label="Horas para propinas de '+vendorEscape(x.u.name)+'" type="text" inputmode="numeric" placeholder="HH:MM" value="'+vendorEscape(fmtMinutes(x.worked))+'" style="max-width:110px"></td><td>'+fmtMinutes(x.vac)+'</td></tr>').join('')+'</tbody></table></div><p class="muted">Puedes editar las horas solo para este reparto. Los registros originales del horario no se modifican. Para volver a las horas registradas, borra el valor editado y vuelve a calcular.</p>';
  const calculate=()=>{
+  const totalInput=Number(String($('tipTotal')?.value||'0').replace(',','.'));
+  const totalCents=Math.max(0,Math.round((Number.isFinite(totalInput)?totalInput:0)*100));
+  const result=$('tipResults');
+  const currentRows=rows.map(row=>{
+   const input=Array.from($('monthlyHoursTable')?.querySelectorAll('[data-tip-hours-key]')||[]).find(el=>el.dataset.tipHoursKey===row.overrideKey);
+   let minutes;
+   if(input){
+    minutes=parseManualHours(input.value);
+    if(minutes===null){input.setCustomValidity('Introduce las horas como HH:MM, por ejemplo 97:30.');input.reportValidity();return null;}
+    input.setCustomValidity('');
+   }else minutes=row.worked;
+   return {...row,worked:Math.max(0,Number(minutes)||0)};
+  });
+  if(currentRows.some(x=>x===null))return null;
+  const valid=currentRows.filter(x=>x.worked>0),mins=valid.reduce((sum,x)=>sum+x.worked,0);
+  if(!mins){result.innerHTML='<p>No hay horas trabajadas para repartir. Comprueba las horas de la tabla y el mes seleccionado.</p>';return null;}
+  const allocations=valid.map((x,index)=>{const exact=totalCents*x.worked/mins;return {x,index,cents:Math.floor(exact),remainder:exact-Math.floor(exact)};});
+  let remaining=totalCents-allocations.reduce((sum,a)=>sum+a.cents,0);
+  allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(a=>allocations[a.index].cents++);
+  const money=c=>(c/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(a=>'<tr><th>'+vendorEscape(a.x.u.name)+'</th><td>'+fmtMinutes(a.x.worked)+'</td><td>'+money(a.cents)+'</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+money(totalCents)+' · <strong>Total horas trabajadas:</strong> '+fmtMinutes(mins)+'</p>';
+  return {month,totalCents,mins,allocations,distributed:totalCents};
+ };
   const totalInput=Number(String($('tipTotal').value||'0').replace(',','.'));
   const totalCents=Math.max(0,Math.round((Number.isFinite(totalInput)?totalInput:0)*100));
   const mins=rows.reduce((sum,x)=>sum+Math.max(0,Number(x.worked)||0),0);
@@ -1002,48 +1025,6 @@ function renderMonthlyHours(){
  });
 }
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
-// Único manejador del cálculo de propinas: toma las horas fichadas del mes, excluyendo vacaciones.
-document.addEventListener('click',e=>{
- const btn=e.target.closest('#calculateTips');
- if(!btn)return;
- e.preventDefault();
- e.stopImmediatePropagation();
- const table=$('monthlyHoursTable'),result=$('tipResults'),month=$('monthlyHoursMonth')?.value;
- if(!table||!result||!month)return;
- const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false);
- const rows=employees.map(u=>{
-  const key=month+':'+u.username;
-  const input=table.querySelector('[data-tip-hours-key="'+CSS.escape(key)+'"]');
-  let minutes;
-  if(input){
-   minutes=parseManualHours(input.value);
-   if(minutes===null){input.setCustomValidity('Introduce las horas como HH:MM, por ejemplo 97:30.');input.reportValidity();return null;}
-   input.setCustomValidity('');
-  }else minutes=0;
-  // Si no hay una edición manual activa, calcula directamente desde los registros diarios guardados.
-  if(!Object.prototype.hasOwnProperty.call(tipHourOverrides,key)){
-   minutes=0;
-   const [year,monthNum]=month.split('-').map(Number);
-   const lastDay=new Date(year,monthNum,0).getDate();
-   for(let day=1;day<=lastDay;day++){
-    const date=month+'-'+String(day).padStart(2,'0');
-    minutes+=totalMinutes((db.records?.[u.username]||{})[date]||{});
-   }
-   if(input)input.value=fmtMinutes(minutes);
-  }
-  return {name:u.name,minutes:Math.max(0,minutes),username:u.username};
- });
- if(rows.some(x=>x===null))return;
- const valid=rows.filter(x=>x.minutes>0),totalMinutes=valid.reduce((sum,x)=>sum+x.minutes,0);
- const amount=Number(String($('tipTotal')?.value||'0').replace(',','.'));
- const totalCents=Math.max(0,Math.round((Number.isFinite(amount)?amount:0)*100));
- if(!totalMinutes){result.innerHTML='<p>No hay horas fichadas en los registros diarios del mes seleccionado. Comprueba el mes y que las jornadas estén guardadas.</p>';return;}
- const allocations=valid.map((x,index)=>{const exact=totalCents*x.minutes/totalMinutes;const cents=Math.floor(exact);return {...x,index,cents,remainder:exact-cents};});
- let remaining=totalCents-allocations.reduce((sum,x)=>sum+x.cents,0);
- allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(x=>allocations[x.index].cents++);
- const money=c=>(c/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
- result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(x=>'<tr><th>'+vendorEscape(x.name)+'</th><td>'+fmtMinutes(x.minutes)+'</td><td>'+money(x.cents)+'</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+money(totalCents)+' · <strong>Total horas trabajadas:</strong> '+fmtMinutes(totalMinutes)+'</p>';
-},true);
 function renderDailyWorkAudit(){
  const auditPanel=$('dailyWorkPanel');
  if(auditPanel)auditPanel.classList.toggle('hidden',!isAdmin());
