@@ -407,7 +407,7 @@ function renderDashboard(mode="employee"){
    const segs=dashboardDaySegments(users,k);
    const vac=users.reduce((a,u)=>a+dashboardMetricsForUser(u,k).vac,0);
    const mins=segs.reduce((a,b)=>a+b.minutes,0);
-   h+=`<div class="dash-day"><strong>${d}</strong><span>${mins||vac?fmtMinutes(mins+vac):""}</span>${segs.length?'<div class="dash-day-colors">'+segs.map(z=>`<i title="${z.name}: ${fmtMinutes(z.minutes)}" style="background:${z.color}"></i>`).join("")+'</div>':""}${vac?`<small>🏖 ${fmtMinutes(vac)}</small>`:""}</div>`;
+   h+=`<div class="dash-day"><strong>${d}</strong><span>${mins?fmtMinutes(mins):""}</span>${segs.length?'<div class="dash-day-colors">'+segs.map(z=>`<i title="${z.name}: ${fmtMinutes(z.minutes)}" style="background:${z.color}"></i>`).join("")+'</div>':""}${vac?`<small>🏖 ${fmtMinutes(vac)}</small>`:""}</div>`;
  }
  $("dashboardCalendar").innerHTML=h+"</div>";
  const dayItems=Array.from({length:days},(_,i)=>{
