@@ -123,7 +123,7 @@ function totalMinutes(r){return workMinutes(r)+extraMinutes(r)}
 function userRecords(){return db.records[selectedEmployee.username]||{}}
 function userLocks(){return db.locks[selectedEmployee.username]||{}}
 function weeklyRows(){return (db.weekly[selectedEmployee.username]||[]).slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)).map(r=>({...r,locked:r.locked!==false}))}
-function vacations(){return (db.vacations[selectedEmployee.username]||[]).filter(v=>/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||''))).slice().sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end))}
+function vacations(){return (db.vacations[selectedEmployee.username]||[]).filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(String(v.start||''))&&/^\d{4}-\d{2}-\d{2}$/.test(String(v.end||''))).slice().sort((a,b)=>a.start.localeCompare(b.start)||a.end.localeCompare(b.end))}
 function classBalance(v){return v>0?"positive":v<0?"negative":"neutral"}
 function isAdmin(){return currentUser?.role==="admin"}
 function monthKey(k){return k.slice(0,7)}
@@ -580,7 +580,7 @@ async function renderPersonalSpaceAdminOverview(){
   const yearSelect=$('spacePayrollYear');
   if(yearSelect){
    const selectedYear=yearSelect.value;
-   const years=[...new Set(rows.flatMap(r=>r.payrolls.map(p=>String(p.month||'').slice(0,4)).filter(y=>/^\\d{4}$/.test(y))))].sort((a,b)=>b.localeCompare(a));
+   const years=[...new Set(rows.flatMap(r=>r.payrolls.map(p=>String(p.month||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y))))].sort((a,b)=>b.localeCompare(a));
    yearSelect.innerHTML='<option value="">Todos los años</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');
    if(years.includes(selectedYear))yearSelect.value=selectedYear;
   }
@@ -635,7 +635,7 @@ async function uploadPayroll(){
 function allVacationRows(){
  const rows=[];
  (db.dayOffRequests||[]).forEach(r=>{const u=(db.users||[]).find(x=>x.username===r.username);if(u)rows.push({...r,employeeName:u.name,year:Number(String(r.start||'').slice(0,4)),isDayOffRequest:true})});
- (db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4)),_index:i})));
+ (db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4))||new Date().getFullYear(),_index:i,isPendingBlock:!v.start&&!v.end})));
  return rows.sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)||a.employeeName.localeCompare(b.employeeName));
 }
 function vacationFiltersInit(){
@@ -665,11 +665,18 @@ function inferVacationWeek(username,v){const year=Number(v.year)||Number(String(
 function renderMyVacations(){
  const box=$('myVacationsBox');if(!box||!currentUser)return;
  const target=isAdmin()?selectedEmployee:currentUser;if(!target)return;
- const mine=(db.vacations?.[target.username]||[]).slice().sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end));
- box.innerHTML=mine.length?'<div class="my-vacations-list">'+mine.map(v=>{const n=workingDaysInclusive(parseKey(v.start),parseKey(v.end));return '<div class="my-vacation-row '+(v.cancelled?'vac-list-cancelled':'')+'"><div class="my-vacation-info"><strong>'+fmtDate(v.start)+' → '+fmtDate(v.end)+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':'')+'</strong><span>Año '+(Number(v.year)||String(v.start||'').slice(0,4))+' · Semana '+(Number(v.week)||inferVacationWeek(target.username,v))+' de 4</span><span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(target))+' horas</span>'+(isAdmin()&&v.adminObservations?'<small class="vac-admin-observation"><b>Observaciones:</b> '+escapeHtml(v.adminObservations)+'</small>':'')+'</div>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+(v.pdfData?'<button type="button" class="small-btn" data-my-vac-pdf="'+escapeHtml(v.id)+'">Ver PDF</button>':'')+(isAdmin()?'<div class="vacation-actions"><button type="button" class="small-btn" data-space-vac-edit="'+escapeHtml(v.id)+'">Editar</button><button type="button" class="small-btn danger-small" data-space-vac-delete="'+escapeHtml(v.id)+'">Eliminar</button></div>':'')+'</div>'}).join('')+'</div>':'<div class="personal-space-empty">Todavía no hay vacaciones registradas para '+escapeHtml(target.name)+'.</div>';
+ const mine=(db.vacations?.[target.username]||[]).slice().sort((a,b)=>Number(a.year||String(a.start||'').slice(0,4))-Number(b.year||String(b.start||'').slice(0,4))||Number(a.week||0)-Number(b.week||0)||String(a.start||'').localeCompare(String(b.start||'')));
+ const actions=isAdmin()?'<div class="my-vacations-admin-actions"><button type="button" class="primary" id="addPendingVacationBlock">+ Añadir bloque pendiente</button></div>':'';
+ box.innerHTML=actions+(mine.length?'<div class="my-vacations-list">'+mine.map(v=>{
+  const pending=!v.start&&!v.end,valid=!!v.start&&!!v.end,n=valid?workingDaysInclusive(parseKey(v.start),parseKey(v.end)):0;
+  const year=Number(v.year)||Number(String(v.start||'').slice(0,4))||new Date().getFullYear(),week=Number(v.week)||inferVacationWeek(target.username,v);
+  return '<div class="my-vacation-row '+(pending?'my-vacation-pending ':'')+(v.cancelled?'vac-list-cancelled':'')+'"><div class="my-vacation-info"><strong>'+(pending?'🟢 Bloque de vacaciones pendiente de asignar fechas':escapeHtml(fmtDate(v.start)+' → '+fmtDate(v.end))+(v.cancelled?' <span class="vac-cancelled-badge">ANULADAS</span>':''))+'</strong><span>Año '+year+' · Semana '+week+' de 4</span>'+(valid?'<span>'+n+' días laborables · '+fmtMinutes(n*dailyContractMinutes(target))+' horas</span>':'<span class="my-vacation-pending-note">Vacaciones que corresponden; todavía sin fechas asignadas ni firma.</span>')+(isAdmin()&&v.adminObservations?'<small class="vac-admin-observation"><b>Observaciones:</b> '+escapeHtml(v.adminObservations)+'</small>':'')+'</div>'+(v.driveLink?'<a class="small-btn" href="'+escapeHtml(v.driveLink)+'" target="_blank" rel="noopener noreferrer">Abrir Drive</a>':'')+(v.pdfData?'<button type="button" class="small-btn" data-my-vac-pdf="'+escapeHtml(v.id)+'">Ver PDF</button>':'')+(isAdmin()?'<div class="vacation-actions"><button type="button" class="small-btn" data-space-vac-edit="'+escapeHtml(v.id)+'">Asignar fechas / Editar</button><button type="button" class="small-btn danger-small" data-space-vac-delete="'+escapeHtml(v.id)+'">Eliminar</button></div>':'')+'</div>';
+ }).join('')+'</div>':'<div class="personal-space-empty">Todavía no hay vacaciones registradas para '+escapeHtml(target.name)+'.</div>');
+ const add=$('addPendingVacationBlock');
+ if(add)add.onclick=async()=>{if(!isAdmin())return;const rows=db.vacations[target.username]=db.vacations[target.username]||[],year=new Date().getFullYear();const used=new Set(rows.filter(v=>(Number(v.year)||Number(String(v.start||'').slice(0,4))||year)===year).map(v=>Number(v.week)||inferVacationWeek(target.username,v)));let week=[1,2,3,4].find(n=>!used.has(n));if(!week){week=1;alert('Este empleado ya tiene cuatro bloques para '+year+'. Se añadirá otro bloque en la semana 1.')}const row={id:'v_pending_'+Date.now()+'_'+Math.random().toString(36).slice(2,7),start:'',end:'',year,week,pending:true};rows.push(row);try{const saved=await saveDB();if(!saved){rows.splice(rows.indexOf(row),1);renderMyVacations();return}renderMyVacations()}catch(e){rows.splice(rows.indexOf(row),1);renderMyVacations();alert('No se pudo guardar el bloque: '+e.message)}};
  box.querySelectorAll('[data-my-vac-pdf]').forEach(b=>b.onclick=()=>{const v=mine.find(x=>String(x.id)===b.dataset.myVacPdf);if(v?.pdfData)openVacationPdf(v)});
  box.querySelectorAll('[data-space-vac-edit]').forEach(b=>b.onclick=()=>openVacationEditForm(target.username,b.dataset.spaceVacEdit));
- box.querySelectorAll('[data-space-vac-delete]').forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm('¿Eliminar este periodo de vacaciones de '+target.name+'?'))return;db.vacations[target.username]=(db.vacations[target.username]||[]).filter(v=>String(v.id)!==b.dataset.spaceVacDelete);try{await saveDB();renderMyVacations();renderVacationsSection()}catch(e){alert(e.message)}});
+ box.querySelectorAll('[data-space-vac-delete]').forEach(b=>b.onclick=async()=>{if(!isAdmin()||!confirm('¿Eliminar este bloque de vacaciones de '+target.name+'?'))return;const previous=db.vacations[target.username]||[];db.vacations[target.username]=previous.filter(v=>String(v.id)!==b.dataset.spaceVacDelete);try{const saved=await saveDB();if(!saved){db.vacations[target.username]=previous;renderMyVacations();return}renderMyVacations();renderVacationsSection()}catch(e){db.vacations[target.username]=previous;renderMyVacations();alert(e.message)}});
 }
 async function refreshPrivateRequests(){try{const data=await api('/api/state');if(Array.isArray(data.dayOffRequests))db.dayOffRequests=data.dayOffRequests;}catch(e){console.warn('No se pudieron actualizar las solicitudes',e)}}
 function requestStatusLabel(status){return status==='approved'?'Aceptada':status==='rejected'?'Rechazada':'Pendiente'}
@@ -818,7 +825,7 @@ async function loadPublishedSchedule(){
  try{
   const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],turnos=h.turnos||[];
   if(!h.semanaGenerada||!turnos.length){box.innerHTML=isAdmin()?'<p class="empty-state">No hay un cuadrante publicado todavía. Puedes crear o revisar el cuadrante desde el generador y publicarlo cuando esté listo.</p><button type="button" class="primary" id="openScheduleGenerator">📅 Abrir generador de horarios</button>':'<p class="empty-state">📅 No hay un cuadrante publicado todavía. Cuando el administrador lo publique, podrás verlo aquí.</p>';return;}
-  const dates=[...new Set([...(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||'')),...turnos.map(t=>String(t.fecha||''))].filter(v=>/^\\d{4}-\\d{2}-\\d{2}$/.test(v)))].sort();
+  const dates=[...new Set([...(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||'')),...turnos.map(t=>String(t.fecha||''))].filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
   const weekdayNames=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
   const shiftClass=t=>{const a=String(t.horaInicio||'').replace(':',''),b=String(t.horaFin||'').replace(':','');if(a==='1600'&&b==='2100')return 'shift-sky';if(a==='1100'&&b==='2100')return 'shift-green';return ''};
   const normalizeRole=t=>String(t.puesto||t.rol||t.area||t.departamento||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
