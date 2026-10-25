@@ -219,8 +219,8 @@
     <div id="weeklyLockNotice" class="lock-notice hidden">🔒 Esta línea está bloqueada por el administrador.</div>
     <form id="weeklyForm">
       <div class="two-col"><label>Periodo y cálculo de horas · Desde<input id="weeklyStart" type="date" required></label><label>Hasta<input id="weeklyEnd" type="date" required></label></div><p id="weeklyRangeWorked" class="muted">Selecciona las fechas para calcular automáticamente las horas trabajadas.</p>
-      <div class="three-col"><label>Anterior<input id="weeklyPrevious" type="number" step="0.01" placeholder="0"></label><label>Contrato (horas)<input id="weeklyContract" type="number" step="0.01" placeholder="40"></label><label>Esta semana (horas)<input id="weeklyWorked" type="number" step="0.01" placeholder="0"></label></div>
-      <div class="formula-box">Balance = Esta semana − Contrato + Anterior <strong id="weeklyBalancePreview">0:00</strong></div>
+      <div class="three-col"><label>Anterior<input id="weeklyPrevious" type="number" step="0.01" placeholder="0"></label><label>Contrato (horas)<input id="weeklyContract" type="number" step="0.01" placeholder="40"></label><label>Esta semana (horas trabajadas)<input id="weeklyWorked" type="number" step="0.01" placeholder="0"></label><label>Horas vacaciones<input id="weeklyVacationHours" type="number" min="0" step="0.01" value="0" placeholder="0"></label></div>
+      <div class="formula-box">Balance = Trabajadas + Vacaciones − Contrato + Anterior <strong id="weeklyBalancePreview">0:00</strong></div>
       <div class="modal-actions"><button type="button" id="deleteWeekly" class="danger-outline">Eliminar línea</button><button type="submit" class="primary">Guardar línea</button></div>
     </form>
   </div></div>
