@@ -977,7 +977,8 @@ function renderMonthlyHours(){
    return {...row,worked:Math.max(0,Number(minutes)||0)};
   });
   if(currentRows.some(x=>x===null))return null;
-  const valid=currentRows.filter(x=>x.worked>0),mins=valid.reduce((sum,x)=>sum+x.worked,0);
+  const valid=currentRows.filter(x=>x.worked>0);
+  const mins=valid.reduce((sum,x)=>sum+x.worked,0);
   if(!mins){result.innerHTML='<p>No hay horas trabajadas para repartir. Comprueba las horas de la tabla y el mes seleccionado.</p>';return null;}
   const allocations=valid.map((x,index)=>{const exact=totalCents*x.worked/mins;return {x,index,cents:Math.floor(exact),remainder:exact-Math.floor(exact)};});
   let remaining=totalCents-allocations.reduce((sum,a)=>sum+a.cents,0);
@@ -986,40 +987,26 @@ function renderMonthlyHours(){
   result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas trabajadas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(a=>'<tr><th>'+vendorEscape(a.x.u.name)+'</th><td>'+fmtMinutes(a.x.worked)+'</td><td>'+money(a.cents)+'</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+money(totalCents)+' · <strong>Total horas trabajadas:</strong> '+fmtMinutes(mins)+'</p>';
   return {month,totalCents,mins,allocations,distributed:totalCents};
  };
-  const totalInput=Number(String($('tipTotal').value||'0').replace(',','.'));
-  const totalCents=Math.max(0,Math.round((Number.isFinite(totalInput)?totalInput:0)*100));
-  const mins=rows.reduce((sum,x)=>sum+Math.max(0,Number(x.worked)||0),0);
-  const result=$('tipResults');
-  if(!mins){result.innerHTML='<p>No hay horas trabajadas para repartir.</p>';return null;}
-  const allocations=rows.map((x,index)=>{const exactCents=totalCents*Math.max(0,Number(x.worked)||0)/mins;return {x,index,cents:Math.floor(exactCents),remainder:exactCents-Math.floor(exactCents)}});
-  let remaining=totalCents-allocations.reduce((sum,a)=>sum+a.cents,0);
-  allocations.slice().sort((a,b)=>b.remainder-a.remainder||a.index-b.index).slice(0,remaining).forEach(a=>{allocations[a.index].cents+=1});
-  const distributed=allocations.reduce((sum,a)=>sum+a.cents,0);
-  result.innerHTML='<table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Horas</th><th>Propina</th></tr></thead><tbody>'+allocations.map(a=>'<tr><th>'+vendorEscape(a.x.u.name)+'</th><td>'+fmtMinutes(a.x.worked)+'</td><td>'+(a.cents/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €</td></tr>').join('')+'</tbody></table><p><strong>Total propina:</strong> '+(distributed/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' € · <strong>Total horas:</strong> '+fmtMinutes(mins)+'</p>';
-  return {month,totalCents,mins,allocations,distributed};
- };
  $('calculateTips').onclick=calculate;
  $('exportTipsPdf').onclick=()=>{
-  const report=calculate();
-  if(!report)return;
+  const report=calculate();if(!report)return;
   const monthLabel=new Date(Number(month.slice(0,4)),Number(month.slice(5,7))-1,1).toLocaleDateString('es-ES',{month:'long',year:'numeric'});
   const money=c=>(c/100).toLocaleString('es-ES',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
   const rowsHtml=report.allocations.map(a=>'<tr><td>'+vendorEscape(a.x.u.name)+'</td><td>'+fmtMinutes(a.x.worked)+'</td><td>'+money(a.cents)+'</td></tr>').join('');
-  const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Reparto de propinas - '+monthLabel+'</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#111}h1{font-size:22px}p{margin:8px 0}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border:1px solid #bbb;padding:9px;text-align:left}th{background:#eee}.summary{margin-top:18px;padding:12px;border:1px solid #bbb}@media print{button{display:none}body{margin:15mm}}</style></head><body><h1>Informe de reparto de propinas</h1><p><strong>Mes:</strong> '+monthLabel+'</p><div class="summary"><p><strong>Total propina:</strong> '+money(report.totalCents)+'</p><p><strong>Total horas computadas:</strong> '+fmtMinutes(report.mins)+'</p><p><strong>Empleados incluidos:</strong> '+report.allocations.length+'</p></div><table><thead><tr><th>Empleado</th><th>Horas para el reparto</th><th>Propina correspondiente</th></tr></thead><tbody>'+rowsHtml+'</tbody><tfoot><tr><th colspan="2">TOTAL</th><th>'+money(report.distributed)+'</th></tr></tfoot></table><p style="margin-top:24px;font-size:12px">El reparto se calcula proporcionalmente a las horas indicadas. Las horas editadas manualmente afectan solo a este reparto y no modifican el registro horario original.</p><button onclick="window.print()">Imprimir / Guardar como PDF</button><script>window.onload=()=>window.print()<\/script></body></html>';
+  const html='<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe de propinas - '+monthLabel+'</title><style>body{font-family:Arial,sans-serif;margin:32px;color:#111}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border:1px solid #bbb;padding:9px;text-align:left}th{background:#eee}</style></head><body><h1>Informe de reparto de propinas</h1><p><strong>Mes:</strong> '+monthLabel+'</p><p><strong>Total propina:</strong> '+money(report.totalCents)+'</p><p><strong>Total horas computadas:</strong> '+fmtMinutes(report.mins)+'</p><table><thead><tr><th>Empleado</th><th>Horas para el reparto</th><th>Propina correspondiente</th></tr></thead><tbody>'+rowsHtml+'</tbody><tfoot><tr><th colspan="2">TOTAL</th><th>'+money(report.distributed)+'</th></tr></tfoot></table><p>Las horas editadas afectan solo a este reparto.</p><button onclick="window.print()">Imprimir / Guardar como PDF</button><script>window.onload=()=>window.print()<\/script></body></html>';
   const win=window.open('','_blank');
-  if(!win){alert('El navegador bloqueó la ventana del PDF. Permite ventanas emergentes para esta web y vuelve a intentarlo.');return;}
+  if(!win){alert('El navegador bloqueó la ventana del PDF. Permite ventanas emergentes y vuelve a intentarlo.');return;}
   win.document.open();win.document.write(html);win.document.close();
  };
- // Aplicar cambios manuales solo al cálculo de propinas; no se alteran los registros horarios.
  $('monthlyHoursTable').querySelectorAll('.tip-hours-manual').forEach(input=>{
   input.addEventListener('change',()=>{
-   const parsed=parseManualHours(input.value);
-   if(parsed===null){input.setCustomValidity('Introduce las horas como HH:MM, por ejemplo 97:30.');input.reportValidity();input.value=fmtMinutes(rows.find(x=>x.overrideKey===input.dataset.tipHoursKey)?.worked||0);return;}
-   input.setCustomValidity('');
-   const row=rows.find(x=>x.overrideKey===input.dataset.tipHoursKey);
-   if(!row)return;
-   if(input.value.trim()===''){delete tipHourOverrides[row.overrideKey];row.worked=row.originalWorked;input.value=fmtMinutes(row.worked);}
-   else{tipHourOverrides[row.overrideKey]=parsed;row.worked=parsed;input.value=fmtMinutes(parsed);}
+   const row=rows.find(x=>x.overrideKey===input.dataset.tipHoursKey);if(!row)return;
+   if(input.value.trim()===''){delete tipHourOverrides[row.overrideKey];row.worked=row.originalWorked;input.value=fmtMinutes(row.worked);input.setCustomValidity('');}
+   else{
+    const parsed=parseManualHours(input.value);
+    if(parsed===null){input.setCustomValidity('Introduce las horas como HH:MM, por ejemplo 97:30.');input.reportValidity();input.value=fmtMinutes(row.worked);return;}
+    input.setCustomValidity('');tipHourOverrides[row.overrideKey]=parsed;row.worked=parsed;input.value=fmtMinutes(parsed);
+   }
    calculate();
   });
  });
