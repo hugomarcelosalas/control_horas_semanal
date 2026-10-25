@@ -1004,7 +1004,7 @@ function renderMonthlyHours(){
 $('monthlyHoursMonth')?.addEventListener('change',renderMonthlyHours);
 // Enlazado delegado como respaldo: mantiene operativo el calculador aunque se vuelva a renderizar la sección.
 document.addEventListener('click',e=>{
- const btn=e.target.closest('#calculateTips');if(!btn)return;
+ const btn=e.target.closest('#calculateTips');if(!btn)return;e.preventDefault();e.stopImmediatePropagation();
  const table=$('monthlyHoursTable'),result=$('tipResults');if(!table||!result)return;
  const rows=Array.from(table.querySelectorAll('.tip-hours-manual')).map(input=>({name:input.getAttribute('aria-label')?.replace(/^Horas para propinas de /,'' )||'Empleado',minutes:parseManualHours(input.value)}));
  const invalid=rows.find(x=>x.minutes===null);if(invalid){result.innerHTML='<p class="error">Revisa las horas: utiliza HH:MM, por ejemplo 97:30.</p>';return;}
