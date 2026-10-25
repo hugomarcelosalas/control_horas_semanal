@@ -1056,7 +1056,7 @@ function showSection(sectionId){
   if(sectionId==='publishedSchedulePanel')loadPublishedSchedule();
   if(sectionId==='wagesPanel')renderWages();
   if(sectionId==='monthlyHoursPanel')renderMonthlyHours();
-  if(sectionId==='dailyWorkPanel'&&isAdmin())renderDailyWorkAudit();if(sectionId==='mainPanel'&&isAdmin())renderDailyWorkAudit();
+  if(sectionId==='dailyWorkPanel'&&isAdmin())renderDailyWorkAudit();if(sectionId==='mainPanel'&&isAdmin())renderDailyWorkAudit();if(sectionId==='mainPanel'&&isAdmin())renderDailyWorkAudit();
   if(sectionId==='personalSpacePanel'){if(isAdmin())renderPersonalSpaceAdminOverview();setupPayrollUI();}
   if(sectionId==='vendorWorkspace'&&isAdmin()){api('/api/vendor/sheets').then(out=>renderVendorWorkspace(out.sheets||{})).catch(err=>{const box=$('vendorSheetContainer');if(box)box.innerHTML='<p>No se pudo cargar Stock: '+vendorEscape(err.message)+'</p>';});}
   $(sectionId)?.scrollIntoView({behavior:'smooth',block:'start'});
