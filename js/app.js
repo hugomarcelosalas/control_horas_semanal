@@ -636,7 +636,7 @@ async function uploadPayroll(){
 function allVacationRows(){
  const rows=[];
  (db.dayOffRequests||[]).forEach(r=>{const u=(db.users||[]).find(x=>x.username===r.username);if(u)rows.push({...r,employeeName:u.name,year:Number(String(r.start||'').slice(0,4)),isDayOffRequest:true})});
- (db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4))||new Date().getFullYear(),_index:i,isPendingBlock:!v.start&&!v.end})));
+ (db.users||[]).filter(u=>u.role==='employee').forEach(u=>(db.vacations?.[u.username]||[]).forEach((v,i)=>rows.push({...v,username:u.username,employeeName:u.name,year:Number(v.year)||Number(String(v.start||'').slice(0,4))||new Date().getFullYear(),_index:i,isPendingBlock:!v.start&&!v.end})));
  return rows.sort((a,b)=>b.start.localeCompare(a.start)||b.end.localeCompare(a.end)||a.employeeName.localeCompare(b.employeeName));
 }
 function vacationFiltersInit(){
@@ -705,7 +705,7 @@ function renderVacationsSection(){
  $('vacationsCalendar').classList.toggle('hidden',vacationsViewMode!=='calendar');$('vacationsList').classList.toggle('hidden',vacationsViewMode!=='list');
  const visibleRows=filteredVacationRows().filter(v=>!v.isPendingBlock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||'')));
  // El calendario y la lista muestran las vacaciones de todos los empleados activos; solo administración puede editar.
- const calendarRows=allVacationRows().filter(v=>v.isDayOffRequest?(!isAdmin()&&v.username!==currentUser?.username?false:true):(/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||''))));
+ const calendarRows=allVacationRows().filter(v=>v.isDayOffRequest?(!isAdmin()&&v.username!==currentUser?.username?false:true):(!v.isPendingBlock&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.start||''))&&/^\\d{4}-\\d{2}-\\d{2}$/.test(String(v.end||''))));
  const first=new Date(y,m,1),offset=(first.getDay()+6)%7,days=new Date(y,m+1,0).getDate();
  const names=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];let grid=names.map(n=>'<div class="vac-cal-head">'+n+'</div>').join('');db.calendarDayTypes=db.calendarDayTypes||{};db.calendarEvents=Array.isArray(db.calendarEvents)?db.calendarEvents:[];
  $('vacationCalendarAdminTools')?.classList.toggle('hidden',!isAdmin()||vacationsViewMode!=='calendar');
