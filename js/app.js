@@ -945,7 +945,7 @@ function parseManualHours(value){
  return hours*60+minutes;
 }
 function renderMonthlyHours(){
- if(!isAdmin())return;
+ if(!isAdmin()&&String(currentUser?.username||'').toLowerCase()!=='admin')return;
  const inp=$('monthlyHoursMonth');if(!inp)return;
  if(!inp.value)inp.value=dateKey(new Date()).slice(0,7);
  const month=inp.value;
