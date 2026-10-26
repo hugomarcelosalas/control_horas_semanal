@@ -907,7 +907,17 @@ async function loadPublishedSchedule(){
     const rows=dayRows.filter(t=>roleFor(t)===group);
     const birthdays=group==='vendedores'?dayRows.filter(t=>roleFor(t)==='cumples'):[];
     html+='<div class="simple-schedule-group"><h4>'+roleLabel[group]+'</h4>';
-    if(group==='vendedores')html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong>'+(birthdays.length?birthdays.map(t=>'<div class="simple-birthday-line">'+vendorEscape([t.horaInicio&&t.horaFin?[t.horaInicio,t.horaFin].join('–'):'',t.descripcion||t.detalle||t.nombreCumple||t.cumple||t.observaciones||t.nota||t.puesto].filter(Boolean).join(' · '))+'</div>').join(''):'<span class="muted">—</span>')+'</div>';
+    if(group==='vendedores'){
+     const birthdayPeriod=t=>{
+      const explicit=[t.periodo,t.turno,t.jornada,t.puesto,t.descripcion,t.detalle,t.observaciones,t.nota].filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+      if(/\\b(tarde|afternoon|^t$|\\btarde\\b)/.test(explicit)||/(^|\\s)T(\\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'tarde';
+      if(/\\b(manana|morning|^m$|\\bmanana\\b)/.test(explicit)||/(^|\\s)M(\\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'manana';
+      const hour=Number(String(t.horaInicio||'').split(':')[0]);return String(t.horaInicio||'')&&Number.isFinite(hour)?(hour>=14?'tarde':'manana'):'manana';
+     };
+     const birthdayLabel=t=>[t.horaInicio&&t.horaFin?[t.horaInicio,t.horaFin].join('–'):'',t.descripcion||t.detalle||t.nombreCumple||t.cumple||t.observaciones||t.nota||((t.puesto&& !/^(m|t)$/i.test(String(t.puesto).trim()))?t.puesto:'')].filter(Boolean).join(' · ');
+     const morning=birthdays.filter(t=>birthdayPeriod(t)==='manana'),afternoon=birthdays.filter(t=>birthdayPeriod(t)==='tarde');
+     html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong><div class="simple-birthday-line"><b>Mañana</b><span>'+(morning.length?morning.map(t=>vendorEscape(birthdayLabel(t)||'✓')).join(' · '):'—')+'</span></div><div class="simple-birthday-line"><b>Tarde</b><span>'+(afternoon.length?afternoon.map(t=>vendorEscape(birthdayLabel(t)||'✓')).join(' · '):'—')+'</span></div></div>';
+    }
     html+='<ul>'+rows.map(t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));const name=emp?.nombre||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'Empleado';const time=[t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–');const details=[t.puesto&&roleFor(t)!=='vendedores'?t.puesto:'',t.observaciones||t.nota||''].filter(Boolean).join(' · ');return '<li><strong>'+vendorEscape(name)+'</strong> <span class="schedule-shift '+shiftClass(t)+'">'+vendorEscape(time)+'</span>'+(details?' <span class="simple-schedule-detail">'+vendorEscape(details)+'</span>':'')+'</li>'}).join('')+'</ul></div>';
    }
    html+='</div></section>';
