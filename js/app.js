@@ -897,7 +897,32 @@ async function loadPublishedSchedule(){
   const normalizeRole=t=>String(t.puesto||t.rol||t.area||t.departamento||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
   const roleFor=t=>{const p=normalizeRole(t);if(/cumple|birthday|fiesta/.test(p))return 'cumples';if(/monitor/.test(p))return 'monitores';if(/kiosko|kiosco/.test(p))return 'kiosko';return 'vendedores'};
   const roleLabel={vendedores:'Vendedores',monitores:'Monitores',kiosko:'Kiosko'};
-  let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="simple-published-schedule">';
+  const weeklyCumples=(shift,date)=>{
+   const dayDate=new Date(date+'T12:00:00'),dayName=weekdayNames[dayDate.getDay()].toLowerCase();
+   const normalize=s=>String(s||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase().trim();
+   const rows=turnos.filter(t=>{
+    const role=normalize(t.puesto||t.rol||t.area||t.departamento||t.tipo||t.categoria||'');
+    const when=String(t.fecha||t.date||'');
+    const period=normalize(t.turno||t.periodo||t.jornada||t.tipoTurno||t.descripcion||t.detalle||'');
+    const time=Number(String(t.horaInicio||'').split(':')[0]);
+    return /cumple|birthday|fiesta/.test(role)&&when===date&&(shift==='manana'?(/manana|morning|^m$/.test(period)||(!period&&String(t.horaInicio||'')&&time<14)):(/tarde|afternoon|^t$/.test(period)||(!period&&String(t.horaInicio||'')&&time>=14)));
+   });
+   const count=t=>{
+    for(const key of ['cantidadNinos','cantidadNiños','numeroNinos','numeroNiños','ninos','niños','cantidad','total','asistentes','count','numero','numNinos','numNiños']){
+     const raw=t[key];if(raw!==undefined&&raw!==null&&String(raw).trim()!==''){const value=Number(String(raw).replace(',','.'));if(Number.isFinite(value))return value;}
+    }
+    const text=[t.descripcion,t.detalle,t.observaciones,t.nota,t.nombreCumple,t.cumple].filter(Boolean).join(' ');
+    const m=text.match(/(?:^|\\s)(\\d+(?:[.,]\\d+)?)\\s*(?:ninos|niños|ninas|niñas|cumples|k)\\b/i);
+    return m?Number(m[1].replace(',','.')):0;
+   };
+   const fromTurns=rows.reduce((sum,t)=>sum+count(t),0);
+   const raw=Array.isArray(h.cumples)?h.cumples:[];
+   const saved=raw.filter(x=>String(x.fecha||x.date||x.diaFecha||'')===date||(!/^\\d{4}-\\d{2}-\\d{2}$/.test(String(x.fecha||x.date||x.diaFecha||''))&&normalize(x.diaSemana||x.weekday||x.dia)===dayName));
+   const keys=shift==='manana'?['manana','mañana','morning','cantidadManana','cantidadMañana','ninosManana','niñosManana','totalManana','totalMañana']:['tarde','afternoon','cantidadTarde','ninosTarde','niñosTarde','totalTarde'];
+   const vals=saved.map(x=>keys.map(k=>x[k]).find(v=>v!==undefined&&v!==null&&String(v).trim()!=='')).filter(v=>v!==undefined).map(v=>Number(String(v).replace(',','.'))).filter(Number.isFinite);
+   return vals.length?vals.reduce((a,b)=>a+b,0):fromTurns;
+  };
+  let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="published-cumples-week"><h3>Eventos · niños por día</h3><table><thead><tr><th>Turno</th>'+['L','M','X','J','V','S','D'].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+[['Mañana','manana'],['Tarde','tarde']].map(([label,shift])=>'<tr><th>'+label+'</th>'+Array.from({length:7},(_,i)=>{const target=new Date((dates[0]||new Date().toISOString().slice(0,10))+'T12:00:00');target.setDate(target.getDate()+i-((target.getDay()+6)%7));const dateKey=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0')+'-'+String(target.getDate()).padStart(2,'0');return '<td>'+weeklyCumples(shift,dateKey)+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div><div class="simple-published-schedule">';
   for(const date of dates){
    const dayRows=turnos.filter(t=>String(t.fecha||'')===date);
    const d=new Date(date+'T12:00:00');
