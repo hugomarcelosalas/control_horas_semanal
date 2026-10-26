@@ -1,4 +1,6 @@
 const $=id=>document.getElementById(id);
+// Alias de escape usado por los módulos de planillas y sueldos.
+function vendorEscape(value){return escapeHtml(value)}
 // Estado de vacaciones inicializado antes de registrar manejadores de clics.
 let vacationsViewMode='calendar';
 let myVacationsSortDirection='asc';
