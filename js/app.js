@@ -909,9 +909,9 @@ async function loadPublishedSchedule(){
     html+='<div class="simple-schedule-group"><h4>'+roleLabel[group]+'</h4>';
     if(group==='vendedores'){
      const birthdayPeriod=t=>{
-      const explicit=[t.periodo,t.turno,t.jornada,t.puesto,t.descripcion,t.detalle,t.observaciones,t.nota].filter(Boolean).join(' ').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
-      if(/\\b(tarde|afternoon|^t$|\\btarde\\b)/.test(explicit)||/(^|\\s)T(\\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'tarde';
-      if(/\\b(manana|morning|^m$|\\bmanana\\b)/.test(explicit)||/(^|\\s)M(\\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'manana';
+      const explicit=[t.periodo,t.turno,t.jornada,t.puesto,t.descripcion,t.detalle,t.observaciones,t.nota].filter(Boolean).join(' ').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+      if(/\b(tarde|afternoon|^t$|\btarde\b)/.test(explicit)||/(^|\s)T(\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'tarde';
+      if(/\b(manana|morning|^m$|\bmanana\b)/.test(explicit)||/(^|\s)M(\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'manana';
       const hour=Number(String(t.horaInicio||'').split(':')[0]);return String(t.horaInicio||'')&&Number.isFinite(hour)?(hour>=14?'tarde':'manana'):'manana';
      };
      const birthdayCount=t=>{
@@ -923,7 +923,7 @@ async function loadPublishedSchedule(){
      };
      const dayCumples=(Array.isArray(h.cumples)?h.cumples:[]).filter(x=>{
       const f=String(x.fecha||x.date||x.diaFecha||x.dia||'');
-      return f===date||(/^\\d{4}-\\d{2}-\\d{2}$/.test(f)&&f===date)||(!/^\\d{4}-\\d{2}-\\d{2}$/.test(f)&&String(x.diaSemana||x.weekday||'').toLowerCase()===weekdayNames[d.getDay()].toLowerCase());
+      return f===date||(/^\d{4}-\d{2}-\d{2}$/.test(f)&&f===date)||(!/^\d{4}-\d{2}-\d{2}$/.test(f)&&String(x.diaSemana||x.weekday||'').toLowerCase()===weekdayNames[d.getDay()].toLowerCase());
      });
      const numberFrom=(obj,keys)=>{
       for(const key of keys){const v=obj?.[key];if(v!==undefined&&v!==null&&String(v).trim()!==''){const n=Number(String(v).replace(',','.'));if(Number.isFinite(n))return n;}}
@@ -934,7 +934,7 @@ async function loadPublishedSchedule(){
       const direct=dayCumples.map(x=>numberFrom(x,aliases)).filter(v=>v!==null);
       if(direct.length)return direct.reduce((a,b)=>a+b,0);
       const matching=dayCumples.filter(x=>{
-       const p=String(x.turno||x.periodo||x.jornada||x.tipoTurno||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+       const p=String(x.turno||x.periodo||x.jornada||x.tipoTurno||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
        return shift==='manana'?/manana|morning|^m$/.test(p):/tarde|afternoon|^t$/.test(p);
       });
       if(matching.length){const vals=matching.map(x=>numberFrom(x,['cantidadNinos','cantidadNiños','numeroNinos','numeroNiños','ninos','niños','cantidad','total','asistentes','count'])).filter(v=>v!==null);if(vals.length)return vals.reduce((a,b)=>a+b,0);}
