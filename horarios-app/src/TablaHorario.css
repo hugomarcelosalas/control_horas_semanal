@@ -1,3 +1,5 @@
+.resumen-cumples-turno{width:100%;overflow-x:auto;margin:0 0 12px}.resumen-cumples-turno table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:12px}.resumen-cumples-turno th,.resumen-cumples-turno td{padding:7px 4px;text-align:center;border:1px solid #cbd5e1}.resumen-cumples-turno thead th{background:#e2e8f0;font-weight:700}.resumen-cumples-turno tbody th{text-align:left;white-space:nowrap;background:#f8fafc}.resumen-cumples-turno tbody td{font-weight:800;background:#fff}
+
 /* Estilos para las pestañas de navegación */
 .pestanas-navegacion {
   display: flex;
