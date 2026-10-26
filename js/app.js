@@ -914,9 +914,16 @@ async function loadPublishedSchedule(){
       if(/\\b(manana|morning|^m$|\\bmanana\\b)/.test(explicit)||/(^|\\s)M(\\s|$)/.test([t.puesto,t.turno,t.periodo].filter(Boolean).join(' ')))return 'manana';
       const hour=Number(String(t.horaInicio||'').split(':')[0]);return String(t.horaInicio||'')&&Number.isFinite(hour)?(hour>=14?'tarde':'manana'):'manana';
      };
-     const birthdayLabel=t=>[t.horaInicio&&t.horaFin?[t.horaInicio,t.horaFin].join('–'):'',t.descripcion||t.detalle||t.nombreCumple||t.cumple||t.observaciones||t.nota||((t.puesto&& !/^(m|t)$/i.test(String(t.puesto).trim()))?t.puesto:'')].filter(Boolean).join(' · ');
-     const morning=birthdays.filter(t=>birthdayPeriod(t)==='manana'),afternoon=birthdays.filter(t=>birthdayPeriod(t)==='tarde');
-     html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong><div class="simple-birthday-line"><b>Mañana</b><span>'+(morning.length?morning.map(t=>vendorEscape(birthdayLabel(t)||'✓')).join(' · '):'—')+'</span></div><div class="simple-birthday-line"><b>Tarde</b><span>'+(afternoon.length?afternoon.map(t=>vendorEscape(birthdayLabel(t)||'✓')).join(' · '):'—')+'</span></div></div>';
+     const birthdayCount=t=>{
+      const direct=[t.cantidadNinos,t.cantidadNiños,t.numeroNinos,t.numeroNiños,t.ninos,t.niños,t.cantidad,t.total,t.asistentes,t.count].find(v=>v!==undefined&&v!==null&&String(v).trim()!=='');
+      if(direct!==undefined){const n=Number(String(direct).replace(',','.'));if(Number.isFinite(n))return n;}
+      const text=[t.descripcion,t.detalle,t.nombreCumple,t.cumple,t.observaciones,t.nota,t.puesto].filter(Boolean).join(' ');
+      const match=String(text).match(/^\s*(\d+(?:[.,]\d+)?)\s*$/)||String(text).match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:niñ|nino|niños|ninos|niñas|ninas|cumples)?\s*$/i);
+      return match?Number(match[1].replace(',','.')):0;
+     };
+     const morning=birthdays.filter(t=>birthdayPeriod(t)==='manana').reduce((sum,t)=>sum+birthdayCount(t),0);
+     const afternoon=birthdays.filter(t=>birthdayPeriod(t)==='tarde').reduce((sum,t)=>sum+birthdayCount(t),0);
+     html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong><div class="simple-birthday-line"><b>Mañana</b><span>'+morning+'</span></div><div class="simple-birthday-line"><b>Tarde</b><span>'+afternoon+'</span></div></div>';
     }
     html+='<ul>'+rows.map(t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));const name=emp?.nombre||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'Empleado';const time=[t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–');const details=[t.puesto&&roleFor(t)!=='vendedores'?t.puesto:'',t.observaciones||t.nota||''].filter(Boolean).join(' · ');return '<li><strong>'+vendorEscape(name)+'</strong> <span class="schedule-shift '+shiftClass(t)+'">'+vendorEscape(time)+'</span>'+(details?' <span class="simple-schedule-detail">'+vendorEscape(details)+'</span>':'')+'</li>'}).join('')+'</ul></div>';
    }
