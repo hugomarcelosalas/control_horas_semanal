@@ -85,7 +85,27 @@ function renderVendorWorkspace(sheets){
  box.querySelectorAll('[data-vendor-cell]').forEach(input=>input.addEventListener('input',()=>{sh.cells[input.dataset.vendorCell]=input.value;const status=$('vendorSaveStatus');if(status)status.textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}));
  const save=$('vendorSaveBtn');if(save)save.onclick=()=>saveVendorSheets(true);
  const print=$('vendorPrintBtn');if(print)print.onclick=()=>{document.body.classList.add('vendor-printing');window.print();setTimeout(()=>document.body.classList.remove('vendor-printing'),500)};
-}async function saveVendorSheets(manual){
+}
+// Delegación de eventos para las pestañas de vendedor, también si el HTML las muestra como respaldo.
+window.__renderVendorWorkspace=renderVendorWorkspace;
+document.addEventListener('click',function(ev){
+ const groupBtn=ev.target.closest('[data-vendor-group]');
+ const sheetBtn=ev.target.closest('[data-vendor-sheet]');
+ if(!groupBtn&&!sheetBtn)return;
+ if(!currentUser||currentUser.role!=='vendedor')return;
+ ev.preventDefault();
+ if(groupBtn){
+  vendorActiveGroup=groupBtn.dataset.vendorGroup;
+  vendorActiveSheet=(vendorGroups[vendorActiveGroup]||[]).find(n=>vendorSheetsState[n])||(vendorGroups[vendorActiveGroup]||[])[0]||'Cierre';
+ }else{
+  vendorActiveSheet=sheetBtn.dataset.vendorSheet;
+  const group=Object.keys(vendorGroups).find(g=>vendorGroups[g].includes(vendorActiveSheet));
+  if(group)vendorActiveGroup=group;
+ }
+ for(const name of Object.values(vendorGroups).flat())if(!vendorSheetsState[name])vendorSheetsState[name]={rows:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(name)?40:20,cols:8,cells:{}};
+ renderVendorWorkspace(vendorSheetsState);
+});
+async function saveVendorSheets(manual){
  const status=$('vendorSaveStatus');if(status)status.textContent='Guardando cambios…';
  try{const out=await api('/api/vendor/sheets',{method:'PUT',body:JSON.stringify({sheets:vendorSheetsState})});vendorSheetsState=out.sheets||vendorSheetsState;if(status)status.textContent='Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
  catch(e){if(status)status.textContent='No se pudo guardar: '+e.message;if(manual)alert('No se pudo guardar la planilla: '+e.message)}
