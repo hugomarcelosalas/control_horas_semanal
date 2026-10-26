@@ -921,8 +921,26 @@ async function loadPublishedSchedule(){
       const match=String(text).match(/^\s*(\d+(?:[.,]\d+)?)\s*$/)||String(text).match(/(?:^|\s)(\d+(?:[.,]\d+)?)\s*(?:niñ|nino|niños|ninos|niñas|ninas|cumples)?\s*$/i);
       return match?Number(match[1].replace(',','.')):0;
      };
-     const morning=birthdays.filter(t=>birthdayPeriod(t)==='manana').reduce((sum,t)=>sum+birthdayCount(t),0);
-     const afternoon=birthdays.filter(t=>birthdayPeriod(t)==='tarde').reduce((sum,t)=>sum+birthdayCount(t),0);
+     const dayCumples=(Array.isArray(h.cumples)?h.cumples:[]).filter(x=>{
+      const f=String(x.fecha||x.date||x.diaFecha||x.dia||'');
+      return f===date||(/^\\d{4}-\\d{2}-\\d{2}$/.test(f)&&f===date)||(!/^\\d{4}-\\d{2}-\\d{2}$/.test(f)&&String(x.diaSemana||x.weekday||'').toLowerCase()===weekdayNames[d.getDay()].toLowerCase());
+     });
+     const numberFrom=(obj,keys)=>{
+      for(const key of keys){const v=obj?.[key];if(v!==undefined&&v!==null&&String(v).trim()!==''){const n=Number(String(v).replace(',','.'));if(Number.isFinite(n))return n;}}
+      return null;
+     };
+     const shiftCount=(shift)=>{
+      const aliases=shift==='manana'?['manana','mañana','morning','cantidadManana','cantidadMañana','ninosManana','niñosManana','ninosMañana','niñosMañana','cumplesManana','cumplesMañana','totalManana','totalMañana']:['tarde','afternoon','cantidadTarde','ninosTarde','niñosTarde','cumplesTarde','totalTarde'];
+      const direct=dayCumples.map(x=>numberFrom(x,aliases)).filter(v=>v!==null);
+      if(direct.length)return direct.reduce((a,b)=>a+b,0);
+      const matching=dayCumples.filter(x=>{
+       const p=String(x.turno||x.periodo||x.jornada||x.tipoTurno||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').toLowerCase();
+       return shift==='manana'?/manana|morning|^m$/.test(p):/tarde|afternoon|^t$/.test(p);
+      });
+      if(matching.length){const vals=matching.map(x=>numberFrom(x,['cantidadNinos','cantidadNiños','numeroNinos','numeroNiños','ninos','niños','cantidad','total','asistentes','count'])).filter(v=>v!==null);if(vals.length)return vals.reduce((a,b)=>a+b,0);}
+      return birthdays.filter(t=>birthdayPeriod(t)===shift).reduce((sum,t)=>sum+birthdayCount(t),0);
+     };
+     const morning=shiftCount('manana'),afternoon=shiftCount('tarde');
      html+='<div class="simple-schedule-birthdays"><strong>Cumples</strong><div class="simple-birthday-line"><b>Mañana</b><span>'+morning+'</span></div><div class="simple-birthday-line"><b>Tarde</b><span>'+afternoon+'</span></div></div>';
     }
     html+='<ul>'+rows.map(t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));const name=emp?.nombre||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'Empleado';const time=[t.horaInicio||'',t.horaFin||''].filter(Boolean).join('–');const details=[t.puesto&&roleFor(t)!=='vendedores'?t.puesto:'',t.observaciones||t.nota||''].filter(Boolean).join(' · ');return '<li><strong>'+vendorEscape(name)+'</strong> <span class="schedule-shift '+shiftClass(t)+'">'+vendorEscape(time)+'</span>'+(details?' <span class="simple-schedule-detail">'+vendorEscape(details)+'</span>':'')+'</li>'}).join('')+'</ul></div>';
