@@ -62,6 +62,46 @@ function renderVendorStock(box){
  box.querySelectorAll('[data-stock-expense]').forEach(inp=>inp.addEventListener('input',()=>{sh.cells[inp.dataset.stockExpense]=inp.value;stockScheduleSave()}));
  function stockScheduleSave(){if($('vendorSaveStatus'))$('vendorSaveStatus').textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}
 }
+let vendorVASortCol=1,vendorVASortAsc=true,vendorVAFilter='';
+function renderVendorVA(box,sh){
+ if(!sh.cells)sh.cells={};
+ const cols=Math.max(1,Number(sh.cols)||8),rows=Math.max(2,Number(sh.rows)||20);
+ const headers=[];
+ for(let col=1;col<=cols;col++){
+  const ref=vendorColName(col)+'1';
+  headers.push(String(sh.cells[ref]??'').trim()||('Campo '+vendorColName(col)));
+ }
+ const records=[];
+ for(let row=2;row<=rows;row++){
+  const vals=headers.map((_,i)=>String(sh.cells[vendorColName(i+1)+row]??''));
+  if(vals.some(v=>v.trim()))records.push({row,vals});
+ }
+ const filtered=records.filter(rec=>!vendorVAFilter||rec.vals.some(v=>v.toLocaleLowerCase('es').includes(vendorVAFilter.toLocaleLowerCase('es'))));
+ filtered.sort((a,b)=>{
+  const av=a.vals[vendorVASortCol-1]||'',bv=b.vals[vendorVASortCol-1]||'';
+  const an=Number(av.replace(',','.')),bn=Number(bv.replace(',','.'));
+  const cmp=av.trim()!==''&&bv.trim()!==''&&Number.isFinite(an)&&Number.isFinite(bn)?an-bn:av.localeCompare(bv,'es',{numeric:true,sensitivity:'base'});
+  return (vendorVASortAsc?1:-1)*cmp;
+ });
+ box.innerHTML='<div class="vendor-va"><h2>Carga de V&amp;A</h2><p>Introduce los datos en el formulario. Se confirmará cuando el servidor los haya guardado.</p><form id="vendorVAForm" class="vendor-va-form">'+headers.map((h,i)=>'<label>'+vendorEscape(h)+'<input name="field'+(i+1)+'" autocomplete="off"></label>').join('')+'<button type="submit" class="primary">Guardar registro</button><span id="vendorVAStatus" role="status" aria-live="polite"></span></form><div class="vendor-va-tools"><label>Filtrar registros<input id="vendorVAFilter" type="search" placeholder="Buscar en cualquier campo" value="'+vendorEscape(vendorVAFilter)+'"></label><button type="button" id="vendorVASortDirection" class="ghost">Orden: '+(vendorVASortAsc?'ascendente':'descendente')+'</button><span>'+filtered.length+' registros</span></div><div class="vendor-va-table-wrap"><table class="vendor-va-table"><thead><tr>'+headers.map((h,i)=>'<th><button type="button" data-va-sort="'+(i+1)+'">'+vendorEscape(h)+(vendorVASortCol===i+1?(vendorVASortAsc?' ↑':' ↓'):'')+'</button></th>').join('')+'</tr></thead><tbody>'+filtered.map(rec=>'<tr>'+rec.vals.map(v=>'<td>'+vendorEscape(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>';
+ const form=box.querySelector('#vendorVAForm');
+ form.addEventListener('submit',async e=>{
+  e.preventDefault();
+  const status=box.querySelector('#vendorVAStatus'),button=form.querySelector('button[type="submit"]');
+  const values=headers.map((_,i)=>String(new FormData(form).get('field'+(i+1))||'').trim());
+  if(!values.some(Boolean)){status.textContent='Introduce al menos un dato.';return;}
+  button.disabled=true;status.textContent='Guardando en el servidor…';
+  const nextRow=Math.max(2,...records.map(x=>x.row+1));
+  values.forEach((v,i)=>{sh.cells[vendorColName(i+1)+nextRow]=v;});
+  sh.rows=Math.max(rows,nextRow);sh.cols=cols;
+  const ok=await saveVendorSheets(false);
+  if(ok){status.textContent='✓ Registro guardado correctamente en el servidor.';form.reset();renderVendorVA(box,sh);}
+  else{values.forEach((v,i)=>{if(v)delete sh.cells[vendorColName(i+1)+nextRow];});sh.rows=rows;status.textContent='No se pudo confirmar el guardado. Revisa la conexión e inténtalo de nuevo.';button.disabled=false;}
+ });
+ box.querySelector('#vendorVAFilter').addEventListener('input',e=>{vendorVAFilter=e.target.value;renderVendorVA(box,sh);const f=box.querySelector('#vendorVAFilter');f.focus();f.setSelectionRange(f.value.length,f.value.length);});
+ box.querySelector('#vendorVASortDirection').addEventListener('click',()=>{vendorVASortAsc=!vendorVASortAsc;renderVendorVA(box,sh)});
+ box.querySelectorAll('[data-va-sort]').forEach(btn=>btn.addEventListener('click',()=>{const col=Number(btn.dataset.vaSort);if(vendorVASortCol===col)vendorVASortAsc=!vendorVASortAsc;else{vendorVASortCol=col;vendorVASortAsc=true;}renderVendorVA(box,sh)}));
+}
 function renderVendorWorkspace(sheets){
  vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};for(const name of Object.values(vendorGroups).flat())if(!vendorSheetsState[name])vendorSheetsState[name]={rows:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(name)?40:20,cols:8,cells:{}};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
  const tabs=$('vendorSheetTabs');if(!tabs)return;
@@ -74,7 +114,7 @@ function renderVendorWorkspace(sheets){
  tabs.querySelectorAll('[data-vendor-sheet]').forEach(btn=>btn.onclick=()=>{vendorActiveSheet=btn.dataset.vendorSheet;renderVendorWorkspace(vendorSheetsState)});
  tabs.querySelectorAll('button').forEach(btn=>btn.setAttribute('aria-selected',String(btn.dataset.vendorGroup?btn.dataset.vendorGroup===vendorActiveGroup:btn.dataset.vendorSheet===vendorActiveSheet)));
  const sh=vendorSheetsState[vendorActiveSheet],box=$('vendorSheetContainer');if(!sh||!box)return;
- if(vendorActiveGroup==='Stock'){renderVendorStock(box);return;}else box.classList.remove('vendor-stock-view');
+ if(vendorActiveGroup==='Stock'){renderVendorStock(box);return;}else box.classList.remove('vendor-stock-view');if(vendorActiveGroup==='V&A'||vendorActiveSheet==='V&A'){renderVendorVA(box,sh);return;}
  const isDaily=['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(vendorActiveSheet);
  box.classList.toggle('vendor-daily-sheet',isDaily);
  let table='<table class="vendor-grid '+(isDaily?'vendor-daily-grid':'')+'"><thead><tr><th class="vendor-index"></th>';
@@ -107,8 +147,8 @@ document.addEventListener('click',function(ev){
 });
 async function saveVendorSheets(manual){
  const status=$('vendorSaveStatus');if(status)status.textContent='Guardando cambios…';
- try{const out=await api('/api/vendor/sheets',{method:'PUT',body:JSON.stringify({sheets:vendorSheetsState})});vendorSheetsState=out.sheets||vendorSheetsState;if(status)status.textContent='Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});}
- catch(e){if(status)status.textContent='No se pudo guardar: '+e.message;if(manual)alert('No se pudo guardar la planilla: '+e.message)}
+ try{const out=await api('/api/vendor/sheets',{method:'PUT',body:JSON.stringify({sheets:vendorSheetsState})});vendorSheetsState=out.sheets||vendorSheetsState;if(status)status.textContent='Guardado correctamente en el servidor · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});return true;}
+ catch(e){if(status)status.textContent='No se pudo guardar: '+e.message;if(manual)alert('No se pudo guardar la planilla: '+e.message);return false}
 }
 
 
