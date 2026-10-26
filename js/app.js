@@ -63,7 +63,7 @@ function renderVendorStock(box){
  function stockScheduleSave(){if($('vendorSaveStatus'))$('vendorSaveStatus').textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}
 }
 function renderVendorWorkspace(sheets){
- vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
+ vendorSheetsState=sheets&&Object.keys(sheets).length?sheets:{};for(const name of Object.values(vendorGroups).flat())if(!vendorSheetsState[name])vendorSheetsState[name]={rows:['Cierre','mon-thursday','Friday','Saturday- vacaciones','Sunday'].includes(name)?40:20,cols:8,cells:{}};vendorActiveSheet=vendorActiveSheet&&vendorSheetsState[vendorActiveSheet]?vendorActiveSheet:Object.keys(vendorSheetsState)[0];
  const tabs=$('vendorSheetTabs');if(!tabs)return;
  const groupNames=Object.keys(vendorGroups);
  if(!groupNames.includes(vendorActiveGroup))vendorActiveGroup='Venta';
