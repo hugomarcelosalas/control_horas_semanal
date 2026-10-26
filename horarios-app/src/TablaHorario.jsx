@@ -1466,14 +1466,6 @@ useEffect(() => {
                 <div className="vista-simple-semanal" ref={vistaSimplePDFRef}>
                   <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
                     <h3>Semana</h3>
-                    <div className="resumen-cumples-turno" aria-label="Cumples por día y turno">
-                      <table>
-                        <thead><tr><th>Cumples</th>{[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=><th key={d.isoFecha}>{['D','L','M','X','J','V','S'][new Date(d.isoFecha+'T12:00:00').getDay()]}</th>)}</tr></thead>
-                        <tbody>
-                          {['manana','tarde'].map(turno=> <tr key={turno}><th>{turno==='manana'?'Mañana':'Tarde'}</th>{[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{const n=cumples.filter(x=>x.fecha===d.isoFecha&&((String(x.horaInicio||'17:00')<'15:00'?'manana':'tarde')===turno)).reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);return <td key={d.isoFecha}>{n}</td>})}</tr>)}
-                        </tbody>
-                      </table>
-                    </div>
                     <div className="resumen-semana-matriz">
                       <div className="resumen-matriz-cabecera"><span></span>{[1,2,3,4,5,6,0].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
                       {empleados.map(emp=><div className="resumen-matriz-fila" key={emp.id}>
@@ -1490,15 +1482,15 @@ useEffect(() => {
                         })}
                       </div>)}
                       <div className="resumen-matriz-separador"><span>Eventos · niños por día</span></div>
-                      <div className="resumen-matriz-fila resumen-matriz-fila-eventos">
-                        <span className="resumen-matriz-nombre">Cumples</span>
+                      {['manana','tarde'].map(turno => <div className="resumen-matriz-fila resumen-matriz-fila-eventos" key={turno}>
+                        <span className="resumen-matriz-nombre">{turno==='manana'?'Mañana':'Tarde'}</span>
                         {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
-                          const lista=cumples.filter(x=>x.fecha===d.isoFecha);
+                          const lista=cumples.filter(x=>x.fecha===d.isoFecha && ((String(x.horaInicio||'17:00')<'15:00'?'manana':'tarde')===turno));
                           const n=lista.reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);
                           const bg=!lista.length?'#eef2f7':n<10?'#bbf7d0':n<20?'#86efac':n<35?'#d9f99d':n<50?'#fef08a':n<65?'#fed7aa':n<80?'#fdba74':n<90?'#fca5a5':'#f87171';
-                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?n+' niños en total':'Sin eventos'}>{lista.length?n:''}</span>;
+                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?n+' niños · '+(turno==='manana'?'mañana':'tarde'):'Sin eventos'}>{lista.length?n:''}</span>;
                         })}
-                      </div>
+                      </div>)}
                     </div>
                     <p className="resumen-semana-leyenda">M mañana · T tarde · C más de 6 h</p>
                   </aside>
