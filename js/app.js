@@ -62,7 +62,7 @@ function renderVendorStock(box){
  box.querySelectorAll('[data-stock-expense]').forEach(inp=>inp.addEventListener('input',()=>{sh.cells[inp.dataset.stockExpense]=inp.value;stockScheduleSave()}));
  function stockScheduleSave(){if($('vendorSaveStatus'))$('vendorSaveStatus').textContent='Hay cambios sin guardar…';if(vendorSaveTimer)clearTimeout(vendorSaveTimer);vendorSaveTimer=setTimeout(()=>saveVendorSheets(false),900)}
 }
-let vendorVASortCol=1,vendorVASortAsc=true,vendorVAFilter='';
+let vendorVASortCol=1,vendorVASortAsc=true,vendorVAFilter='',vendorVAStatusMessage='';
 function renderVendorVA(box,sh){
  if(!sh.cells)sh.cells={};
  const cols=Math.max(1,Number(sh.cols)||8),rows=Math.max(2,Number(sh.rows)||20);
@@ -83,7 +83,7 @@ function renderVendorVA(box,sh){
   const cmp=av.trim()!==''&&bv.trim()!==''&&Number.isFinite(an)&&Number.isFinite(bn)?an-bn:av.localeCompare(bv,'es',{numeric:true,sensitivity:'base'});
   return (vendorVASortAsc?1:-1)*cmp;
  });
- box.innerHTML='<div class="vendor-va"><h2>Carga de V&amp;A</h2><p>Introduce los datos en el formulario. Se confirmará cuando el servidor los haya guardado.</p><form id="vendorVAForm" class="vendor-va-form">'+headers.map((h,i)=>'<label>'+vendorEscape(h)+'<input name="field'+(i+1)+'" autocomplete="off"></label>').join('')+'<button type="submit" class="primary">Guardar registro</button><span id="vendorVAStatus" role="status" aria-live="polite"></span></form><div class="vendor-va-tools"><label>Filtrar registros<input id="vendorVAFilter" type="search" placeholder="Buscar en cualquier campo" value="'+vendorEscape(vendorVAFilter)+'"></label><button type="button" id="vendorVASortDirection" class="ghost">Orden: '+(vendorVASortAsc?'ascendente':'descendente')+'</button><span>'+filtered.length+' registros</span></div><div class="vendor-va-table-wrap"><table class="vendor-va-table"><thead><tr>'+headers.map((h,i)=>'<th><button type="button" data-va-sort="'+(i+1)+'">'+vendorEscape(h)+(vendorVASortCol===i+1?(vendorVASortAsc?' ↑':' ↓'):'')+'</button></th>').join('')+'</tr></thead><tbody>'+filtered.map(rec=>'<tr>'+rec.vals.map(v=>'<td>'+vendorEscape(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>';
+ box.innerHTML='<div class="vendor-va"><h2>Carga de V&amp;A</h2><p>Introduce los datos en el formulario. Se confirmará cuando el servidor los haya guardado.</p><form id="vendorVAForm" class="vendor-va-form">'+headers.map((h,i)=>'<label>'+vendorEscape(h)+'<input name="field'+(i+1)+'" autocomplete="off"></label>').join('')+'<button type="submit" class="primary">Guardar registro</button><span id="vendorVAStatus" role="status" aria-live="polite">'+vendorEscape(vendorVAStatusMessage)+'</span></form><div class="vendor-va-tools"><label>Filtrar registros<input id="vendorVAFilter" type="search" placeholder="Buscar en cualquier campo" value="'+vendorEscape(vendorVAFilter)+'"></label><button type="button" id="vendorVASortDirection" class="ghost">Orden: '+(vendorVASortAsc?'ascendente':'descendente')+'</button><span>'+filtered.length+' registros</span></div><div class="vendor-va-table-wrap"><table class="vendor-va-table"><thead><tr>'+headers.map((h,i)=>'<th><button type="button" data-va-sort="'+(i+1)+'">'+vendorEscape(h)+(vendorVASortCol===i+1?(vendorVASortAsc?' ↑':' ↓'):'')+'</button></th>').join('')+'</tr></thead><tbody>'+filtered.map(rec=>'<tr>'+rec.vals.map(v=>'<td>'+vendorEscape(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div></div>';
  const form=box.querySelector('#vendorVAForm');
  form.addEventListener('submit',async e=>{
   e.preventDefault();
@@ -95,8 +95,8 @@ function renderVendorVA(box,sh){
   values.forEach((v,i)=>{sh.cells[vendorColName(i+1)+nextRow]=v;});
   sh.rows=Math.max(rows,nextRow);sh.cols=cols;
   const ok=await saveVendorSheets(false);
-  if(ok){status.textContent='✓ Registro guardado correctamente en el servidor.';form.reset();renderVendorVA(box,sh);}
-  else{values.forEach((v,i)=>{if(v)delete sh.cells[vendorColName(i+1)+nextRow];});sh.rows=rows;status.textContent='No se pudo confirmar el guardado. Revisa la conexión e inténtalo de nuevo.';button.disabled=false;}
+  if(ok){vendorVAStatusMessage='✓ Registro guardado correctamente en el servidor.';form.reset();renderVendorVA(box,sh);}
+  else{values.forEach((v,i)=>{if(v)delete sh.cells[vendorColName(i+1)+nextRow];});sh.rows=rows;vendorVAStatusMessage='No se pudo confirmar el guardado. Revisa la conexión e inténtalo de nuevo.';status.textContent=vendorVAStatusMessage;button.disabled=false;}
  });
  box.querySelector('#vendorVAFilter').addEventListener('input',e=>{vendorVAFilter=e.target.value;renderVendorVA(box,sh);const f=box.querySelector('#vendorVAFilter');f.focus();f.setSelectionRange(f.value.length,f.value.length);});
  box.querySelector('#vendorVASortDirection').addEventListener('click',()=>{vendorVASortAsc=!vendorVASortAsc;renderVendorVA(box,sh)});
