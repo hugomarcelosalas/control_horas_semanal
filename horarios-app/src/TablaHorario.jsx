@@ -1466,6 +1466,14 @@ useEffect(() => {
                 <div className="vista-simple-semanal" ref={vistaSimplePDFRef}>
                   <aside className="resumen-semanal-simple" aria-label="Resumen visual semanal">
                     <h3>Semana</h3>
+                    <div className="resumen-cumples-turno" aria-label="Cumples por día y turno">
+                      <table>
+                        <thead><tr><th>Cumples</th>{[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=><th key={d.isoFecha}>{['D','L','M','X','J','V','S'][new Date(d.isoFecha+'T12:00:00').getDay()]}</th>)}</tr></thead>
+                        <tbody>
+                          {['manana','tarde'].map(turno=> <tr key={turno}><th>{turno==='manana'?'Mañana':'Tarde'}</th>{[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{const n=cumples.filter(x=>x.fecha===d.isoFecha&&((String(x.horaInicio||'17:00')<'15:00'?'manana':'tarde')===turno)).reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);return <td key={d.isoFecha}>{n}</td>})}</tr>)}
+                        </tbody>
+                      </table>
+                    </div>
                     <div className="resumen-semana-matriz">
                       <div className="resumen-matriz-cabecera"><span></span>{[1,2,3,4,5,6,0].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
                       {empleados.map(emp=><div className="resumen-matriz-fila" key={emp.id}>
