@@ -4,7 +4,7 @@
   const COLS = 21;
   const colName = n => { let s=''; while(n){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s; };
   const addr = (r,c) => colName(c)+r;
-  let cells = {}, rowCount = 95, colCount = COLS, saving = false, dirty = false, saveTimer = null;
+  let cells = {}, rowCount = 95, colCount = COLS, saving = false, dirty = false, saveTimer = null, weekBlocks = [];
 
   function numberOf(v){ if(v===null||v===undefined||v==='')return 0; const n=Number(v); return Number.isFinite(n)?n:0; }
   function evalCell(ref, seen=new Set()) {
@@ -61,6 +61,7 @@
     return classes.join(' ');
   }
   function render(){
+    renderWeekBlocks();
     const host=$('stockWorkbookGrid'); if(!host)return;
     let html='<table class="stock-workbook-table"><thead><tr><th class="sw-corner">#</th>';
     for(let c=1;c<=colCount;c++)html+='<th>'+colName(c)+'</th>';
@@ -98,7 +99,7 @@
   }
   async function save(showMessage=true){
     if(saving)return false;saving=true;
-    try{await api('/api/stock/workbook','PUT',{workbook:{rows:rowCount,cols:colCount,cells}});dirty=false;updateStatus('Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));if(showMessage)alert('Stock guardado correctamente.');return true;}
+    try{await api('/api/stock/workbook','PUT',{workbook:{rows:rowCount,cols:colCount,cells,weekBlocks}});dirty=false;updateStatus('Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));if(showMessage)alert('Stock guardado correctamente.');return true;}
     catch(e){updateStatus('No se pudo guardar: '+e.message);return false;}finally{saving=false;}
   }
   function importWorkbook(file){
@@ -121,15 +122,43 @@
     };
     reader.readAsArrayBuffer(file);
   }
+
+  function escText(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');}
+  function dateRangeDays(start,end){
+    const out=[];let d=new Date(start+'T12:00:00'),last=new Date(end+'T12:00:00');
+    while(d<=last&&out.length<62){out.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}return out;
+  }
+  function renderWeekBlocks(){
+    const host=$('stockWeekBlocks');if(!host)return;
+    host.innerHTML=weekBlocks.map((b,bi)=>{
+      const days=dateRangeDays(b.start,b.end);
+      return '<section class="stock-week-card"><div class="stock-week-card-head"><div><strong>'+escText(b.name||'Bloque semanal')+'</strong><br><span>'+escText(b.start)+' — '+escText(b.end)+' · '+days.length+' días</span></div><button class="stock-week-delete" type="button" data-delete-week="'+bi+'">Eliminar</button></div><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Mostrador (pares)</th><th>Cumples (pares)</th><th>Total</th></tr></thead><tbody>'+days.map(day=>{const row=b.days?.[day]||{counter:0,birthday:0};return '<tr><td>'+day+'</td><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-kind="counter" value="'+Number(row.counter||0)+'"></td><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-kind="birthday" value="'+Number(row.birthday||0)+'"></td><td><strong>'+ (Number(row.counter||0)+Number(row.birthday||0))+'</strong></td></tr>';}).join('')+'</tbody></table></div></section>';
+    }).join('');
+    host.querySelectorAll('[data-week][data-day]').forEach(inp=>inp.addEventListener('change',()=>{
+      const b=weekBlocks[Number(inp.dataset.week)],day=inp.dataset.day,kind=inp.dataset.kind;
+      b.days=b.days||{};b.days[day]=b.days[day]||{counter:0,birthday:0};b.days[day][kind]=Math.max(0,Number(inp.value)||0);
+      dirty=true;renderWeekBlocks();updateStatus('Bloques modificados; guardando…');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(false),500);
+    }));
+    host.querySelectorAll('[data-delete-week]').forEach(btn=>btn.addEventListener('click',()=>{
+      if(!confirm('¿Eliminar este bloque semanal?'))return;weekBlocks.splice(Number(btn.dataset.deleteWeek),1);dirty=true;renderWeekBlocks();save(false);
+    }));
+  }
+  function setupWeekBlockDialog(){
+    const dialog=$('stockWeekBlockDialog'),form=$('stockWeekBlockForm');if(!dialog||!form)return;
+    $('stockAddWeekBlock')?.addEventListener('click',()=>{const now=new Date(),start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));const end=new Date(start);end.setDate(start.getDate()+6);$('stockWeekStart').value=start.toISOString().slice(0,10);$('stockWeekEnd').value=end.toISOString().slice(0,10);$('stockWeekBlockName').value='Semana '+(weekBlocks.length+1);dialog.classList.remove('hidden');});
+    $('stockWeekCancel')?.addEventListener('click',()=>dialog.classList.add('hidden'));
+    form.addEventListener('submit',e=>{e.preventDefault();const start=$('stockWeekStart').value,end=$('stockWeekEnd').value;if(!start||!end||end<start){alert('El rango de fechas no es válido.');return;}const days={};dateRangeDays(start,end).forEach(d=>days[d]={counter:0,birthday:0});weekBlocks.push({name:$('stockWeekBlockName').value.trim()||'Bloque semanal',start,end,days});dialog.classList.add('hidden');dirty=true;renderWeekBlocks();updateStatus('Bloque añadido; guardando…');save(false);});
+  }
   async function init(){
+    setupWeekBlockDialog();
     const panel=$('stockWorkbookPanel');if(!panel)return;
     $('stockWorkbookImport')?.addEventListener('change',e=>importWorkbook(e.target.files?.[0]));
     $('stockWorkbookSave')?.addEventListener('click',()=>save(true));
     $('stockWorkbookPrint')?.addEventListener('click',()=>window.print());
     try{
       const data=await api('/api/stock/workbook');
-      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;render();}
-      else if(window.STOCK_WORKBOOK_INITIAL){cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
+      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];render();}
+      else if(window.STOCK_WORKBOOK_INITIAL){weekBlocks=[];cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
     }catch(e){cells={};rowCount=95;colCount=21;render();updateStatus('Esperando sesión de administrador para cargar/guardar el Excel.');}
   }
   document.addEventListener('click',e=>{
