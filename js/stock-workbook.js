@@ -61,6 +61,7 @@
     return classes.join(' ');
   }
   function render(){
+    renderMetrics();
     renderStockCards();
     renderWeekBlocks();
     const host=$('stockWorkbookGrid'); if(!host)return;
@@ -132,7 +133,18 @@
   }
 
 
-  function renderStockCards(){
+
+  function renderMetrics(){
+    const host=$('stockMetrics');if(!host)return;
+    const total=col=>{let n=0;for(let r=5;r<=11;r++){const a=col+r,v=cells[a];n+=numberOf(isFormula(v)?evalCell(a):v);}return n;};
+    const items=[['Bajo escaleras',total('D'),'blue'],['Bajo parque',total('H'),'green'],['Mostrador',total('K'),'amber'],['Cumpleaños',total('N'),'purple']];
+    host.innerHTML=items.map(x=>'<div class="stock-metric '+x[2]+'"><span>'+x[0]+'</span><strong>'+Math.round(x[1]).toLocaleString('es-ES')+'</strong><small>Pares en inventario</small></div>').join('');
+    const aside=$('stockMovementSummary');if(aside){
+      let a=0,b=0;weekBlocks.forEach(w=>Object.values(w.days||{}).forEach(d=>{a+=numberOf(d.counter);b+=numberOf(d.birthday);}));
+      aside.innerHTML='<div class="stock-section-heading"><div><h3>Movimiento registrado</h3><p>Totales de bloques semanales</p></div></div><div class="stock-movement-row"><span>Ventas mostrador</span><strong>'+a.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row"><span>Ventas cumpleaños</span><strong>'+b.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row total"><span>Total ventas</span><strong>'+(a+b).toLocaleString('es-ES')+'</strong></div>';
+    }
+  }
+\n  function renderStockCards(){
     const host=$('stockStockCards');if(!host)return;
     const groups=[
       {title:'Bajo escaleras',cols:['B','C','D'],labels:['Cajas','Unidades','Total pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]},
@@ -166,10 +178,10 @@
     host.querySelectorAll('[data-week][data-day]').forEach(inp=>inp.addEventListener('change',()=>{
       const b=weekBlocks[Number(inp.dataset.week)],day=inp.dataset.day,kind=inp.dataset.kind;
       b.days=b.days||{};b.days[day]=b.days[day]||{counter:0,birthday:0};b.days[day][kind]=Math.max(0,Number(inp.value)||0);
-      dirty=true;renderWeekBlocks();updateStatus('Bloques modificados; guardando…');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(false),500);
+      dirty=true;renderWeekBlocks();renderMetrics();updateStatus('Bloques modificados; guardando…');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(false),500);
     }));
     host.querySelectorAll('[data-delete-week]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(!confirm('¿Eliminar este bloque semanal?'))return;weekBlocks.splice(Number(btn.dataset.deleteWeek),1);dirty=true;renderWeekBlocks();save(false);
+      if(!confirm('¿Eliminar este bloque semanal?'))return;weekBlocks.splice(Number(btn.dataset.deleteWeek),1);dirty=true;renderWeekBlocks();renderMetrics();save(false);
     }));
   }
   let weekDialogBound=false;
@@ -178,7 +190,7 @@
     const dialog=$('stockWeekBlockDialog'),form=$('stockWeekBlockForm');if(!dialog||!form)return;
     $('stockAddWeekBlock')?.addEventListener('click',()=>{const now=new Date(),start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));const end=new Date(start);end.setDate(start.getDate()+6);$('stockWeekStart').value=start.toISOString().slice(0,10);$('stockWeekEnd').value=end.toISOString().slice(0,10);$('stockWeekBlockName').value='Semana '+(weekBlocks.length+1);dialog.classList.remove('hidden');});
     $('stockWeekCancel')?.addEventListener('click',()=>dialog.classList.add('hidden'));
-    form.addEventListener('submit',e=>{e.preventDefault();const start=$('stockWeekStart').value,end=$('stockWeekEnd').value;if(!start||!end||end<start){alert('El rango de fechas no es válido.');return;}const days={};dateRangeDays(start,end).forEach(d=>days[d]={counter:0,birthday:0});weekBlocks.push({name:$('stockWeekBlockName').value.trim()||'Bloque semanal',start,end,days});dialog.classList.add('hidden');dirty=true;renderWeekBlocks();updateStatus('Bloque añadido; guardando…');save(false);});
+    form.addEventListener('submit',e=>{e.preventDefault();const start=$('stockWeekStart').value,end=$('stockWeekEnd').value;if(!start||!end||end<start){alert('El rango de fechas no es válido.');return;}const days={};dateRangeDays(start,end).forEach(d=>days[d]={counter:0,birthday:0});weekBlocks.push({name:$('stockWeekBlockName').value.trim()||'Bloque semanal',start,end,days});dialog.classList.add('hidden');dirty=true;renderWeekBlocks();renderMetrics();updateStatus('Bloque añadido; guardando…');save(false);});
   }
   async function init(){
     setupWeekBlockDialog();
