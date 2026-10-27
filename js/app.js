@@ -1167,6 +1167,7 @@ function updateSectionTabsVisibility(){
 }
 
 function showSection(sectionId){
+  document.body.classList.toggle('stock-workbook-mode',sectionId==='stockWorkbookPanel');
   if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel'||sectionId==='vendorWorkspace'||sectionId==='stockWorkbookPanel')&&!isAdmin())return;
   if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
