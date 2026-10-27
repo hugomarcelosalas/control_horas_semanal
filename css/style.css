@@ -567,3 +567,34 @@ body.stock-workbook-mode .sw-file-label,body.stock-workbook-mode #stockWorkbookP
 body.stock-workbook-mode #stockWorkbookSave{border-radius:10px;box-shadow:0 5px 12px rgba(28,63,110,.16)}
 @media(max-width:760px){body.stock-workbook-mode .container{padding:0 8px 12px!important}body.stock-workbook-mode #stockWorkbookPanel{padding:14px 10px}body.stock-workbook-mode #stockWorkbookPanel .section-head{align-items:flex-start}body.stock-workbook-mode .stock-workbook-grid{max-height:calc(100vh - 320px)}}
 @media print{body.stock-workbook-mode .topbar,body.stock-workbook-mode #sectionTabs{display:none!important}body.stock-workbook-mode #stockWorkbookPanel{box-shadow:none;border:0;padding:0}body.stock-workbook-mode .stock-workbook-grid{max-height:none}}
+
+
+/* Stock compacto + bloques semanales por rango de fechas */
+body.stock-workbook-mode #stockWorkbookPanel{padding:14px 16px 18px}
+body.stock-workbook-mode #stockWorkbookPanel .section-head{margin-bottom:8px}
+body.stock-workbook-mode .stock-workbook-note{margin:6px 0 8px;padding:7px 10px;font-size:12px}
+body.stock-workbook-mode .stock-workbook-grid{max-height:calc(100vh - 235px);min-height:280px}
+body.stock-workbook-mode .stock-workbook-table{font-size:11px}
+body.stock-workbook-mode .stock-workbook-table th,body.stock-workbook-mode .stock-workbook-table td{height:25px;min-width:64px;padding:0 6px}
+body.stock-workbook-mode .stock-workbook-table td input{height:24px;min-width:56px;padding:0 5px}
+body.stock-workbook-mode #stockWorkbookPanel .vendor-actions{gap:6px}
+body.stock-workbook-mode #stockWorkbookPanel .vendor-actions button,body.stock-workbook-mode #stockWorkbookPanel .sw-file-label{padding:7px 10px;font-size:12px}
+.stock-week-blocks{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;margin:10px 0}
+.stock-week-card{border:1px solid #dbe5f1;border-radius:12px;background:#fff;overflow:hidden}
+.stock-week-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 12px;background:#edf4fd;border-bottom:1px solid #dbe5f1}
+.stock-week-card-head strong{color:#193b66;font-size:13px}
+.stock-week-card-head span{color:#526b8b;font-size:11px}
+.stock-week-card table{width:100%;border-collapse:collapse;font-size:11px}
+.stock-week-card th,.stock-week-card td{padding:4px 7px;border-bottom:1px solid #edf1f6;text-align:center}
+.stock-week-card th{color:#64748b;background:#f8fafc;font-weight:700}
+.stock-week-card input{width:100%;min-width:0;box-sizing:border-box;border:1px solid #dbe4ef;border-radius:5px;padding:4px;text-align:center;font:inherit}
+.stock-week-delete{border:0;border-radius:7px;background:#fff;color:#a33;padding:4px 7px;cursor:pointer}
+.stock-week-dialog{position:fixed;inset:0;z-index:1000;background:#10234277;display:flex;align-items:center;justify-content:center;padding:16px}
+.stock-week-dialog.hidden{display:none}
+.stock-week-dialog-card{width:min(440px,100%);padding:22px;background:white;border-radius:16px;box-shadow:0 20px 60px #10234233;display:grid;gap:12px}
+.stock-week-dialog-card h3{margin:0;color:#102342}.stock-week-dialog-card p{margin:0;color:#64748b;font-size:13px}
+.stock-week-dialog-card label{display:grid;gap:5px;font-size:12px;font-weight:700;color:#334155}
+.stock-week-dialog-card input{width:100%;box-sizing:border-box;padding:9px;border:1px solid #cbd5e1;border-radius:8px}
+.stock-week-date-fields{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stock-week-dialog-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:5px}
+@media(max-width:760px){body.stock-workbook-mode .stock-workbook-grid{max-height:calc(100vh - 270px)}.stock-week-blocks{grid-template-columns:1fr}}
