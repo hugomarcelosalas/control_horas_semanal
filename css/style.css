@@ -606,3 +606,39 @@ body.stock-workbook-mode #stockWorkbookPanel .vendor-actions button,body.stock-w
 .stock-size-list{padding:6px 10px}.stock-size-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 2px;border-bottom:1px solid #edf1f6;font-size:12px}
 .stock-size-item label{display:flex;align-items:center;gap:7px;color:#64748b;font-size:11px}.stock-size-item input{width:76px;padding:5px;border:1px solid #dbe4ef;border-radius:6px;text-align:right}
 .stock-week-card table{table-layout:auto}.stock-week-card th,.stock-week-card td{padding:3px 6px}
+
+
+/* Ajuste estético compacto de Stock */
+body.stock-workbook-mode #stockWorkbookPanel{padding:10px 12px 14px!important;border-radius:14px}
+body.stock-workbook-mode #stockWorkbookPanel .section-head{margin-bottom:5px!important;gap:8px}
+body.stock-workbook-mode #stockWorkbookPanel h2{font-size:24px!important;letter-spacing:-.035em}
+body.stock-workbook-mode #stockWorkbookPanel .section-head p{font-size:11px;margin-top:2px}
+body.stock-workbook-mode #stockWorkbookPanel .eyebrow{font-size:9px}
+body.stock-workbook-mode .stock-workbook-note{padding:5px 8px!important;margin:4px 0 6px!important;font-size:10px!important;border-radius:8px}
+body.stock-workbook-mode #stockWorkbookStatus{font-size:10px!important;margin:4px 0!important}
+body.stock-workbook-mode #stockWorkbookPanel .vendor-actions{gap:5px!important}
+body.stock-workbook-mode #stockWorkbookPanel .vendor-actions button,
+body.stock-workbook-mode #stockWorkbookPanel .sw-file-label{padding:6px 9px!important;font-size:11px!important;border-radius:8px}
+body.stock-workbook-mode .stock-stock-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:7px 0 10px}
+body.stock-workbook-mode .stock-summary-card{border-radius:10px;box-shadow:0 2px 8px rgba(31,55,90,.035)}
+body.stock-workbook-mode .stock-summary-card>header{padding:7px 9px}
+body.stock-workbook-mode .stock-summary-card h3{font-size:11px}
+body.stock-workbook-mode .stock-summary-card p{font-size:9px;margin-top:2px}
+body.stock-workbook-mode .stock-size-list{padding:3px 7px}
+body.stock-workbook-mode .stock-size-item{padding:3px 1px;gap:4px;font-size:10px}
+body.stock-workbook-mode .stock-size-item>strong{min-width:25px;font-size:10px}
+body.stock-workbook-mode .stock-size-fields{display:flex;flex:1;gap:4px;min-width:0}
+body.stock-workbook-mode .stock-size-item label{display:flex;flex-direction:column;align-items:stretch;gap:2px;min-width:0;flex:1;font-size:8px;line-height:1.1}
+body.stock-workbook-mode .stock-size-item input{width:100%;min-width:0;padding:3px 4px;font-size:10px;border-radius:5px}
+body.stock-workbook-mode .stock-week-blocks{grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:8px;margin:7px 0}
+body.stock-workbook-mode .stock-week-card{border-radius:10px;box-shadow:0 2px 8px rgba(31,55,90,.035)}
+body.stock-workbook-mode .stock-week-card-head{padding:7px 9px}
+body.stock-workbook-mode .stock-week-card-head strong{font-size:11px}
+body.stock-workbook-mode .stock-week-card-head span{font-size:9px}
+body.stock-workbook-mode .stock-week-card table{font-size:10px}
+body.stock-workbook-mode .stock-week-card th,body.stock-workbook-mode .stock-week-card td{padding:3px 5px}
+body.stock-workbook-mode .stock-week-card input{padding:3px 4px;font-size:10px;border-radius:5px}
+body.stock-workbook-mode .stock-week-delete{font-size:10px;padding:4px 6px}
+body.stock-workbook-mode .stock-workbook-grid{max-height:calc(100vh - 200px);min-height:220px}
+@media(max-width:1050px){body.stock-workbook-mode .stock-stock-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){body.stock-workbook-mode #stockWorkbookPanel{padding:8px!important}body.stock-workbook-mode .stock-stock-cards{grid-template-columns:1fr 1fr;gap:6px}body.stock-workbook-mode .stock-size-fields{flex-direction:column}body.stock-workbook-mode .stock-week-blocks{grid-template-columns:1fr}}
