@@ -143,7 +143,9 @@
       if(!confirm('¿Eliminar este bloque semanal?'))return;weekBlocks.splice(Number(btn.dataset.deleteWeek),1);dirty=true;renderWeekBlocks();save(false);
     }));
   }
+  let weekDialogBound=false;
   function setupWeekBlockDialog(){
+    if(weekDialogBound)return;weekDialogBound=true;
     const dialog=$('stockWeekBlockDialog'),form=$('stockWeekBlockForm');if(!dialog||!form)return;
     $('stockAddWeekBlock')?.addEventListener('click',()=>{const now=new Date(),start=new Date(now);start.setDate(now.getDate()-((now.getDay()+6)%7));const end=new Date(start);end.setDate(start.getDate()+6);$('stockWeekStart').value=start.toISOString().slice(0,10);$('stockWeekEnd').value=end.toISOString().slice(0,10);$('stockWeekBlockName').value='Semana '+(weekBlocks.length+1);dialog.classList.remove('hidden');});
     $('stockWeekCancel')?.addEventListener('click',()=>dialog.classList.add('hidden'));
