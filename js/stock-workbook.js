@@ -63,6 +63,7 @@
   function render(){
     renderWeekBlocks();
     const host=$('stockWorkbookGrid'); if(!host)return;
+    host.style.display='none';
     let html='<table class="stock-workbook-table"><thead><tr><th class="sw-corner">#</th>';
     for(let c=1;c<=colCount;c++)html+='<th>'+colName(c)+'</th>';
     html+='</tr></thead><tbody>';
@@ -128,6 +129,18 @@
     const out=[];let d=new Date(start+'T12:00:00'),last=new Date(end+'T12:00:00');
     while(d<=last&&out.length<62){out.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}return out;
   }
+
+  function migrateLegacyWeeks(){
+    const defs=[['Semana 1',31,37],['Semana 2',42,48],['Semana 3',53,59],['Semana 4',64,70],['Semana 5',75,81],['Semana 6',85,91]];
+    const out=[];
+    for(const [name,a,z] of defs){
+      const valid=[];for(let r=a;r<=z;r++){const d=cells['A'+r];if(typeof d==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(d))valid.push({r,d});}
+      if(!valid.length)continue;const days={};
+      for(const x of valid){const sumCols=cols=>cols.reduce((s,c)=>s+numberOf(cells[c+x.r]),0);days[x.d]={counter:sumCols(['B','C','D','E','F','G','H']),birthday:sumCols(['J','K','L','M','N','O','P'])};}
+      out.push({name,start:valid[0].d,end:valid[valid.length-1].d,days});
+    }return out;
+  }
+
   function renderWeekBlocks(){
     const host=$('stockWeekBlocks');if(!host)return;
     host.innerHTML=weekBlocks.map((b,bi)=>{
@@ -159,7 +172,7 @@
     $('stockWorkbookPrint')?.addEventListener('click',()=>window.print());
     try{
       const data=await api('/api/stock/workbook');
-      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];render();}
+      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];if(!weekBlocks.length){weekBlocks=migrateLegacyWeeks();if(weekBlocks.length){dirty=true;}}render();if(dirty)await save(false);}
       else if(window.STOCK_WORKBOOK_INITIAL){weekBlocks=[];cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
     }catch(e){cells={};rowCount=95;colCount=21;render();updateStatus('Esperando sesión de administrador para cargar/guardar el Excel.');}
   }
