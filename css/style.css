@@ -642,3 +642,41 @@ body.stock-workbook-mode .stock-week-delete{font-size:10px;padding:4px 6px}
 body.stock-workbook-mode .stock-workbook-grid{max-height:calc(100vh - 200px);min-height:220px}
 @media(max-width:1050px){body.stock-workbook-mode .stock-stock-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){body.stock-workbook-mode #stockWorkbookPanel{padding:8px!important}body.stock-workbook-mode .stock-stock-cards{grid-template-columns:1fr 1fr;gap:6px}body.stock-workbook-mode .stock-size-fields{flex-direction:column}body.stock-workbook-mode .stock-week-blocks{grid-template-columns:1fr}}
+
+/* Dashboard Stock refinado */
+body.stock-workbook-mode #stockWorkbookPanel{background:#f6f9fe!important;border:0!important;box-shadow:none!important;padding:12px 16px 18px!important}
+body.stock-workbook-mode #stockWorkbookPanel .section-head{background:linear-gradient(110deg,#fff,#f1f6ff);padding:12px 15px;border:1px solid #e2eaf6;border-radius:14px;margin-bottom:8px!important}
+body.stock-workbook-mode #stockWorkbookPanel h2{font-size:25px!important;color:#142b4d!important}
+body.stock-workbook-mode #stockWorkbookPanel .section-head p:not(.eyebrow){font-size:12px!important;color:#71819a}
+body.stock-workbook-mode .stock-workbook-note{display:none}
+body.stock-workbook-mode .stock-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:8px 0 12px}
+body.stock-workbook-mode .stock-metric{padding:10px 13px;border-radius:12px;border:1px solid #dce7f5;background:#fff;box-shadow:0 3px 10px #19375f09;display:grid;grid-template-columns:1fr auto;align-items:center}
+body.stock-workbook-mode .stock-metric span{font-size:11px;color:#61718a;font-weight:700}
+body.stock-workbook-mode .stock-metric strong{grid-column:2;grid-row:1/3;font-size:24px;color:#193c6a}
+body.stock-workbook-mode .stock-metric small{font-size:9px;color:#8795a9}
+body.stock-workbook-mode .stock-metric.green{background:#f5fcf8;border-color:#d9f0e2}.stock-metric.green strong{color:#218253}
+body.stock-workbook-mode .stock-metric.amber{background:#fffaf0;border-color:#f6e9c9}.stock-metric.amber strong{color:#b77715}
+body.stock-workbook-mode .stock-metric.purple{background:#fcf8ff;border-color:#eee0fa}.stock-metric.purple strong{color:#8750b6}
+body.stock-workbook-mode .stock-inventory-heading,body.stock-workbook-mode .stock-section-heading{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:8px 2px}
+body.stock-workbook-mode .stock-inventory-heading h3,body.stock-workbook-mode .stock-section-heading h3{margin:0;font-size:14px;color:#1b3558}
+body.stock-workbook-mode .stock-inventory-heading span{font-size:10px;color:#7b8ba1}
+body.stock-workbook-mode .stock-stock-cards{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:6px 0 12px}
+body.stock-workbook-mode .stock-summary-card{border-color:#e0e8f3;box-shadow:0 4px 12px #1e3c640a}
+body.stock-workbook-mode .stock-summary-card>header{background:#f1f6fd;padding:8px 10px}
+body.stock-workbook-mode .stock-summary-card:nth-child(2)>header{background:#effaf4}
+body.stock-workbook-mode .stock-summary-card:nth-child(3)>header{background:#fff8e9}
+body.stock-workbook-mode .stock-summary-card:nth-child(4)>header{background:#f8f0ff}
+body.stock-workbook-mode .stock-week-layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(230px,.8fr);gap:10px;align-items:start;margin-top:10px}
+body.stock-workbook-mode .stock-weeks-section,body.stock-workbook-mode .stock-movement-summary{background:#fff;border:1px solid #e0e8f3;border-radius:13px;padding:10px 12px;min-width:0}
+body.stock-workbook-mode .stock-section-heading{margin:0 0 8px}
+body.stock-workbook-mode .stock-section-heading p{font-size:10px;color:#7b8ba1;margin:3px 0 0}
+body.stock-workbook-mode .stock-week-blocks{grid-template-columns:1fr;gap:7px;margin:0}
+body.stock-workbook-mode .stock-week-card{border:1px solid #e0e8f3;border-radius:10px;box-shadow:none}
+body.stock-workbook-mode .stock-week-card-head{padding:7px 9px;background:#f8faff}
+body.stock-workbook-mode .stock-week-card table{font-size:10px}
+body.stock-workbook-mode .stock-movement-row{display:flex;justify-content:space-between;gap:8px;padding:10px 2px;border-bottom:1px solid #edf1f6;font-size:11px;color:#687a92}
+body.stock-workbook-mode .stock-movement-row strong{color:#243f63}
+body.stock-workbook-mode .stock-movement-row.total{font-weight:800;color:#1d385c;border:0;background:#edf5ff;border-radius:7px;padding:10px;margin-top:5px}
+body.stock-workbook-mode #stockWorkbookGrid{display:none!important}
+@media(max-width:950px){body.stock-workbook-mode .stock-week-layout{grid-template-columns:1fr}body.stock-workbook-mode .stock-stock-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){body.stock-workbook-mode .stock-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode #stockWorkbookPanel .section-head{flex-direction:column}}
