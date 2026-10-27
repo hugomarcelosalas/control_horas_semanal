@@ -61,6 +61,7 @@
     return classes.join(' ');
   }
   function render(){
+    renderStockCards();
     renderWeekBlocks();
     const host=$('stockWorkbookGrid'); if(!host)return;
     host.style.display='none';
@@ -128,6 +129,21 @@
   function dateRangeDays(start,end){
     const out=[];let d=new Date(start+'T12:00:00'),last=new Date(end+'T12:00:00');
     while(d<=last&&out.length<62){out.push(d.toISOString().slice(0,10));d.setDate(d.getDate()+1);}return out;
+  }
+
+
+  function renderStockCards(){
+    const host=$('stockStockCards');if(!host)return;
+    const groups=[
+      {title:'Bajo escaleras',cols:['B','C','D'],labels:['Cajas','Unidades','Total pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]},
+      {title:'Bajo parque',cols:['G','H'],labels:['Cajas','Total pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]},
+      {title:'Mostrador',cols:['K'],labels:['Pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]},
+      {title:'Cumpleaños',cols:['N'],labels:['Pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]}
+    ];
+    host.innerHTML=groups.map(g=>'<section class="stock-summary-card"><header><h3>'+g.title+'</h3><p>Inventario por talla</p></header><div class="stock-size-list">'+g.sizes.map(([size,row])=>'<div class="stock-size-item"><strong>'+size+'</strong><div class="stock-size-fields">'+g.cols.map((col,i)=>'<label>'+g.labels[i]+'<input type="number" min="0" step="1" data-stock-cell="'+col+row+'" value="'+escText(display(isFormula(cells[col+row])?evalCell(col+row):cells[col+row]||0))+'" '+(isFormula(cells[col+row])?'readonly':'')+'></label>').join('')+'</div></div>').join('')+'</div></section>').join('');
+    host.querySelectorAll('[data-stock-cell]').forEach(inp=>inp.addEventListener('change',()=>{
+      const a=inp.dataset.stockCell;if(isFormula(cells[a]))return;cells[a]=Math.max(0,Number(inp.value)||0);dirty=true;updateStatus('Inventario modificado; guardando…');save(false);
+    }));
   }
 
   function migrateLegacyWeeks(){
