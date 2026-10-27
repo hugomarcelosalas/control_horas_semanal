@@ -28,11 +28,27 @@
   }
   function display(v){if(v===null||v===undefined||v==='')return '';if(typeof v==='number')return Number.isInteger(v)?String(v):String(Math.round(v*100)/100);return String(v);}
   function isFormula(v){return typeof v==='string'&&v.startsWith('=');}
+  function addDefaultFormulas(target){
+    target.C9='=200-17';target.C11='=225+30';
+    for(let r=5;r<=11;r++){target['D'+r]='=(B'+r+'*200)+C'+r;target['H'+r]='=G'+r+'*200';target['Q'+r]='=N'+r+'+K'+r+'+H'+r+'+D'+r;target['U'+r]='=Q'+r+'-T'+r;}
+    target.B16='=5*200';target.C16='=16+2137';target.B18='=20*200';target.B19='=17*200';target.B20='=6*200';
+    const hRefs=['H94','G94','F94','E94','D94','C94','B94'], kRefs=['P94','O94','N94','M94','L94','K94','J94'];
+    for(let i=0;i<7;i++){const r=15+i,inv=5+i;target['H'+r]='='+hRefs[i];target['K'+r]='='+kRefs[i];target['N'+r]='=H'+r+'+K'+r;target['Q'+r]='=D'+inv+'+H'+inv+'+K'+inv+'+N'+r;target['T'+r]='=E'+r+'-N'+r+'-B'+r+'+C'+r;target['U'+r]='=Q'+r+'-T'+r;}
+    const weeks=[[38,31,37],[49,42,48],[60,53,59],[71,64,70],[82,75,81],[92,85,91]];
+    for(const [total,start,end] of weeks){
+      for(let c=2;c<=8;c++){const col=colName(c);target[col+total]='='+Array.from({length:end-start+1},(_,i)=>col+(start+i)).join('+');}
+      target['I'+total]='='+['B','C','D','E','F','G'].map(c=>c+total).join('+');
+      for(let c=10;c<=16;c++){const col=colName(c);target[col+total]='='+Array.from({length:end-start+1},(_,i)=>col+(start+i)).join('+');}
+      target['Q'+total]='='+['O','N','M','L','K','J'].map(c=>c+total).join('+');
+    }
+    for(let c=2;c<=16;c++){const col=colName(c);target[col+'94']='='+[92,82,71,60,49,38].map(r=>col+r).join('+');}
+    return target;
+  }
   function editable(r,c,v){
     if(isFormula(v))return false;
     if(r>=5&&r<=21&&[2,3,7,11,14,20].includes(c))return true;
     const dayRows=[[31,37],[42,48],[53,59],[64,70],[75,81],[85,91]];
-    if(dayRows.some(([a,b])=>r>=a&&r<=b)&&((c>=2&&c<=8)||(c>=10&&c<=16)))return true;
+    if(dayRows.some(([a,b])=>r>=a&&r<=b)&&((c>=2&&c<=8)||(c>=10&&c<=16)||c===1))return true;
     return false;
   }
   function cellClass(r,c,v){
@@ -113,7 +129,7 @@
     try{
       const data=await api('/api/stock/workbook');
       if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;render();}
-      else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
+      else if(window.STOCK_WORKBOOK_INITIAL){cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
     }catch(e){cells={};rowCount=95;colCount=21;render();updateStatus('Esperando sesión de administrador para cargar/guardar el Excel.');}
   }
   document.addEventListener('click',e=>{
