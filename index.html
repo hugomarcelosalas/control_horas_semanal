@@ -205,7 +205,7 @@
 
   <div id="dayModal" class="modal hidden"><div class="modal-card">
     <button id="closeModal" class="modal-close">×</button><p class="eyebrow">REGISTRO DIARIO</p><h2 id="modalDate"></h2>
-    <div id="dayLockNotice" class="lock-notice hidden">🔒 Este día está bloqueado por el administrador.</div>
+    <div id="dayLockNotice" class="lock-notice hidden">🔒 Este día está bloqueado por el administrador.</div><p id="daySaveStatus" class="muted hidden" role="status" aria-live="polite"></p>
     <form id="dayForm">
       <div class="two-col"><label>Entrada<input id="entryTime" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM o 1336" maxlength="5"></label><label>Salida<input id="exitTime" type="text" inputmode="numeric" autocomplete="off" placeholder="HH:MM o 1336" maxlength="5"></label></div>
       <div class="two-col"><label>Horas extras<input id="extraHours" type="number" min="0" step="0.25" placeholder="0"></label><label>Horas trabajadas<input id="workedPreview" type="text" readonly></label></div>
@@ -227,7 +227,7 @@
 
   <div id="userModal" class="modal hidden"><div class="modal-card">
     <button id="closeUserModal" class="modal-close">×</button><p class="eyebrow">ADMINISTRACIÓN</p><h2 id="userModalTitle">Crear usuario</h2>
-    <form id="userForm"><label>Nombre<input id="newName" required></label><label>Usuario<input id="newUsername" required></label><label>Contraseña<input id="newPassword" type="password"></label><label>Horas contratadas por semana<input id="newWeeklyHours" type="number" min="0" step="0.5" value="40" required></label><label>Color del empleado<input id="newColor" type="color" value="#2563eb"></label><label class="checkbox-line"><input id="newActive" type="checkbox" checked> Empleado activo</label><p id="userFormStatus" class="muted" role="status"></p><button id="userSubmit" class="primary full" type="submit">Crear usuario</button></form>
+    <form id="userForm"><label>Nombre<input id="newName" required></label><label>Usuario<input id="newUsername" required></label><label>Contraseña<input id="newPassword" type="password"></label><label>Horas contratadas por semana<input id="newWeeklyHours" type="number" min="0" step="0.5" value="40" required></label><label>Color del empleado<input id="newColor" type="color" value="#2563eb"></label><label>Permiso del empleado<select id="newPermission"><option value="none">Ninguno</option><option value="encargado">Encargado</option></select></label><label class="checkbox-line"><input id="newActive" type="checkbox" checked> Empleado activo</label><p id="userFormStatus" class="muted" role="status"></p><button id="userSubmit" class="primary full" type="submit">Crear usuario</button></form>
   </div></div>
 
 
