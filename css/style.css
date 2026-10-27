@@ -515,3 +515,6 @@ body:has(#vendorWorkspace:not(.hidden)) #app main{width:100%;max-width:none;marg
 
 /* Permiso visible en la lista de empleados */
 .employee-permission{display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:3px 7px;border-radius:999px;font-size:11px;font-weight:700;line-height:1.3;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1}.employee-chip .employee-permission{margin:0 5px}.employee-chip:has(.employee-permission){gap:6px}
+
+/* Colores distintivos de permisos visibles en Empleados */
+.employee-permission-encargado{background:#dcfce7!important;color:#166534!important;border-color:#86efac!important;box-shadow:inset 3px 0 0 #16a34a}.employee-permission-none{background:#f1f5f9!important;color:#64748b!important;border-color:#cbd5e1!important;box-shadow:inset 3px 0 0 #94a3b8}
