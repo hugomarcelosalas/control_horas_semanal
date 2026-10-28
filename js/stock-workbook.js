@@ -144,7 +144,8 @@
       aside.innerHTML='<div class="stock-section-heading"><div><h3>Movimiento registrado</h3><p>Totales de bloques semanales</p></div></div><div class="stock-movement-row"><span>Ventas mostrador</span><strong>'+a.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row"><span>Ventas cumpleaños</span><strong>'+b.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row total"><span>Total ventas</span><strong>'+(a+b).toLocaleString('es-ES')+'</strong></div>';
     }
   }
-\n  function renderStockCards(){
+
+  function renderStockCards(){
     const host=$('stockStockCards');if(!host)return;
     const groups=[
       {title:'Bajo escaleras',cols:['B','C','D'],labels:['Cajas','Unidades','Total pares'],sizes:[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]]},
