@@ -808,3 +808,37 @@ body.stock-workbook-mode .stock-movement-summary{max-width:320px!important}
  body.stock-workbook-mode .stock-weeks-section,
  body.stock-workbook-mode .stock-movement-summary{max-width:100%!important}
 }
+
+
+/* Conciliación de stock y libro de ingresos/egresos */
+body.stock-workbook-mode .stock-reconciliation,
+body.stock-workbook-mode .stock-movements{background:#fff;border:1px solid #e0e8f3;border-radius:13px;padding:11px 13px;margin:10px 0;box-shadow:0 3px 12px #1e3c6408}
+body.stock-workbook-mode .stock-reconcile-wrap,
+body.stock-workbook-mode .stock-ledger-wrap{width:100%;overflow-x:auto}
+body.stock-workbook-mode .stock-reconcile-table,
+body.stock-workbook-mode .stock-ledger-table{width:100%;border-collapse:collapse;font-size:12px}
+body.stock-workbook-mode .stock-reconcile-table th,
+body.stock-workbook-mode .stock-reconcile-table td,
+body.stock-workbook-mode .stock-ledger-table th,
+body.stock-workbook-mode .stock-ledger-table td{padding:8px 10px;border-bottom:1px solid #edf1f6;text-align:right;white-space:nowrap}
+body.stock-workbook-mode .stock-reconcile-table thead th,
+body.stock-workbook-mode .stock-ledger-table thead th{background:#f5f8fd;color:#61718a;font-size:10px;text-transform:uppercase;letter-spacing:.025em}
+body.stock-workbook-mode .stock-reconcile-table th:first-child,
+body.stock-workbook-mode .stock-ledger-table th:first-child,
+body.stock-workbook-mode .stock-ledger-table td:first-child{text-align:left}
+body.stock-workbook-mode .stock-reconcile-table tbody th{color:#193b66}
+body.stock-workbook-mode .stock-reconcile-table td.balanced{color:#218253;font-weight:800}
+body.stock-workbook-mode .stock-reconcile-table td.positive{color:#218253;font-weight:800}
+body.stock-workbook-mode .stock-reconcile-table td.negative{color:#b42318;font-weight:800}
+body.stock-workbook-mode .stock-movement-form{display:grid;grid-template-columns:repeat(5,minmax(100px,1fr)) auto;align-items:end;gap:8px;margin:10px 0 13px}
+body.stock-workbook-mode .stock-movement-form label{display:grid;gap:4px;font-size:10px;font-weight:700;color:#61718a;min-width:0}
+body.stock-workbook-mode .stock-movement-form input,
+body.stock-workbook-mode .stock-movement-form select{box-sizing:border-box;width:100%;min-width:0;height:34px;border:1px solid #dbe4ef;border-radius:7px;padding:6px 8px;font:inherit;color:#243f63;background:#fff}
+body.stock-workbook-mode .stock-movement-form button{height:34px;white-space:nowrap;padding:0 11px;font-size:11px}
+body.stock-workbook-mode .stock-ledger-table td{font-size:11px}
+body.stock-workbook-mode .stock-movement-tag{display:inline-block;padding:3px 7px;border-radius:999px;font-size:10px;font-weight:800}
+body.stock-workbook-mode .stock-movement-tag.in{background:#eaf8ef;color:#218253}
+body.stock-workbook-mode .stock-movement-tag.out{background:#fff0ed;color:#b42318}
+body.stock-workbook-mode .stock-ledger-delete{border:0;background:#fff1f0;color:#b42318;border-radius:6px;font-size:17px;line-height:1;padding:3px 8px;cursor:pointer}
+@media(max-width:900px){body.stock-workbook-mode .stock-movement-form{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode .stock-movement-form button{grid-column:1/-1}}
+@media(max-width:520px){body.stock-workbook-mode .stock-reconciliation,body.stock-workbook-mode .stock-movements{padding:8px}.stock-reconcile-table{min-width:500px}.stock-ledger-table{min-width:580px}}
