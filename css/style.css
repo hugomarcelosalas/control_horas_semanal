@@ -842,3 +842,29 @@ body.stock-workbook-mode .stock-movement-tag.out{background:#fff0ed;color:#b4231
 body.stock-workbook-mode .stock-ledger-delete{border:0;background:#fff1f0;color:#b42318;border-radius:6px;font-size:17px;line-height:1;padding:3px 8px;cursor:pointer}
 @media(max-width:900px){body.stock-workbook-mode .stock-movement-form{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode .stock-movement-form button{grid-column:1/-1}}
 @media(max-width:520px){body.stock-workbook-mode .stock-reconciliation,body.stock-workbook-mode .stock-movements{padding:8px}.stock-reconcile-table{min-width:500px}.stock-ledger-table{min-width:580px}}
+
+
+/* Gestión de almacenes y movimientos por talla */
+body.stock-workbook-mode .stock-warehouse-form{display:flex;align-items:end;gap:8px;max-width:620px;margin:10px 0}
+body.stock-workbook-mode .stock-warehouse-form label{display:grid;gap:4px;flex:1;font-size:11px;font-weight:700;color:#61718a}
+body.stock-workbook-mode .stock-warehouse-form input{box-sizing:border-box;width:100%;height:34px;padding:6px 9px;border:1px solid #dbe4ef;border-radius:7px;font:inherit}
+body.stock-workbook-mode .stock-warehouse-form button{height:34px;white-space:nowrap;font-size:11px}
+body.stock-workbook-mode .stock-warehouse-list{display:flex;flex-wrap:wrap;gap:7px;margin:8px 0 17px}
+body.stock-workbook-mode .stock-warehouse-chip{display:inline-flex;align-items:center;gap:7px;padding:5px 8px 5px 10px;background:#f1f6fd;border:1px solid #dce7f5;border-radius:999px;color:#29486f;font-size:11px;font-weight:700}
+body.stock-workbook-mode .stock-warehouse-chip button{border:0;border-radius:50%;width:19px;height:19px;line-height:17px;padding:0;background:#fff;color:#b42318;font-size:15px;cursor:pointer}
+body.stock-workbook-mode .stock-ledger-heading{margin-top:14px!important;padding-top:12px;border-top:1px solid #edf1f6}
+body.stock-workbook-mode .stock-movement-form-wide{display:grid;grid-template-columns:repeat(4,minmax(125px,1fr));gap:9px;align-items:end;margin:10px 0 14px}
+body.stock-workbook-mode .stock-movement-form-wide label{display:grid;gap:4px;font-size:10px;font-weight:700;color:#61718a;min-width:0}
+body.stock-workbook-mode .stock-movement-form-wide input,
+body.stock-workbook-mode .stock-movement-form-wide select{box-sizing:border-box;width:100%;min-width:0;height:34px;padding:6px 8px;border:1px solid #dbe4ef;border-radius:7px;background:#fff;color:#243f63;font:inherit}
+body.stock-workbook-mode .stock-movement-form-wide .stock-movement-note{grid-column:span 2}
+body.stock-workbook-mode .stock-qty-grid{grid-column:1/-1;display:grid;grid-template-columns:repeat(7,minmax(60px,1fr));gap:7px;padding:10px;background:#f7faff;border:1px solid #e5edf7;border-radius:10px}
+body.stock-workbook-mode .stock-qty-grid .stock-size-qty{display:grid;gap:5px;text-align:center}
+body.stock-workbook-mode .stock-qty-grid .stock-size-qty span{font-size:11px;font-weight:800;color:#23466f}
+body.stock-workbook-mode .stock-qty-grid .stock-size-qty input{text-align:center;font-size:12px;height:36px;padding:5px;min-width:0}
+body.stock-workbook-mode .stock-movement-form-wide>button{grid-column:1/-1;justify-self:start;min-height:36px;padding:8px 14px;font-size:11px}
+body.stock-workbook-mode .stock-ledger-table{min-width:800px}
+body.stock-workbook-mode .stock-ledger-table td:nth-child(5){white-space:normal;min-width:130px;text-align:left}
+body.stock-workbook-mode .stock-ledger-table td:nth-child(6){white-space:normal;min-width:120px;text-align:left}
+@media(max-width:900px){body.stock-workbook-mode .stock-movement-form-wide{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode .stock-qty-grid{grid-template-columns:repeat(4,minmax(55px,1fr))}}
+@media(max-width:520px){body.stock-workbook-mode .stock-warehouse-form{align-items:stretch}body.stock-workbook-mode .stock-movement-form-wide{grid-template-columns:1fr}body.stock-workbook-mode .stock-movement-form-wide .stock-movement-note{grid-column:1}body.stock-workbook-mode .stock-qty-grid{grid-template-columns:repeat(3,minmax(55px,1fr))}}
