@@ -143,7 +143,12 @@
     host.innerHTML=items.map(x=>'<div class="stock-metric '+x[2]+'"><span>'+x[0]+'</span><strong>'+Math.round(x[1]).toLocaleString('es-ES')+'</strong><small>Pares en inventario</small></div>').join('');
     const aside=$('stockMovementSummary');if(aside){
       let a=0,b=0;weekBlocks.forEach(w=>Object.values(w.days||{}).forEach(d=>{a+=numberOf(d.counter);b+=numberOf(d.birthday);}));
-      aside.innerHTML='<div class="stock-section-heading"><div><h3>Movimiento registrado</h3><p>Totales de bloques semanales</p></div></div><div class="stock-movement-row"><span>Ventas mostrador</span><strong>'+a.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row"><span>Ventas cumpleaños</span><strong>'+b.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row total"><span>Total ventas</span><strong>'+(a+b).toLocaleString('es-ES')+'</strong></div>';
+      const sizes=['XXL','XL','L','M','S','XS','XXS'];
+      const movementTotals={ingreso:Object.fromEntries(sizes.map(s=>[s,0])),egreso:Object.fromEntries(sizes.map(s=>[s,0]))};
+      stockMovements.forEach(m=>{const type=m.type==='ingreso'?'ingreso':m.type==='egreso'?'egreso':null;if(!type)return;const quantities=m.quantities&&typeof m.quantities==='object'?m.quantities:{[m.size||'']:numberOf(m.qty)};sizes.forEach(size=>{movementTotals[type][size]+=numberOf(quantities[size]);});});
+      const sizeRows=sizes.map(size=>'<tr><th>'+size+'</th><td>'+movementTotals.ingreso[size].toLocaleString('es-ES')+'</td><td>'+movementTotals.egreso[size].toLocaleString('es-ES')+'</td></tr>').join('');
+      const totalIn=sizes.reduce((sum,size)=>sum+movementTotals.ingreso[size],0),totalOut=sizes.reduce((sum,size)=>sum+movementTotals.egreso[size],0);
+      aside.innerHTML='<div class="stock-section-heading"><div><h3>Movimiento registrado</h3><p>Totales de bloques semanales y movimientos de almacén</p></div></div><div class="stock-movement-row"><span>Ventas mostrador</span><strong>'+a.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row"><span>Ventas cumpleaños</span><strong>'+b.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row total"><span>Total ventas</span><strong>'+(a+b).toLocaleString('es-ES')+'</strong></div><div class="stock-movement-size-summary"><h4>Ingresos y egresos por talla</h4><div class="stock-ledger-wrap"><table class="stock-ledger-table"><thead><tr><th>Talla</th><th>Ingresos</th><th>Egresos</th></tr></thead><tbody>'+sizeRows+'<tr class="stock-movement-size-total"><th>Total</th><td>'+totalIn.toLocaleString('es-ES')+'</td><td>'+totalOut.toLocaleString('es-ES')+'</td></tr></tbody></table></div></div>';
     }
   }
 
@@ -196,7 +201,10 @@
       const ok=await save(false);if(ok){showMovementForm=false;renderMovements();alert('Movimiento registrado y guardado en el servidor.');}else{stockMovements=previous;showMovementForm=true;renderMovements();alert('No se pudo guardar el movimiento en el servidor. No se ha confirmado el registro; inténtalo de nuevo.');}
     });
     host.querySelectorAll('[data-movement-id]').forEach(btn=>btn.addEventListener('click',()=>{
-      const previous=stockMovements.slice();stockMovements=stockMovements.filter(m=>m.id!==btn.dataset.movementId);dirty=true;renderMovements();save(false).then(ok=>{if(!ok){stockMovements=previous;renderMovements();alert('No se pudo eliminar en el servidor.');}});
+      const movement=stockMovements.find(m=>m.id===btn.dataset.movementId);if(!movement)return;
+      const detail=Object.entries(movement.quantities||{}).filter(([size,qty])=>numberOf(qty)>0).map(([size,qty])=>size+' × '+numberOf(qty)).join(', ');
+      if(!confirm('¿Eliminar este '+(movement.type==='ingreso'?'ingreso':'egreso')+' del '+(movement.date||'')+'?\\n\\n'+(detail||'Sin cantidades')+'\\n\\nEsta acción se guardará en el servidor y no se puede deshacer.'))return;
+      const previous=stockMovements.slice();stockMovements=stockMovements.filter(m=>m.id!==btn.dataset.movementId);dirty=true;renderMovements();updateStatus('Guardando eliminación en el servidor…');save(false).then(ok=>{if(!ok){stockMovements=previous;renderMovements();alert('No se pudo eliminar en el servidor. El movimiento se ha restaurado en pantalla.');}else{alert('Movimiento eliminado y cambio guardado en el servidor.');}});
     }));
   }
 
