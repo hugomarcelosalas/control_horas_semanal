@@ -894,3 +894,7 @@ body.stock-workbook-mode .stock-movement-size-summary h4{margin:0 0 8px;font-siz
 body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-wrap{max-width:680px}
 body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table td{padding:8px 10px}
 body.stock-workbook-mode .stock-movement-size-total th,body.stock-workbook-mode .stock-movement-size-total td{font-weight:800;background:#f0f5fb}
+
+body.stock-workbook-mode .stock-summary-note{margin:8px 0 0;color:#778397;font-size:11px;line-height:1.5}
+body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-wrap{max-width:100%;overflow-x:auto}
+body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table{min-width:480px}
