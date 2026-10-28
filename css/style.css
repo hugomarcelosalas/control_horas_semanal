@@ -868,3 +868,22 @@ body.stock-workbook-mode .stock-ledger-table td:nth-child(5){white-space:normal;
 body.stock-workbook-mode .stock-ledger-table td:nth-child(6){white-space:normal;min-width:120px;text-align:left}
 @media(max-width:900px){body.stock-workbook-mode .stock-movement-form-wide{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode .stock-qty-grid{grid-template-columns:repeat(4,minmax(55px,1fr))}}
 @media(max-width:520px){body.stock-workbook-mode .stock-warehouse-form{align-items:stretch}body.stock-workbook-mode .stock-movement-form-wide{grid-template-columns:1fr}body.stock-workbook-mode .stock-movement-form-wide .stock-movement-note{grid-column:1}body.stock-workbook-mode .stock-qty-grid{grid-template-columns:repeat(3,minmax(55px,1fr))}}
+
+/* Stock: formularios flotantes y secciones separadas de ingresos/egresos */
+body.stock-workbook-mode .stock-form-modal{z-index:1200;align-items:center;padding:18px;background:rgba(15,29,49,.68);backdrop-filter:blur(5px)}
+body.stock-workbook-mode .stock-form-modal .modal-card{width:min(760px,100%);max-width:760px;max-height:min(88vh,900px);overflow:auto;padding:28px;border-radius:18px}
+body.stock-workbook-mode .stock-form-modal .modal-card h2{margin-bottom:18px}
+body.stock-workbook-mode .stock-form-modal .stock-warehouse-form{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;margin:12px 0 0}
+body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0}
+body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide label{font-size:12px}
+body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide input,body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide select{height:40px;font-size:13px}
+body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide .stock-movement-note{grid-column:1/-1}
+body.stock-workbook-mode .stock-form-modal .stock-qty-grid{grid-column:1/-1;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide>button{grid-column:1/-1;justify-self:stretch;min-height:42px;font-size:13px}
+body.stock-workbook-mode .stock-form-modal .stock-warehouse-form label{font-size:12px}
+body.stock-workbook-mode .stock-form-modal .stock-warehouse-form input{height:40px;font-size:13px}
+body.stock-workbook-mode .stock-ledger-section{margin-top:18px}
+body.stock-workbook-mode .stock-ledger-section h4{margin:0 0 8px;font-size:14px;color:#294568}
+body.stock-workbook-mode .stock-ledger-section .stock-ledger-wrap{margin-bottom:12px}
+body.stock-workbook-mode .stock-ledger-section td[colspan="7"]{text-align:center;padding:18px;color:#7b8696}
+@media(max-width:560px){body.stock-workbook-mode .stock-form-modal{padding:8px;align-items:center}body.stock-workbook-mode .stock-form-modal .modal-card{padding:24px 16px;max-height:92dvh}body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide{grid-template-columns:1fr}body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide .stock-movement-note{grid-column:1}body.stock-workbook-mode .stock-form-modal .stock-qty-grid{grid-template-columns:repeat(3,minmax(0,1fr))}body.stock-workbook-mode .stock-form-modal .stock-warehouse-form{grid-template-columns:1fr}body.stock-workbook-mode .stock-form-modal .stock-warehouse-form button{height:40px}}
