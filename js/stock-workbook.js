@@ -193,12 +193,44 @@
     $('stockWeekCancel')?.addEventListener('click',()=>dialog.classList.add('hidden'));
     form.addEventListener('submit',e=>{e.preventDefault();const start=$('stockWeekStart').value,end=$('stockWeekEnd').value;if(!start||!end||end<start){alert('El rango de fechas no es válido.');return;}const days={};dateRangeDays(start,end).forEach(d=>days[d]={counter:0,birthday:0});weekBlocks.push({name:$('stockWeekBlockName').value.trim()||'Bloque semanal',start,end,days});dialog.classList.add('hidden');dirty=true;renderWeekBlocks();renderMetrics();updateStatus('Bloque añadido; guardando…');save(false);});
   }
+
+  function printStockReport(){
+    const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const inventory=[...document.querySelectorAll('#stockStockCards .stock-summary-card')].map(card=>{
+      const title=card.querySelector('h3')?.textContent||'Inventario';
+      const headers=[...card.querySelectorAll('.stock-size-fields label')].map(x=>x.childNodes[0]?.textContent?.trim()||'Cantidad');
+      const rows=[...card.querySelectorAll('.stock-size-item')].map(row=>{
+        const size=row.querySelector('strong')?.textContent||'';
+        const values=[...row.querySelectorAll('input')].map(inp=>inp.value||'0');
+        return '<tr><td>'+esc(size)+'</td>'+values.map(v=>'<td class="num">'+esc(v)+'</td>').join('')+'</tr>';
+      });
+      return '<section class="card"><h2>'+esc(title)+'</h2><table><thead><tr><th>Talla</th>'+headers.map(x=>'<th>'+esc(x)+'</th>').join('')+'</tr></thead><tbody>'+rows.join('')+'</tbody></table></section>';
+    }).join('');
+    const weeks=[...document.querySelectorAll('#stockWeekBlocks .stock-week-card')].map(card=>{
+      const title=card.querySelector('.stock-week-card-head strong')?.textContent||'Bloque semanal';
+      const range=card.querySelector('.stock-week-card-head span')?.textContent||'';
+      const table=card.querySelector('table');
+      return '<section class="card"><h2>'+esc(title)+'</h2><p class="sub">'+esc(range)+'</p>'+(table?table.outerHTML:'')+'</section>';
+    }).join('');
+    const metrics=[...document.querySelectorAll('#stockMetrics .stock-metric')].map(m=>'<div class="metric"><span>'+esc(m.querySelector('span')?.textContent)+'</span><b>'+esc(m.querySelector('strong')?.textContent)+'</b><small>'+esc(m.querySelector('small')?.textContent)+'</small></div>').join('');
+    const movements=$('stockMovementSummary')?.innerHTML||'';
+    const win=window.open('','_blank');
+    if(!win){alert('El navegador bloqueó la ventana de impresión. Permite ventanas emergentes para esta web y vuelve a pulsar Imprimir.');return;}
+    win.document.open();
+    win.document.write('<!doctype html><html lang="es"><head><meta charset="utf-8"><title>Informe de Stock · Calcetines</title><style>'+
+      '@page{size:A4 landscape;margin:12mm}*{box-sizing:border-box}body{font:11px Arial,sans-serif;color:#172b4d;margin:0}h1{font-size:23px;margin:0 0 4px}h2{font-size:13px;margin:0 0 8px;color:#1e4778}p{margin:0 0 10px;color:#66758b}.top{display:flex;justify-content:space-between;align-items:start;border-bottom:2px solid #dbe7f5;padding-bottom:10px;margin-bottom:12px}.date{font-size:10px;color:#64748b}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}.metric{border:1px solid #dbe5f1;border-radius:8px;padding:8px;background:#f7faff}.metric span,.metric small{display:block;color:#61718a;font-size:9px}.metric b{display:block;font-size:18px;margin:3px 0}.inventory{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;align-items:start}.card{border:1px solid #dbe5f1;border-radius:7px;padding:8px;margin:0 0 10px;break-inside:avoid}.inventory .card{margin:0}table{border-collapse:collapse;width:100%;font-size:9px}th,td{border:1px solid #e2e8f0;padding:5px 6px;text-align:left}th{background:#edf4fd;color:#365477}.num{text-align:right;font-variant-numeric:tabular-nums}.weeks{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.sub{font-size:9px} .stock-week-delete,button{display:none!important}.stock-week-card-head{display:flex;justify-content:space-between;margin-bottom:5px}.stock-week-card-head span{font-size:9px;color:#64748b}.stock-week-card table input{border:0;width:100%;font:inherit;text-align:center;background:transparent}.movement{margin-top:12px}.movement h3{font-size:13px}.movement .stock-section-heading{margin-bottom:5px}.movement .stock-movement-row{display:flex;justify-content:space-between;padding:5px;border-bottom:1px solid #e2e8f0;font-size:10px}.movement .total{font-weight:bold;background:#edf4fd}'+
+      '@media print{body{print-color-adjust:exact;-webkit-print-color-adjust:exact}}'+
+      '</style></head><body><div class="top"><div><h1>Informe de Stock · Calcetines</h1><p>Inventario por ubicación y movimientos semanales</p></div><div class="date">Generado: '+esc(new Date().toLocaleString('es-ES'))+'</div></div>'+
+      '<div class="metrics">'+metrics+'</div><h2>Inventario por talla y ubicación</h2><div class="inventory">'+inventory+'</div><h2 style="margin-top:16px">Bloques semanales</h2><div class="weeks">'+weeks+'</div><div class="movement">'+movements+'</div><script>window.onload=()=>{setTimeout(()=>window.print(),350)};<\/script></body></html>');
+    win.document.close();
+  }
+
   async function init(){
     setupWeekBlockDialog();
     const panel=$('stockWorkbookPanel');if(!panel)return;
     $('stockWorkbookImport')?.addEventListener('change',e=>importWorkbook(e.target.files?.[0]));
     $('stockWorkbookSave')?.addEventListener('click',()=>save(true));
-    $('stockWorkbookPrint')?.addEventListener('click',()=>window.print());
+    $('stockWorkbookPrint')?.addEventListener('click',printStockReport);
     try{
       const data=await api('/api/stock/workbook');
       if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];if(!weekBlocks.length){weekBlocks=migrateLegacyWeeks();if(weekBlocks.length){dirty=true;}}render();if(dirty)await save(false);}
