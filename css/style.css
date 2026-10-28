@@ -887,3 +887,10 @@ body.stock-workbook-mode .stock-ledger-section h4{margin:0 0 8px;font-size:14px;
 body.stock-workbook-mode .stock-ledger-section .stock-ledger-wrap{margin-bottom:12px}
 body.stock-workbook-mode .stock-ledger-section td[colspan="7"]{text-align:center;padding:18px;color:#7b8696}
 @media(max-width:560px){body.stock-workbook-mode .stock-form-modal{padding:8px;align-items:center}body.stock-workbook-mode .stock-form-modal .modal-card{padding:24px 16px;max-height:92dvh}body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide{grid-template-columns:1fr}body.stock-workbook-mode .stock-form-modal .stock-movement-form-wide .stock-movement-note{grid-column:1}body.stock-workbook-mode .stock-form-modal .stock-qty-grid{grid-template-columns:repeat(3,minmax(0,1fr))}body.stock-workbook-mode .stock-form-modal .stock-warehouse-form{grid-template-columns:1fr}body.stock-workbook-mode .stock-form-modal .stock-warehouse-form button{height:40px}}
+
+/* Resumen de ingresos y egresos por talla en el panel Movimiento registrado */
+body.stock-workbook-mode .stock-movement-size-summary{margin-top:16px}
+body.stock-workbook-mode .stock-movement-size-summary h4{margin:0 0 8px;font-size:13px;color:#294568}
+body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-wrap{max-width:680px}
+body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table td{padding:8px 10px}
+body.stock-workbook-mode .stock-movement-size-total th,body.stock-workbook-mode .stock-movement-size-total td{font-weight:800;background:#f0f5fb}
