@@ -950,3 +950,15 @@ body.stock-workbook-mode .stock-week-size-table input{width:100%;min-width:0;box
 body.stock-workbook-mode .stock-week-size-row:nth-child(7n+1) td,body.stock-workbook-mode .stock-week-size-row:nth-child(7n+1) th{border-top:2px solid #cbd8e8}
 body.stock-workbook-mode .stock-week-legacy-row{background:#fff8e8;color:#6f5a2d}
 @media(max-width:560px){body.stock-workbook-mode .stock-stock-cards .stock-size-fields{flex-direction:column;align-items:stretch}body.stock-workbook-mode .stock-stock-cards .stock-size-item{min-height:64px}}
+
+/* Weekly blocks are a date-by-size matrix: fixed columns keep every size aligned */
+body.stock-workbook-mode .stock-week-size-table{width:100%;min-width:820px;table-layout:fixed;border-collapse:collapse}
+body.stock-workbook-mode .stock-week-size-table th,body.stock-workbook-mode .stock-week-size-table td{padding:5px 4px;text-align:center;vertical-align:middle}
+body.stock-workbook-mode .stock-week-size-table thead th{white-space:nowrap;font-size:11px}
+body.stock-workbook-mode .stock-week-size-table th:first-child,body.stock-workbook-mode .stock-week-size-table td:first-child{width:94px;text-align:left;white-space:nowrap}
+body.stock-workbook-mode .stock-week-size-table th:last-child,body.stock-workbook-mode .stock-week-size-table td:last-child{width:66px}
+body.stock-workbook-mode .stock-week-size-table input{display:block;width:100%;min-width:0;height:32px;box-sizing:border-box;padding:3px;text-align:center;font-size:12px}
+body.stock-workbook-mode .stock-week-table-wrap{width:100%;max-width:100%;overflow-x:auto}
+body.stock-workbook-mode .stock-week-legacy-row td{white-space:normal;text-align:left;font-size:11px;background:#fff8e8;color:#6f5a2d}
+body.stock-workbook-mode .stock-bottom-dashboard-layout{grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr)}
+@media(max-width:760px){body.stock-workbook-mode .stock-bottom-dashboard-layout{grid-template-columns:minmax(0,1fr)}body.stock-workbook-mode .stock-week-size-table{min-width:820px}}
