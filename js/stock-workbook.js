@@ -4,7 +4,7 @@
   const COLS = 21;
   const colName = n => { let s=''; while(n){const r=(n-1)%26;s=String.fromCharCode(65+r)+s;n=Math.floor((n-1)/26);}return s; };
   const addr = (r,c) => colName(c)+r;
-  let cells = {}, rowCount = 95, colCount = COLS, saving = false, dirty = false, saveTimer = null, weekBlocks = [];
+  let cells = {}, rowCount = 95, colCount = COLS, saving = false, dirty = false, saveTimer = null, weekBlocks = [], stockMovements = [];
 
   function numberOf(v){ if(v===null||v===undefined||v==='')return 0; const n=Number(v); return Number.isFinite(n)?n:0; }
   function evalCell(ref, seen=new Set()) {
@@ -62,6 +62,8 @@
   }
   function render(){
     renderMetrics();
+    renderReconciliation();
+    renderMovements();
     renderStockCards();
     renderWeekBlocks();
     const host=$('stockWorkbookGrid'); if(!host)return;
@@ -102,7 +104,7 @@
   }
   async function save(showMessage=true){
     if(saving)return false;saving=true;
-    try{await api('/api/stock/workbook','PUT',{workbook:{rows:rowCount,cols:colCount,cells,weekBlocks}});dirty=false;updateStatus('Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));if(showMessage)alert('Stock guardado correctamente.');return true;}
+    try{await api('/api/stock/workbook','PUT',{workbook:{rows:rowCount,cols:colCount,cells,weekBlocks,stockMovements}});dirty=false;updateStatus('Guardado correctamente · '+new Date().toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}));if(showMessage)alert('Stock guardado correctamente.');return true;}
     catch(e){updateStatus('No se pudo guardar: '+e.message);return false;}finally{saving=false;}
   }
   function importWorkbook(file){
@@ -143,6 +145,21 @@
       let a=0,b=0;weekBlocks.forEach(w=>Object.values(w.days||{}).forEach(d=>{a+=numberOf(d.counter);b+=numberOf(d.birthday);}));
       aside.innerHTML='<div class="stock-section-heading"><div><h3>Movimiento registrado</h3><p>Totales de bloques semanales</p></div></div><div class="stock-movement-row"><span>Ventas mostrador</span><strong>'+a.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row"><span>Ventas cumpleaños</span><strong>'+b.toLocaleString('es-ES')+'</strong></div><div class="stock-movement-row total"><span>Total ventas</span><strong>'+(a+b).toLocaleString('es-ES')+'</strong></div>';
     }
+  }
+
+
+  function stockVal(col,row){const v=cells[col+row];return numberOf(isFormula(v)?evalCell(col+row):v);}
+  function renderReconciliation(){
+    const host=$('stockReconciliation');if(!host)return;
+    const sizes=[['XXL',5],['XL',6],['L',7],['M',8],['S',9],['XS',10],['XXS',11]];
+    host.innerHTML='<div class="stock-section-heading"><div><h3>Conciliación de stock</h3><p>Stock físico frente al saldo calculado en sistema, por talla</p></div></div><div class="stock-reconcile-wrap"><table class="stock-reconcile-table"><thead><tr><th>Talla</th><th>Total calcetines en stock</th><th>Calcetines en sistema</th><th>Diferencia</th></tr></thead><tbody>'+sizes.map(([size,row])=>{const physical=stockVal('Q',row),system=stockVal('U',row),diff=physical-system;return '<tr><th>'+size+'</th><td>'+physical.toLocaleString('es-ES')+'</td><td>'+system.toLocaleString('es-ES')+'</td><td class="'+(diff===0?'balanced':diff<0?'negative':'positive')+'">'+(diff>0?'+':'')+diff.toLocaleString('es-ES')+'</td></tr>';}).join('')+'</tbody></table></div>';
+  }
+  function renderMovements(){
+    const host=$('stockMovements');if(!host)return;
+    const sizes=['XXL','XL','L','M','S','XS','XXS'];
+    host.innerHTML='<div class="stock-section-heading"><div><h3>Ingresos y egresos</h3><p>Registro histórico por talla; los movimientos se conservan al guardar Stock</p></div></div><form id="stockMovementForm" class="stock-movement-form"><label>Fecha<input name="date" type="date" value="'+new Date().toISOString().slice(0,10)+'" required></label><label>Tipo<select name="type"><option value="ingreso">Ingreso</option><option value="egreso">Egreso</option></select></label><label>Talla<select name="size">'+sizes.map(x=>'<option>'+x+'</option>').join('')+'</select></label><label>Cantidad<input name="qty" type="number" min="1" step="1" required></label><label>Motivo / observación<input name="note" type="text" maxlength="160" placeholder="Opcional"></label><button type="submit" class="primary">Registrar movimiento</button></form><div class="stock-ledger-wrap"><table class="stock-ledger-table"><thead><tr><th>Fecha</th><th>Tipo</th><th>Talla</th><th>Cantidad</th><th>Motivo</th><th></th></tr></thead><tbody>'+stockMovements.slice().reverse().map(m=>'<tr><td>'+escText(m.date||'')+'</td><td><span class="stock-movement-tag '+(m.type==='ingreso'?'in':'out')+'">'+(m.type==='ingreso'?'Ingreso':'Egreso')+'</span></td><td>'+escText(m.size||'')+'</td><td>'+numberOf(m.qty).toLocaleString('es-ES')+'</td><td>'+escText(m.note||'—')+'</td><td><button type="button" class="stock-ledger-delete" data-movement-id="'+escText(m.id)+'" aria-label="Eliminar movimiento">×</button></td></tr>').join('')+'</tbody></table></div>';
+    host.querySelector('#stockMovementForm')?.addEventListener('submit',e=>{e.preventDefault();const form=e.currentTarget,fd=new FormData(form),qty=Math.floor(Number(fd.get('qty'))||0);if(qty<1)return;stockMovements.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),date:String(fd.get('date')),type:String(fd.get('type')),size:String(fd.get('size')),qty,note:String(fd.get('note')||'').trim()});dirty=true;renderMovements();save(false);});
+    host.querySelectorAll('[data-movement-id]').forEach(btn=>btn.addEventListener('click',()=>{stockMovements=stockMovements.filter(m=>m.id!==btn.dataset.movementId);dirty=true;renderMovements();save(false);}));
   }
 
   function renderStockCards(){
@@ -233,8 +250,8 @@
     $('stockWorkbookPrint')?.addEventListener('click',printStockReport);
     try{
       const data=await api('/api/stock/workbook');
-      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];if(!weekBlocks.length){weekBlocks=migrateLegacyWeeks();if(weekBlocks.length){dirty=true;}}render();if(dirty)await save(false);}
-      else if(window.STOCK_WORKBOOK_INITIAL){weekBlocks=[];cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
+      if(data.workbook&&data.workbook.cells){cells=data.workbook.cells;rowCount=data.workbook.rows||95;colCount=data.workbook.cols||21;weekBlocks=Array.isArray(data.workbook.weekBlocks)?data.workbook.weekBlocks:[];stockMovements=Array.isArray(data.workbook.stockMovements)?data.workbook.stockMovements:[];if(!weekBlocks.length){weekBlocks=migrateLegacyWeeks();if(weekBlocks.length){dirty=true;}}render();if(dirty)await save(false);}
+      else if(window.STOCK_WORKBOOK_INITIAL){weekBlocks=[];stockMovements=[];cells=addDefaultFormulas({...window.STOCK_WORKBOOK_INITIAL.cells});rowCount=window.STOCK_WORKBOOK_INITIAL.rows||95;colCount=window.STOCK_WORKBOOK_INITIAL.cols||21;dirty=true;render();updateStatus('Cargando los datos originales del Excel…');await save(false);}else{cells={};rowCount=95;colCount=21;render();updateStatus('Carga el archivo Calcetines 2026-10.xlsx para importar datos y fórmulas.');}
     }catch(e){cells={};rowCount=95;colCount=21;render();updateStatus('Esperando sesión de administrador para cargar/guardar el Excel.');}
   }
   document.addEventListener('click',e=>{
