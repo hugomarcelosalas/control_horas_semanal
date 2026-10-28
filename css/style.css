@@ -907,3 +907,12 @@ body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table{width
 body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table td{padding:7px 9px;overflow-wrap:anywhere}
 body.stock-workbook-mode .stock-warehouse-summary{margin-top:20px;padding-top:14px;border-top:1px solid #e5eaf1}
 @media(max-width:560px){body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table{font-size:11px}body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table td{padding:6px 4px}}
+
+/* Side-by-side movement summary and income/expense ledger */
+body.stock-workbook-mode .stock-movement-dashboard-layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.4fr);gap:14px;align-items:start;margin:12px 0}
+body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovementSummary,body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovements{min-width:0;width:100%;max-width:none!important;margin:0;box-sizing:border-box}
+body.stock-workbook-mode .stock-movement-dashboard-layout .stock-ledger-wrap{width:100%;max-width:100%;overflow-x:auto}
+body.stock-workbook-mode .stock-movement-dashboard-layout .stock-ledger-table{min-width:540px}
+body.stock-workbook-mode .stock-movement-dashboard-layout .stock-movement-size-summary .stock-summary-table{min-width:0}
+@media(max-width:1100px){body.stock-workbook-mode .stock-movement-dashboard-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}}
+@media(max-width:850px){body.stock-workbook-mode .stock-movement-dashboard-layout{grid-template-columns:minmax(0,1fr)}body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovementSummary,body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovements{max-width:100%!important}}
