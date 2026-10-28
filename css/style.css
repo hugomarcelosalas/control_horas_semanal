@@ -715,3 +715,49 @@ body.stock-workbook-mode .stock-week-card td input{width:100%!important;max-widt
 body.stock-workbook-mode .stock-week-card th,body.stock-workbook-mode .stock-week-card td{padding:3px 5px!important}
 body.stock-workbook-mode .stock-week-card-head{padding:6px 8px!important}
 body.stock-workbook-mode .stock-week-card table{font-size:10px!important}
+
+
+/* KPI de ubicación: tarjetas compactas, proporciones profesionales */
+body.stock-workbook-mode .stock-metrics{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(175px,225px))!important;
+  justify-content:start!important;
+  gap:8px!important;
+  margin:7px 0 10px!important;
+}
+body.stock-workbook-mode .stock-metric{
+  min-width:0!important;
+  min-height:52px!important;
+  padding:8px 10px!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  column-gap:8px!important;
+  border-radius:10px!important;
+}
+body.stock-workbook-mode .stock-metric span{
+  font-size:10px!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+}
+body.stock-workbook-mode .stock-metric strong{
+  grid-column:2!important;
+  grid-row:1/3!important;
+  font-size:19px!important;
+  line-height:1!important;
+  letter-spacing:-.03em!important;
+  white-space:nowrap!important;
+}
+body.stock-workbook-mode .stock-metric small{
+  font-size:8px!important;
+  line-height:1.2!important;
+  white-space:nowrap!important;
+}
+@media(max-width:980px){
+ body.stock-workbook-mode .stock-metrics{grid-template-columns:repeat(2,minmax(165px,225px))!important}
+}
+@media(max-width:520px){
+ body.stock-workbook-mode .stock-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important}
+ body.stock-workbook-mode .stock-metric{padding:7px!important}
+ body.stock-workbook-mode .stock-metric strong{font-size:16px!important}
+ body.stock-workbook-mode .stock-metric span{white-space:normal!important}
+ body.stock-workbook-mode .stock-metric small{white-space:normal!important}
+}
