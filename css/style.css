@@ -898,3 +898,12 @@ body.stock-workbook-mode .stock-movement-size-total th,body.stock-workbook-mode 
 body.stock-workbook-mode .stock-summary-note{margin:8px 0 0;color:#778397;font-size:11px;line-height:1.5}
 body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-wrap{max-width:100%;overflow-x:auto}
 body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-table{min-width:480px}
+
+/* Summary tables use the full available width without horizontal scrolling */
+body.stock-workbook-mode #stockMovementSummary{width:100%;max-width:none;min-width:0}
+body.stock-workbook-mode .stock-movement-size-summary{width:100%;min-width:0}
+body.stock-workbook-mode .stock-movement-size-summary .stock-ledger-wrap{width:100%;max-width:none;overflow-x:visible}
+body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table{width:100%;min-width:0;table-layout:fixed;font-size:12px}
+body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table td{padding:7px 9px;overflow-wrap:anywhere}
+body.stock-workbook-mode .stock-warehouse-summary{margin-top:20px;padding-top:14px;border-top:1px solid #e5eaf1}
+@media(max-width:560px){body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table{font-size:11px}body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table th,body.stock-workbook-mode .stock-movement-size-summary .stock-summary-table td{padding:6px 4px}}
