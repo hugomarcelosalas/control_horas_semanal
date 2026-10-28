@@ -916,3 +916,19 @@ body.stock-workbook-mode .stock-movement-dashboard-layout .stock-ledger-table{mi
 body.stock-workbook-mode .stock-movement-dashboard-layout .stock-movement-size-summary .stock-summary-table{min-width:0}
 @media(max-width:1100px){body.stock-workbook-mode .stock-movement-dashboard-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.25fr)}}
 @media(max-width:850px){body.stock-workbook-mode .stock-movement-dashboard-layout{grid-template-columns:minmax(0,1fr)}body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovementSummary,body.stock-workbook-mode .stock-movement-dashboard-layout>#stockMovements{max-width:100%!important}}
+
+/* Stock dashboard: three aligned rows as requested */
+body.stock-workbook-mode .stock-top-dashboard-layout{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:stretch;margin:10px 0 14px;width:100%}
+body.stock-workbook-mode .stock-top-dashboard-layout>#stockReconciliation,body.stock-workbook-mode .stock-top-dashboard-layout>#stockMovementSummary,body.stock-workbook-mode .stock-top-dashboard-layout>#stockWarehouseMovementSummary{min-width:0;width:100%;max-width:none!important;margin:0;box-sizing:border-box;background:#fff;border:1px solid #e0e8f3;border-radius:13px;padding:11px 12px;box-shadow:0 3px 12px #1e3c6408}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-reconcile-wrap,body.stock-workbook-mode .stock-top-dashboard-layout .stock-ledger-wrap{width:100%;max-width:100%;overflow-x:auto}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-reconcile-table,body.stock-workbook-mode .stock-top-dashboard-layout .stock-summary-table{width:100%;min-width:0;table-layout:fixed;font-size:11px}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-reconcile-table th,body.stock-workbook-mode .stock-top-dashboard-layout .stock-reconcile-table td,body.stock-workbook-mode .stock-top-dashboard-layout .stock-summary-table th,body.stock-workbook-mode .stock-top-dashboard-layout .stock-summary-table td{padding:6px 4px;overflow-wrap:anywhere}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-section-heading{margin:0 0 9px}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-section-heading h3{font-size:13px}
+body.stock-workbook-mode .stock-top-dashboard-layout .stock-section-heading p{font-size:10px}
+body.stock-workbook-mode .stock-metrics{margin-top:8px}
+body.stock-workbook-mode .stock-bottom-dashboard-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:start;margin:12px 0;width:100%}
+body.stock-workbook-mode .stock-bottom-dashboard-layout>.stock-weeks-section,body.stock-workbook-mode .stock-bottom-dashboard-layout>.stock-movements{min-width:0;width:100%;max-width:none!important;margin:0;box-sizing:border-box}
+body.stock-workbook-mode .stock-bottom-dashboard-layout .stock-ledger-wrap{max-width:100%;overflow-x:auto}
+@media(max-width:1050px){body.stock-workbook-mode .stock-top-dashboard-layout{grid-template-columns:repeat(2,minmax(0,1fr))}body.stock-workbook-mode .stock-top-dashboard-layout>#stockReconciliation{grid-column:1/-1}}
+@media(max-width:760px){body.stock-workbook-mode .stock-top-dashboard-layout,body.stock-workbook-mode .stock-bottom-dashboard-layout{grid-template-columns:minmax(0,1fr)}body.stock-workbook-mode .stock-top-dashboard-layout>#stockReconciliation{grid-column:auto}body.stock-workbook-mode .stock-top-dashboard-layout .stock-reconcile-table{min-width:430px}body.stock-workbook-mode .stock-top-dashboard-layout .stock-summary-table{min-width:0}}
