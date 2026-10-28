@@ -142,7 +142,7 @@
     const items=[['Bajo escaleras',total('D'),'blue'],['Bajo parque',total('H'),'green'],['Mostrador',total('K'),'amber'],['Cumpleaños',total('N'),'purple']];
     host.innerHTML=items.map(x=>'<div class="stock-metric '+x[2]+'"><span>'+x[0]+'</span><strong>'+Math.round(x[1]).toLocaleString('es-ES')+'</strong><small>Pares en inventario</small></div>').join('');
     const aside=$('stockMovementSummary'),warehouseHost=$('stockWarehouseMovementSummary');
-    let a=0,b=0;weekBlocks.forEach(w=>Object.values(w.days||{}).forEach(d=>{a+=numberOf(d.counter);b+=numberOf(d.birthday);}));
+    let a=0,b=0;weekBlocks.forEach(w=>Object.values(w.days||{}).forEach(d=>{const sizeRows=Object.values(d.sizes||{});if(sizeRows.length){sizeRows.forEach(s=>{a+=numberOf(s.counter);b+=numberOf(s.birthday);});}else{a+=numberOf(d.counter);b+=numberOf(d.birthday);}}));
     const sizes=['XXL','XL','L','M','S','XS','XXS'];
     const movementTotals={ingreso:Object.fromEntries(sizes.map(s=>[s,0])),egreso:Object.fromEntries(sizes.map(s=>[s,0])),warehouseIn:Object.fromEntries(sizes.map(s=>[s,0])),warehouseOut:Object.fromEntries(sizes.map(s=>[s,0]))};
     stockMovements.forEach(m=>{const type=m.type==='ingreso'?'ingreso':m.type==='egreso'?'egreso':null;const quantities=m.quantities&&typeof m.quantities==='object'?m.quantities:{[m.size||'']:numberOf(m.qty)};const internalOrigin=stockWarehouses.includes(m.origin),internalDestination=stockWarehouses.includes(m.destination);sizes.forEach(size=>{const qty=numberOf(quantities[size]);if(type)movementTotals[type][size]+=qty;if(internalOrigin&&internalDestination&&m.origin!==m.destination){if(m.type==='ingreso')movementTotals.warehouseIn[size]+=qty;else if(m.type==='egreso')movementTotals.warehouseOut[size]+=qty;}});});
@@ -236,13 +236,16 @@
 
   function renderWeekBlocks(){
     const host=$('stockWeekBlocks');if(!host)return;
+    const sizes=['XXL','XL','L','M','S','XS','XXS'];
     host.innerHTML=weekBlocks.map((b,bi)=>{
       const days=dateRangeDays(b.start,b.end);
-      return '<section class="stock-week-card"><div class="stock-week-card-head"><div><strong>'+escText(b.name||'Bloque semanal')+'</strong><br><span>'+escText(b.start)+' — '+escText(b.end)+' · '+days.length+' días</span></div><button class="stock-week-delete" type="button" data-delete-week="'+bi+'">Eliminar</button></div><div style="overflow-x:auto"><table><thead><tr><th>Fecha</th><th>Mostrador (pares)</th><th>Cumples (pares)</th><th>Total</th></tr></thead><tbody>'+days.map(day=>{const row=b.days?.[day]||{counter:0,birthday:0};return '<tr><td>'+day+'</td><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-kind="counter" value="'+Number(row.counter||0)+'"></td><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-kind="birthday" value="'+Number(row.birthday||0)+'"></td><td><strong>'+ (Number(row.counter||0)+Number(row.birthday||0))+'</strong></td></tr>';}).join('')+'</tbody></table></div></section>';
+      return '<section class="stock-week-card"><div class="stock-week-card-head"><div><strong>'+escText(b.name||'Bloque semanal')+'</strong><br><span>'+escText(b.start)+' — '+escText(b.end)+' · '+days.length+' días</span></div><button class="stock-week-delete" type="button" data-delete-week="'+bi+'">Eliminar</button></div><div class="stock-week-table-wrap"><table class="stock-week-size-table"><thead><tr><th>Fecha</th><th>Talla</th><th>Mostrador</th><th>Cumpleaños</th><th>Total</th></tr></thead><tbody>'+days.map(day=>{const row=b.days?.[day]||{counter:0,birthday:0};return sizes.map((size,si)=>{const sized=row.sizes?.[size]||{};const counter=Number(sized.counter||0),birthday=Number(sized.birthday||0);return '<tr class="stock-week-size-row"><td>'+(si===0?day:'')+'</td><th>'+size+'</th><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-size="'+size+'" data-kind="counter" aria-label="'+day+' talla '+size+' mostrador" value="'+counter+'"></td><td><input type="number" min="0" step="1" data-week="'+bi+'" data-day="'+day+'" data-size="'+size+'" data-kind="birthday" aria-label="'+day+' talla '+size+' cumpleaños" value="'+birthday+'"></td><td><strong>'+(counter+birthday)+'</strong></td></tr>';}).join('')+(Number(row.counter||0)||Number(row.birthday||0)?'<tr class="stock-week-legacy-row"><td>'+day+'</td><th>Sin talla (anterior)</th><td>'+Number(row.counter||0)+'</td><td>'+Number(row.birthday||0)+'</td><td><strong>'+(Number(row.counter||0)+Number(row.birthday||0))+'</strong></td></tr>':'');}).join('')+'</tbody></table></div></section>';
     }).join('');
-    host.querySelectorAll('[data-week][data-day]').forEach(inp=>inp.addEventListener('change',()=>{
-      const b=weekBlocks[Number(inp.dataset.week)],day=inp.dataset.day,kind=inp.dataset.kind;
-      b.days=b.days||{};b.days[day]=b.days[day]||{counter:0,birthday:0};b.days[day][kind]=Math.max(0,Number(inp.value)||0);
+    host.querySelectorAll('[data-week][data-day][data-size]').forEach(inp=>inp.addEventListener('change',()=>{
+      const b=weekBlocks[Number(inp.dataset.week)],day=inp.dataset.day,kind=inp.dataset.kind,size=inp.dataset.size;
+      b.days=b.days||{};b.days[day]=b.days[day]||{counter:0,birthday:0,sizes:{}};
+      b.days[day].sizes=b.days[day].sizes||{};b.days[day].sizes[size]=b.days[day].sizes[size]||{counter:0,birthday:0};
+      b.days[day].sizes[size][kind]=Math.max(0,Number(inp.value)||0);
       dirty=true;renderWeekBlocks();renderMetrics();updateStatus('Bloques modificados; guardando…');if(saveTimer)clearTimeout(saveTimer);saveTimer=setTimeout(()=>save(false),500);
     }));
     host.querySelectorAll('[data-delete-week]').forEach(btn=>btn.addEventListener('click',()=>{
