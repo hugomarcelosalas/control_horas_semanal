@@ -103,12 +103,14 @@ useEffect(() => {
       setTurnos(Array.isArray(h.turnos) ? h.turnos : []);
       setCumples(Array.isArray(h.cumples) ? h.cumples : []);
       setEmpleados(Array.isArray(data.employees) ? data.employees : []);
-      const role = data.user?.role || (window.parent && window.parent.__CONTROL_HORARIO_USER__?.role);
+      const roleApi = data.user?.role;
+      const roleParent = window.parent && window.parent.__CONTROL_HORARIO_USER__?.role;
+      // La sesión principal puede conocer el rol de administrador aunque la respuesta del cuadrante devuelva otro rol.
+      const admin = esRolAdmin(roleApi) || esRolAdmin(roleParent);
       if (data.user) {
         setUsuarioActual(data.user);
         if (data.user.username) setEmpleadoVistaMia(data.user.role === 'admin' ? (data.employees?.[0]?.id || '') : data.user.username);
       }
-      const admin = esRolAdmin(role);
       setIsAdmin(admin);
       setPestanaActiva('visualizacion');
       setSubVista('simple');
