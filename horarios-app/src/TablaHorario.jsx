@@ -53,6 +53,9 @@ const [empleados, setEmpleados] = useState(EMPLEADOS_INICIALES);
   const [turnos, setTurnos] = useState([]);
   const [cumples, setCumples] = useState([]);
   const [historial, setHistorial] = useState([]);
+  const [historialHorarios, setHistorialHorarios] = useState([]);
+  const [isViewingHistory, setIsViewingHistory] = useState(false);
+  const [historialSeleccionado, setHistorialSeleccionado] = useState('');
 
   const [mostrarModalGestionEmp, setMostrarModalGestionEmp] = useState(false);
   const [idEmpPlantillaEdit, setIdEmpPlantillaEdit] = useState(null);
@@ -115,6 +118,10 @@ useEffect(() => {
       setPestanaActiva('visualizacion');
       setSubVista('simple');
       setDatosServidorCargados(true);
+      try {
+        const historyResponse = await fetch('/api/horarios/history', {headers:{Authorization:'Bearer '+token}});
+        if(historyResponse.ok) setHistorialHorarios(await historyResponse.json());
+      } catch(historyError) { console.error('No se pudo cargar el historial de horarios:', historyError); }
     } catch (err) { console.error('Error cargando el cuadrante:', err); }
     finally { cargando = false; }
   };
@@ -139,7 +146,7 @@ useEffect(() => {
 }, []);
 
 useEffect(() => {
-  if(!datosServidorCargados || !isAdmin) return;
+  if(!datosServidorCargados || !isAdmin || isViewingHistory) return;
   const timer=setTimeout(() => {
     const token = window.parent && window.parent.__CONTROL_HORARIO_TOKEN__;
     fetch('/api/horarios/state', {
@@ -149,7 +156,51 @@ useEffect(() => {
     }).catch(err => console.error('No se pudo guardar el cuadrante',err));
   }, 500);
   return () => clearTimeout(timer);
-}, [datosServidorCargados,isAdmin,fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples,capacidadParque]);
+}, [datosServidorCargados,isAdmin,isViewingHistory,fechaInicio,semanaGenerada,diasSemana,empleados,turnos,cumples,capacidadParque]);
+
+  const verHorarioHistorico = (id) => {
+    if(!id) return;
+    const registro = historialHorarios.find(item => item.id === id);
+    if(!registro?.horarios) return;
+    const h = registro.horarios;
+    setIsViewingHistory(true);
+    setHistorialSeleccionado(id);
+    setIsAdmin(false);
+    setFechaInicio(h.fechaInicio || '');
+    setSemanaGenerada(Boolean(h.semanaGenerada));
+    setDiasSemana(Array.isArray(h.diasSemana) ? h.diasSemana : []);
+    setEmpleados(Array.isArray(h.empleados) ? h.empleados : []);
+    setTurnos(Array.isArray(h.turnos) ? h.turnos : []);
+    setCumples(Array.isArray(h.cumples) ? h.cumples : []);
+    setCapacidadParque(Math.max(1, Number(h.capacidadParque) || 150));
+    setPestanaActiva('visualizacion');
+    setSubVista('simple');
+  };
+
+  const volverHorarioActual = async () => {
+    const token = window.parent && window.parent.__CONTROL_HORARIO_TOKEN__;
+    if(!token) return;
+    try {
+      const response = await fetch('/api/horarios/state', {headers:{Authorization:'Bearer '+token}});
+      if(!response.ok) throw new Error('No se pudo recuperar el horario actual');
+      const data = await response.json();
+      const h = data.horarios || {};
+      setFechaInicio(h.fechaInicio || '');
+      setSemanaGenerada(Boolean(h.semanaGenerada));
+      setDiasSemana(Array.isArray(h.diasSemana) ? h.diasSemana : []);
+      setTurnos(Array.isArray(h.turnos) ? h.turnos : []);
+      setCumples(Array.isArray(h.cumples) ? h.cumples : []);
+      setEmpleados(Array.isArray(data.employees) ? data.employees : []);
+      setCapacidadParque(Math.max(1, Number(h.capacidadParque) || 150));
+      setIsAdmin(esRolAdmin(data.user?.role) || esRolAdmin(window.parent?.__CONTROL_HORARIO_USER__?.role));
+      setIsViewingHistory(false);
+      setHistorialSeleccionado('');
+      setPestanaActiva('visualizacion');
+      setSubVista('simple');
+    } catch(error) {
+      alert('No se pudo volver al horario actual: '+error.message);
+    }
+  };
 
   const registrarHistorial = () => {
     const estadoActual = {
@@ -1191,6 +1242,16 @@ useEffect(() => {
           {/* ================= PESTAÑA 2: VISUALIZACIÓN ================= */}
           {pestanaActiva === 'visualizacion' && (
             <div className="seccion-pestana">
+              <div className="historial-horario-toolbar">
+                <label htmlFor="historialHorarioSelect">🕘 Historial de horarios
+                  <select id="historialHorarioSelect" value={historialSeleccionado} onChange={(e) => verHorarioHistorico(e.target.value)}>
+                    <option value="">Horario actual publicado</option>
+                    {historialHorarios.map(item => <option key={item.id} value={item.id}>{(item.fechaInicio ? 'Semana desde '+item.fechaInicio+' · ' : '')+new Date(item.publishedAt).toLocaleString('es-ES')}</option>)}
+                  </select>
+                </label>
+                {isViewingHistory && <button type="button" className="btn-gris" onClick={volverHorarioActual}>↩ Volver al horario actual</button>}
+              </div>
+              {isViewingHistory && <div className="historial-horario-aviso" role="status">Estás consultando un horario anterior en modo de solo lectura. No se modificarán los turnos guardados.</div>}
               <div className="pestanas-navegacion sub-pestañas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                   <button className={`btn-pestana ${subVista === 'detallada' ? 'activa' : ''}`} onClick={() => setSubVista('detallada')}>📊 Vista detallada</button>
