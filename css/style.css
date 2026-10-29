@@ -977,3 +977,12 @@ body.stock-workbook-mode .stock-reconcile-detail{margin-top:12px;padding-top:10p
 body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table{min-width:0;width:100%;table-layout:fixed}
 body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table th,body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table td{padding:6px 5px;overflow-wrap:anywhere}
 @media(max-width:900px){body.stock-workbook-mode #stockStockCards .stock-size-item{height:64px;min-height:64px;max-height:64px;grid-template-columns:30px minmax(0,1fr);padding:5px}body.stock-workbook-mode #stockStockCards .stock-size-fields label{font-size:8px}}
+
+/* Vertically align each sock-size row across Movement registered and Warehouse movements */
+body.stock-workbook-mode .stock-warehouse-align-spacer{height:153px;display:flex;flex-direction:column;justify-content:flex-start;visibility:hidden;pointer-events:none}
+body.stock-workbook-mode .stock-warehouse-align-spacer>div{height:33px;flex:0 0 33px}
+body.stock-workbook-mode .stock-warehouse-align-spacer>div:last-child{height:54px;flex-basis:54px}
+body.stock-workbook-mode #stockMovementSummary .stock-movement-size-summary,body.stock-workbook-mode #stockWarehouseMovementSummary .stock-movement-size-summary{margin-top:0}
+body.stock-workbook-mode #stockMovementSummary .stock-movement-size-summary h4{min-height:20px;margin:0 0 8px}
+@media(max-width:1050px){body.stock-workbook-mode .stock-warehouse-align-spacer{height:153px}}
+@media(max-width:760px){body.stock-workbook-mode .stock-warehouse-align-spacer{height:0;display:none}}
