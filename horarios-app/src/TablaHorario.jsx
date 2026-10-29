@@ -57,6 +57,8 @@ const [empleados, setEmpleados] = useState(EMPLEADOS_INICIALES);
   const [isViewingHistory, setIsViewingHistory] = useState(false);
   const [historialSeleccionado, setHistorialSeleccionado] = useState('');
 
+  const [mostrarModalNuevoHorario, setMostrarModalNuevoHorario] = useState(false);
+  const [fechaNuevoHorario, setFechaNuevoHorario] = useState('');
   const [mostrarModalGestionEmp, setMostrarModalGestionEmp] = useState(false);
   const [idEmpPlantillaEdit, setIdEmpPlantillaEdit] = useState(null);
   const [nombreEmpPlantilla, setNombreEmpPlantilla] = useState('');
@@ -511,6 +513,48 @@ useEffect(() => {
     });
     const horasCalculadas = totalMinutos / 60;
     return Number.isInteger(horasCalculadas) ? horasCalculadas : Number(horasCalculadas.toFixed(2));
+  };
+
+  const abrirNuevoHorario = () => {
+    if(!isAdmin || isViewingHistory) return;
+    setFechaNuevoHorario(fechaInicio || new Date().toISOString().slice(0,10));
+    setMostrarModalNuevoHorario(true);
+  };
+
+  const crearNuevoHorario = (modo) => {
+    if(!isAdmin || !fechaNuevoHorario) return;
+    const nuevaFecha = new Date(fechaNuevoHorario+'T12:00:00');
+    if(Number.isNaN(nuevaFecha.getTime())) { alert('Selecciona una fecha válida.'); return; }
+    registrarHistorial();
+    const diasNuevos = calcularNuevosDiasSemana(fechaNuevoHorario);
+    if(modo === 'conservar') {
+      const fechaAnterior = fechaInicio ? new Date(fechaInicio+'T12:00:00') : nuevaFecha;
+      const diferencia = Math.round((nuevaFecha.getTime()-fechaAnterior.getTime())/86400000);
+      const desplazarFecha = fecha => {
+        if(!fecha) return fecha;
+        const d = new Date(String(fecha)+'T12:00:00');
+        if(Number.isNaN(d.getTime())) return fecha;
+        d.setDate(d.getDate()+diferencia);
+        return d.toISOString().slice(0,10);
+      };
+      setCumples(prev => prev.map(c => ({...c,fecha:desplazarFecha(c.fecha)})));
+      setTurnos([]);
+    } else {
+      setCumples([]);
+      setTurnos([]);
+    }
+    setFechaInicio(fechaNuevoHorario);
+    setDiasSemana(diasNuevos);
+    if(diasNuevos.length) {
+      setTurnoFecha(diasNuevos[0].isoFecha);
+      setCumpleFecha(diasNuevos[0].isoFecha);
+    }
+    setSemanaGenerada(true);
+    setIsViewingHistory(false);
+    setHistorialSeleccionado('');
+    setPestanaActiva('admin');
+    setSubVista('simple');
+    setMostrarModalNuevoHorario(false);
   };
 
   const iniciarCuadrante = (e) => {
@@ -1033,6 +1077,11 @@ useEffect(() => {
           {/* ================= PESTAÑA 1: ADMINISTRADOR ================= */}
           {pestanaActiva === 'admin' && (
             <div className="seccion-pestana">
+              <div className="nuevo-horario-toolbar">
+                <div><strong>Gestión de horarios</strong><span>Crear una nueva semana sin cambiar el horario publicado hasta que pulses «Publicar horario».</span></div>
+                <button type="button" className="btn-primario" onClick={abrirNuevoHorario} disabled={isViewingHistory}>＋ Crear nuevo horario</button>
+              </div>
+              {isViewingHistory && <p className="historial-horario-aviso">Estás consultando una versión histórica. Vuelve al horario actual antes de crear otro.</p>}
               <div className="controles-modo-pantalla" role="group" aria-label="Modo de visualización del cuadrante">
                 <strong>Visualización:</strong>
                 <button type="button" className={modoPantalla === 'ajustado' ? 'modo-activo' : ''} onClick={() => setModoPantalla('ajustado')} title="Mostrar el cuadrante con el menor desplazamiento horizontal posible">⛶ Ajustar a la pantalla</button>
@@ -1625,7 +1674,25 @@ useEffect(() => {
             </div>
           )}
 
-          {mostrarModalTurno && (
+          {mostrarModalNuevoHorario && isAdmin && (
+        <div className="modal-overlay" role="presentation" onMouseDown={(e) => {if(e.target===e.currentTarget)setMostrarModalNuevoHorario(false);}}>
+          <div className="modal-contenido modal-nuevo-horario" role="dialog" aria-modal="true" aria-labelledby="tituloNuevoHorario">
+            <h3 id="tituloNuevoHorario">Crear nuevo horario</h3>
+            <p>Elige el lunes (o primer día) de la nueva semana y cómo quieres preparar el borrador. El horario publicado seguirá igual hasta que lo publiques expresamente.</p>
+            <label htmlFor="fechaNuevoHorario">Fecha de inicio de la semana</label>
+            <input id="fechaNuevoHorario" type="date" value={fechaNuevoHorario} onChange={e=>setFechaNuevoHorario(e.target.value)} required />
+            <div className="nuevo-horario-opciones">
+              <button type="button" className="btn-primario" onClick={()=>crearNuevoHorario('conservar')} disabled={!fechaNuevoHorario}>📅 Cambiar fechas y conservar empleados y eventos</button>
+              <small>Traslada los eventos a la nueva semana, mantiene la plantilla de empleados y limpia los turnos para preparar el nuevo cuadrante.</small>
+              <button type="button" className="btn-cancelar" onClick={()=>{if(window.confirm('¿Empezar de cero? Se borrarán los turnos y eventos del borrador actual. El horario publicado no cambiará.'))crearNuevoHorario('nuevo');}} disabled={!fechaNuevoHorario}>🆕 Empezar de cero</button>
+              <small>Vacía los turnos y eventos del borrador. La plantilla de empleados se conserva porque pertenece a la gestión de empleados de la empresa.</small>
+            </div>
+            <div className="modal-acciones"><button type="button" className="btn-gris" onClick={()=>setMostrarModalNuevoHorario(false)}>Cancelar</button></div>
+          </div>
+        </div>
+      )}
+
+      {mostrarModalTurno && (
             <div className="modal-overlay">
               <div className="modal-contenido">
                 <h3>{idTurnoEdit ? '✏️ Modificar Turno' : '📋 Asignar / Crear Turno'}</h3>
