@@ -950,6 +950,12 @@ useEffect(() => {
       <h2>HORARIO SEMANAL</h2>
 
       <div className="pestanas-navegacion">
+        {isAdmin && <button
+          className={`btn-pestana ${pestanaActiva === 'admin' ? 'activa' : ''}`}
+          onClick={() => setPestanaActiva('admin')}
+        >
+          🛠️ Administrador
+        </button>}
         <button
           className={`btn-pestana ${pestanaActiva === 'visualizacion' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('visualizacion')}
@@ -1186,22 +1192,37 @@ useEffect(() => {
           {pestanaActiva === 'visualizacion' && (
             <div className="seccion-pestana">
               <div className="pestanas-navegacion sub-pestañas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div className="horario-vista-simple-titulo"><strong>{subVista === 'mia' ? '👤 Vista mía' : '📋 Vista simple'}</strong></div>
+                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                  <button className={`btn-pestana ${subVista === 'detallada' ? 'activa' : ''}`} onClick={() => setSubVista('detallada')}>📊 Vista detallada</button>
+                  <button className={`btn-pestana ${subVista === 'simple' ? 'activa' : ''}`} onClick={() => setSubVista('simple')}>📋 Vista simple</button>
+                  <button className={`btn-pestana ${subVista === 'mia' ? 'activa' : ''}`} onClick={() => setSubVista('mia')}>🙋 Vista mía</button>
+                </div>
 
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  <button type="button" onClick={() => setSubVista('simple')} className={subVista === 'simple' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'simple'}>📋 Vista simple</button>
-                  <button type="button" onClick={() => setSubVista('mia')} className={subVista === 'mia' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'mia'}>👤 Vista mía</button>
-                  {isAdmin && <div className="acciones-vista-simple" data-html2canvas-ignore="true" style={{display:'flex',flexWrap:'wrap',gap:'8px',marginBottom:'12px'}}>
-                    <button type="button" onClick={abrirModalNuevoEmpleado} className="btn-terciario">＋ Añadir empleado</button>
-                    <button type="button" onClick={abrirModalNuevoTurno} className="btn-secundario">＋ Añadir turno</button>
-                    <button type="button" onClick={abrirModalNuevoCumple} className="btn-cumple">＋ Añadir evento</button>
-                    <button type="button" onClick={deshacerUltimaAccion} className="btn-gris" disabled={historial.length === 0}>↩️ Deshacer</button>
-                  </div>}
-                  <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'portrait')} className="btn-exportar">📄 Descargar PDF</button>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  {isAdmin && <button
+                    onClick={() => setPestanaActiva('admin')}
+                    className="btn-gris"
+                    title="Volver al administrador para editar turnos y eventos"
+                  >
+                    ✏️ Volver a Admin
+                  </button>}
+                  {subVista === 'simple' && <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'portrait')} className="btn-exportar">📄 PDF Vista simple</button>}
+                  <button
+                    onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'landscape')}
+                    className="btn-exportar"
+                  >
+                    📄 Descargar PDF Horizontal
+                  </button>
+                  <button
+                    onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'portrait')}
+                    className="btn-exportar"
+                  >
+                    📄 Descargar PDF Vertical
+                  </button>
                 </div>
               </div>
 
-              {false && subVista === 'detallada' && <>
+              {subVista === 'detallada' && <>
               {/* Vista 1 */}
               {vistaVisualizacion === 'carriles' && (
                 <div ref={vistaHorizontalRef} className="area-impresion">
