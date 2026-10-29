@@ -962,3 +962,18 @@ body.stock-workbook-mode .stock-week-table-wrap{width:100%;max-width:100%;overfl
 body.stock-workbook-mode .stock-week-legacy-row td{white-space:normal;text-align:left;font-size:11px;background:#fff8e8;color:#6f5a2d}
 body.stock-workbook-mode .stock-bottom-dashboard-layout{grid-template-columns:minmax(0,1.7fr) minmax(280px,.8fr)}
 @media(max-width:760px){body.stock-workbook-mode .stock-bottom-dashboard-layout{grid-template-columns:minmax(0,1fr)}body.stock-workbook-mode .stock-week-size-table{min-width:820px}}
+
+/* Align the same sock size on one horizontal line across all four inventory cards */
+body.stock-workbook-mode #stockStockCards{align-items:start!important}
+body.stock-workbook-mode #stockStockCards .stock-summary-card{height:auto!important;min-width:0;display:flex;flex-direction:column}
+body.stock-workbook-mode #stockStockCards .stock-summary-card>header{height:58px;min-height:58px;max-height:58px;box-sizing:border-box;overflow:hidden}
+body.stock-workbook-mode #stockStockCards .stock-size-list{display:block!important;flex:0 0 auto}
+body.stock-workbook-mode #stockStockCards .stock-size-item{height:58px;min-height:58px;max-height:58px;box-sizing:border-box;display:grid;grid-template-columns:34px minmax(0,1fr);align-items:center;gap:6px;padding:6px 8px;overflow:hidden}
+body.stock-workbook-mode #stockStockCards .stock-size-item>strong{line-height:1.2;white-space:nowrap}
+body.stock-workbook-mode #stockStockCards .stock-size-fields{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);grid-template-rows:1fr;align-items:center;gap:5px;min-width:0}
+body.stock-workbook-mode #stockStockCards .stock-size-fields label{display:flex;flex-direction:column;justify-content:center;gap:3px;min-width:0;white-space:nowrap;font-size:9px;line-height:1.1;overflow:hidden}
+body.stock-workbook-mode #stockStockCards .stock-size-fields input{width:100%;min-width:0;height:27px;box-sizing:border-box;padding:3px 4px;font-size:11px}
+body.stock-workbook-mode .stock-reconcile-detail{margin-top:12px;padding-top:10px;border-top:1px solid #e3eaf3}
+body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table{min-width:0;width:100%;table-layout:fixed}
+body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table th,body.stock-workbook-mode .stock-reconcile-detail .stock-reconcile-table td{padding:6px 5px;overflow-wrap:anywhere}
+@media(max-width:900px){body.stock-workbook-mode #stockStockCards .stock-size-item{height:64px;min-height:64px;max-height:64px;grid-template-columns:30px minmax(0,1fr);padding:5px}body.stock-workbook-mode #stockStockCards .stock-size-fields label{font-size:8px}}
