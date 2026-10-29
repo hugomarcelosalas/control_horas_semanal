@@ -1189,10 +1189,8 @@ useEffect(() => {
                 <div className="horario-vista-simple-titulo"><strong>{subVista === 'mia' ? '👤 Vista mía' : '📋 Vista simple'}</strong></div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                  {!isAdmin && <>
-                    <button type="button" onClick={() => setSubVista('simple')} className={subVista === 'simple' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'simple'}>📋 Vista simple</button>
-                    <button type="button" onClick={() => setSubVista('mia')} className={subVista === 'mia' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'mia'}>👤 Vista mía</button>
-                  </>}
+                  <button type="button" onClick={() => setSubVista('simple')} className={subVista === 'simple' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'simple'}>📋 Vista simple</button>
+                  <button type="button" onClick={() => setSubVista('mia')} className={subVista === 'mia' ? 'btn-primario' : 'btn-terciario'} aria-pressed={subVista === 'mia'}>👤 Vista mía</button>
                   {isAdmin && <div className="acciones-vista-simple" data-html2canvas-ignore="true" style={{display:'flex',flexWrap:'wrap',gap:'8px',marginBottom:'12px'}}>
                     <button type="button" onClick={abrirModalNuevoEmpleado} className="btn-terciario">＋ Añadir empleado</button>
                     <button type="button" onClick={abrirModalNuevoTurno} className="btn-secundario">＋ Añadir turno</button>
