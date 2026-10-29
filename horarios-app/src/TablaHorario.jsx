@@ -19,9 +19,9 @@ const TablaHorario = () => {
   const esRolAdmin = (role) => String(role || '').trim().toLowerCase() === 'admin' || String(role || '').trim().toLowerCase().includes('administrador');
   const [isAdmin, setIsAdmin] = useState(esRolAdmin(parentUser.role));
   const [datosServidorCargados, setDatosServidorCargados] = useState(false);
-  const [pestanaActiva, setPestanaActiva] = useState(esRolAdmin(parentUser.role) ? 'admin' : 'visualizacion'); 
+  const [pestanaActiva, setPestanaActiva] = useState('visualizacion'); 
   const [vistaVisualizacion, setVistaVisualizacion] = useState('carriles');
-  const [subVista, setSubVista] = useState(esRolAdmin(parentUser.role) ? 'detallada' : 'mia');
+  const [subVista, setSubVista] = useState('simple');
   const [usuarioActual, setUsuarioActual] = useState(parentUser);
   const [empleadoVistaMia, setEmpleadoVistaMia] = useState(parentUser.username || '');
   const [modoPantalla, setModoPantalla] = useState('ajustado');
@@ -110,8 +110,8 @@ useEffect(() => {
       }
       const admin = esRolAdmin(role);
       setIsAdmin(admin);
-      setPestanaActiva(admin ? 'admin' : 'visualizacion');
-      if(!admin) setSubVista('mia');
+      setPestanaActiva('visualizacion');
+      setSubVista('simple');
       setDatosServidorCargados(true);
     } catch (err) { console.error('Error cargando el cuadrante:', err); }
     finally { cargando = false; }
@@ -128,7 +128,7 @@ useEffect(() => {
     if(role) {
       const admin = esRolAdmin(role);
       setIsAdmin(admin);
-      if(!admin) { setPestanaActiva('visualizacion'); setSubVista('mia'); }
+      { setPestanaActiva('visualizacion'); setSubVista('simple'); }
     }
   };
   window.addEventListener('control-horario-auth', syncRole);
@@ -384,8 +384,8 @@ useEffect(() => {
     const esDiaCompleto=t=>duracionHoras(t)>6;
     const desfaseHora=(hora,base)=>{const [h,m]=String(hora||base).split(':').map(Number);const [bh,bm]=base.split(':').map(Number);return Math.max(0,Math.min(60,((h*60+m)-(bh*60+bm))/6));};
     const shiftClass=t=>t.horaInicio==='16:00'&&t.horaFin==='21:00'?'turno-celeste':t.horaInicio==='11:00'&&t.horaFin==='21:00'?'turno-verde-pastel':'';
-    const personRow=(emp,t)=>{const inicio=Number(String(t.horaInicio||'11:00').split(':')[0])*60+Number(String(t.horaInicio||'11:00').split(':')[1]||0);const fin=Number(String(t.horaFin||'21:00').split(':')[0])*60+Number(String(t.horaFin||'21:00').split(':')[1]||0);const esManana=String(t.horaInicio||'')<'15:00';const base=esManana?630:930;const limite=esManana?930:1260;const left=esManana?Math.max(0,(inicio-base)/(limite-base)*100):Math.max(0,(inicio-base)/(limite-base)*100);const width=esManana?Math.max(0,Math.min(200-left,(fin-inicio)/(limite-base)*100)):Math.max(0,Math.min(100-left,(fin-inicio)/(limite-base)*100));return <div style={esDiaCompleto(t)?undefined:{marginLeft:0,width:'100%',position:'relative'}} className={`simple-turno-persona ${esDiaCompleto(t)?'simple-dia-completo-persona':''}`} key={t.id}><span className={`simple-turno-badge ${esDiaCompleto(t)?'turno-dia-completo':shiftClass(t)}`} style={{position:'absolute',left:esDiaCompleto(t)?0:`${left}%`,width:esDiaCompleto(t)?'100%':`${width}%`,maxWidth:'none'}}><span className="simple-turno-nombre"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{String(emp.nombre||'').trim().split(/\s+/)[0]}{t.encargado&&<b className="simple-marca-turno" title="Encargado">★</b>}{t.siEsNecesario&&<b className="simple-marca-turno necesario" title="Solo si hace falta">!</b>}</span><span className="simple-turno-horas-texto">{t.horaInicio}–{t.horaFin}</span></span></div>;};
-    const eventos=(titulo,lista)=>{const ninos=lista.reduce((s,c)=>s+Math.max(0,Number(c.cantNinos)||0),0);const pct=Math.min(100,ninos);const color=pct>=90?'#ef4444':pct>=75?'#f97316':pct>=50?'#eab308':pct>=25?'#84cc16':'#22c55e';return <div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4><div className="simple-aforo" aria-label={`${ninos} de 100 plazas ocupadas`}><div className="simple-aforo-meta"><span>Capacidad</span><strong>{ninos}/100</strong></div><div className="simple-aforo-track"><span style={{width:`${pct}%`,background:color}}/></div></div>{lista.length?<ul>{lista.map(c=>{const [eh,em]=hs(c).split(':').map(Number);const mins=eh*60+(em||0);const esManana=titulo==='Mañana';const base=esManana?630:960;const finFranja=esManana?900:1260;const left=Math.max(0,Math.min(100,(mins-base)/(finFranja-base)*100));const tipo=String(c.tipo||'').toUpperCase();const esXT=tipo.includes('XT');const n=Number(c.cantNinos)||0;const colorEvento=n<10?'#f0f9ff':n<15?'#e0f2fe':n<=20?'#fef3c7':'#fee2e2';const bordeEvento=n<15?'#7dd3fc':n<=20?'#fcd34d':'#fca5a5';const duracion=esXT?180:120;const width=Math.max(0,Math.min(100-left,duracion/(finFranja-base)*100));return <li key={c.id} style={{margin:0,width:'100%',position:'relative',height:'auto',minHeight:38,overflow:'visible'}}><div className="simple-cumple-contenido" style={{marginLeft:`${left}%`,width:`${width}%`,minWidth:0,maxWidth:'100%'}}><div className="simple-cumple-badge" style={{background:colorEvento,borderColor:bordeEvento}}><strong>{hs(c)}</strong><span>{[c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}</span></div></div></li>;})}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;};
+    const personRow=(emp,t)=>{const inicio=Number(String(t.horaInicio||'11:00').split(':')[0])*60+Number(String(t.horaInicio||'11:00').split(':')[1]||0);const fin=Number(String(t.horaFin||'21:00').split(':')[0])*60+Number(String(t.horaFin||'21:00').split(':')[1]||0);const esManana=String(t.horaInicio||'')<'15:00';const base=esManana?630:930;const limite=esManana?930:1260;const left=esManana?Math.max(0,(inicio-base)/(limite-base)*100):Math.max(0,(inicio-base)/(limite-base)*100);const width=esManana?Math.max(0,Math.min(200-left,(fin-inicio)/(limite-base)*100)):Math.max(0,Math.min(100-left,(fin-inicio)/(limite-base)*100));return <div style={esDiaCompleto(t)?undefined:{marginLeft:0,width:'100%',position:'relative'}} className={`simple-turno-persona ${esDiaCompleto(t)?'simple-dia-completo-persona':''}`} key={t.id}><span className={`simple-turno-badge ${esDiaCompleto(t)?'turno-dia-completo':shiftClass(t)}`} onClick={isAdmin ? () => abrirModalEditarTurno(t) : undefined} title={isAdmin ? 'Pulsa para editar este turno' : undefined} style={{position:'absolute',left:esDiaCompleto(t)?0:`${left}%`,width:esDiaCompleto(t)?'100%':`${width}%`,maxWidth:'none',cursor:isAdmin?'pointer':undefined}}><span className="simple-turno-nombre"><i style={{backgroundColor:emp.color||'#cbd5e1'}}/>{String(emp.nombre||'').trim().split(/\s+/)[0]}{t.encargado&&<b className="simple-marca-turno" title="Encargado">★</b>}{t.siEsNecesario&&<b className="simple-marca-turno necesario" title="Solo si hace falta">!</b>}</span><span className="simple-turno-horas-texto">{t.horaInicio}–{t.horaFin}</span></span></div>;};
+    const eventos=(titulo,lista)=>{const ninos=lista.reduce((s,c)=>s+Math.max(0,Number(c.cantNinos)||0),0);const pct=Math.min(100,ninos);const color=pct>=90?'#ef4444':pct>=75?'#f97316':pct>=50?'#eab308':pct>=25?'#84cc16':'#22c55e';return <div className="simple-eventos-grupo" key={titulo}><h4>{titulo}</h4><div className="simple-aforo" aria-label={`${ninos} de 100 plazas ocupadas`}><div className="simple-aforo-meta"><span>Capacidad</span><strong>{ninos}/100</strong></div><div className="simple-aforo-track"><span style={{width:`${pct}%`,background:color}}/></div></div>{lista.length?<ul>{lista.map(c=>{const [eh,em]=hs(c).split(':').map(Number);const mins=eh*60+(em||0);const esManana=titulo==='Mañana';const base=esManana?630:960;const finFranja=esManana?900:1260;const left=Math.max(0,Math.min(100,(mins-base)/(finFranja-base)*100));const tipo=String(c.tipo||'').toUpperCase();const esXT=tipo.includes('XT');const n=Number(c.cantNinos)||0;const colorEvento=n<10?'#f0f9ff':n<15?'#e0f2fe':n<=20?'#fef3c7':'#fee2e2';const bordeEvento=n<15?'#7dd3fc':n<=20?'#fcd34d':'#fca5a5';const duracion=esXT?180:120;const width=Math.max(0,Math.min(100-left,duracion/(finFranja-base)*100));return <li key={c.id} style={{margin:0,width:'100%',position:'relative',height:'auto',minHeight:38,overflow:'visible'}}><div className="simple-cumple-contenido" style={{marginLeft:`${left}%`,width:`${width}%`,minWidth:0,maxWidth:'100%'}}><div className="simple-cumple-badge" onClick={isAdmin ? () => abrirModalEditarCumple(c) : undefined} title={isAdmin ? 'Pulsa para editar este evento' : undefined} style={{background:colorEvento,borderColor:bordeEvento,cursor:isAdmin?'pointer':undefined}}><strong>{hs(c)}</strong><span>{[c.tipo,c.cantNinos?`${c.cantNinos}k`:null,c.edad?`${c.edad}a`:null].filter(Boolean).join(' ')}</span></div></div></li>;})}</ul>:<p className="sin-eventos-franja">Sin eventos</p>}</div>;};
     return <section className="dia-simple-card" key={dia.clave}>
       <h3>{dia.nombre} <small>{dia.fecha}</small></h3>
       <div className="simple-franjas-encabezado"><strong>Mañana</strong><strong>Tarde</strong></div>
@@ -948,12 +948,6 @@ useEffect(() => {
       <h2>HORARIO SEMANAL</h2>
 
       <div className="pestanas-navegacion">
-        {isAdmin && <button
-          className={`btn-pestana ${pestanaActiva === 'admin' ? 'activa' : ''}`}
-          onClick={() => setPestanaActiva('admin')}
-        >
-          🛠️ Administrador
-        </button>}
         <button
           className={`btn-pestana ${pestanaActiva === 'visualizacion' ? 'activa' : ''}`}
           onClick={() => setPestanaActiva('visualizacion')}
@@ -1190,41 +1184,21 @@ useEffect(() => {
           {pestanaActiva === 'visualizacion' && (
             <div className="seccion-pestana">
               <div className="pestanas-navegacion sub-pestañas" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                  <button className={`btn-pestana ${subVista === 'detallada' ? 'activa' : ''}`} onClick={() => setSubVista('detallada')}>📊 Vista detallada</button>
-                  <button className={`btn-pestana ${subVista === 'simple' ? 'activa' : ''}`} onClick={() => setSubVista('simple')}>📋 Vista simple</button>
-                  <button className={`btn-pestana ${subVista === 'mia' ? 'activa' : ''}`} onClick={() => setSubVista('mia')}>🙋 Vista mía</button>
-                </div>
+                <div className="horario-vista-simple-titulo"><strong>📋 Vista simple</strong></div>
 
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                  {isAdmin && <button
-                    onClick={() => setPestanaActiva('admin')}
-                    className="btn-gris"
-                    title="Volver al administrador para editar turnos y eventos"
-                  >
-                    ✏️ Volver a Admin
-                  </button>}
-                  {subVista === 'simple' && <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'portrait')} className="btn-exportar">📄 PDF Vista simple</button>}
-                  <button 
-                    onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'landscape')} 
-                    className="btn-exportar"
-                  >
-                    📄 Descargar PDF Horizontal
-                  </button>
-                  <button 
-                    onClick={() => exportarPDFPersonalizado(vistaVisualizacion === 'carriles' ? vistaHorizontalRef : vistaVerticalRef, 'portrait')} 
-                    className="btn-jpg"
-                  >
-                    📄 Descargar PDF Vertical
-                  </button>
+                  {isAdmin && <div className="acciones-vista-simple" data-html2canvas-ignore="true" style={{display:'flex',flexWrap:'wrap',gap:'8px',marginBottom:'12px'}}>
+                    <button type="button" onClick={abrirModalNuevoEmpleado} className="btn-terciario">＋ Añadir empleado</button>
+                    <button type="button" onClick={abrirModalNuevoTurno} className="btn-secundario">＋ Añadir turno</button>
+                    <button type="button" onClick={abrirModalNuevoCumple} className="btn-cumple">＋ Añadir evento</button>
+                    <button type="button" onClick={deshacerUltimaAccion} className="btn-gris" disabled={historial.length === 0}>↩️ Deshacer</button>
+                  </div>}
+                  <button onClick={() => exportarPDFPersonalizado(vistaSimplePDFRef, 'portrait')} className="btn-exportar">📄 Descargar PDF</button>
                 </div>
               </div>
 
-              {subVista === 'detallada' && <>
+              {false && subVista === 'detallada' && <>
               <div className="selector-layout-detallada">
-                <button className={`btn-pestana ${vistaVisualizacion === 'carriles' ? 'activa' : ''}`} onClick={() => setVistaVisualizacion('carriles')}>Horario completo (carriles)</button>
-                <button className={`btn-pestana ${vistaVisualizacion === 'inversa' ? 'activa' : ''}`} onClick={() => setVistaVisualizacion('inversa')}>Horas en filas y días en columnas</button>
-              </div>
               {/* Vista 1 */}
               {vistaVisualizacion === 'carriles' && (
                 <div ref={vistaHorizontalRef} className="area-impresion">
@@ -1469,7 +1443,7 @@ useEffect(() => {
                     <div className="resumen-semana-matriz">
                       <div className="resumen-matriz-cabecera"><span></span>{[1,2,3,4,5,6,0].map(i=><span key={i}>{['D','L','M','X','J','V','S'][i]}</span>)}</div>
                       {empleados.map(emp=><div className="resumen-matriz-fila" key={emp.id}>
-                        <span className="resumen-matriz-nombre" title={emp.nombre}>{String(emp.nombre||'').trim().split(/\s+/)[0]}</span>
+                        <span className="resumen-matriz-nombre" title={isAdmin ? 'Pulsa para editar '+emp.nombre : emp.nombre} onClick={isAdmin ? () => abrirModalEditarEmpleado(emp) : undefined} style={isAdmin ? {cursor:'pointer'} : undefined}>{String(emp.nombre||'').trim().split(/\s+/)[0]}</span>
                         {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
                           const ts=turnos.filter(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
                           if(!ts.length)return <span key={d.isoFecha} className="resumen-matriz-celda" title="Sin turno"/>;
@@ -1497,7 +1471,7 @@ useEffect(() => {
                   {diasSemana.map(dia => <div className="dia-simple-en-cuadricula" key={dia.isoFecha}>{renderDiaSimple(dia)}</div>)}
                 </div>
               )}
-              {subVista === 'mia' && (() => {
+              {false && subVista === 'mia' && (() => {
                 const usuario = usuarioActual || {};
                 const usuarioEsAdmin = isAdmin;
                 const miEmpleado = usuarioEsAdmin
