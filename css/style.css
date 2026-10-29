@@ -520,3 +520,42 @@ body:has(#vendorWorkspace:not(.hidden)) #app main{width:100%;max-width:none;marg
 
 /* Colores distintivos de permisos visibles en Empleados */
 .employee-permission-encargado{background:#dcfce7!important;color:#166534!important;border-color:#86efac!important;box-shadow:inset 3px 0 0 #16a34a}.employee-permission-none{background:#f1f5f9!important;color:#64748b!important;border-color:#cbd5e1!important;box-shadow:inset 3px 0 0 #94a3b8}
+
+
+/* Ajuste global de diseño: navegación limpia, espaciado consistente y una sola página desplazable. */
+html { min-height: 100%; scroll-behavior: smooth; }
+body { min-height: 100vh; overflow-x: hidden; background: #f3f6fb; }
+#app { min-height: 100vh; }
+.topbar { position: sticky; top: 0; z-index: 30; }
+.section-tabs { top: 60px; z-index: 25; max-width: 1440px; margin: 0 auto; border-radius: 0 0 14px 14px; scrollbar-width: none; }
+.section-tabs::-webkit-scrollbar { display: none; }
+.container { width: min(100%, 1440px); margin: 22px auto; }
+.panel { min-width: 0; }
+.section-head { min-width: 0; }
+.section-head, .admin-head { flex-wrap: wrap; }
+.admin-actions { flex-wrap: wrap; }
+button, input, select, textarea { max-width: 100%; }
+button { transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid #8bb5f8; outline-offset: 2px; }
+.generator-frame-wrap { min-height: 0; overflow: visible; }
+.generator-frame-wrap iframe { display: block; width: 100%; height: 1800px; min-height: 0; border: 0; overflow: hidden; }
+#horariosPanel { overflow: visible; }
+#horariosPanel > .section-head { border-radius: 14px 14px 0 0; }
+@media (min-width: 1100px) {
+  .container { padding-left: 28px; padding-right: 28px; }
+  .section-tabs { padding-left: 28px; padding-right: 28px; }
+}
+@media (max-width: 900px) {
+  .section-tabs { top: 60px; }
+  .container { margin: 16px auto; }
+  .generator-frame-wrap iframe { height: 2000px; }
+}
+@media (max-width: 640px) {
+  .topbar { height: auto; min-height: 60px; gap: 10px; padding-top: 10px; padding-bottom: 10px; }
+  .section-tabs { position: sticky; top: 60px; border-radius: 0 0 10px 10px; }
+  .container { padding: 0 10px; }
+  .section-head { padding: 15px; }
+  .admin-actions { width: 100%; }
+  .admin-actions button { flex: 1 1 auto; }
+  .generator-frame-wrap iframe { height: 2200px; }
+}
