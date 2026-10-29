@@ -1192,6 +1192,10 @@ function showSection(sectionId){
   ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel','vendorWorkspace'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
   if(importPanel)importPanel.dataset.active=sectionId==='importExportPanel'?'true':'false';
+  // El resumen personal y las herramientas de administración pertenecen únicamente a Control horario.
+  // El resto de pestañas debe mostrar exclusivamente el contenido de su propia sección.
+  document.querySelector('.hero')?.classList.toggle('hidden', sectionId !== 'mainPanel');
+  $('adminPanel')?.classList.toggle('hidden', sectionId !== 'mainPanel' || !isAdmin());
   updateSectionTabsVisibility();
   document.querySelectorAll('.section-tab').forEach(t=>t.classList.toggle('active',t.dataset.section===sectionId));
   if(sectionId==='dashboardPanel'&&isAdmin())renderDashboard('general');if(sectionId==='vacationsPanel')renderVacationsSection();if(sectionId==='invoicesPanel'&&isAdmin())setupInvoices();
