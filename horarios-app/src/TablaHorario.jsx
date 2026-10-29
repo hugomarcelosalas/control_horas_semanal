@@ -1198,7 +1198,6 @@ useEffect(() => {
               </div>
 
               {false && subVista === 'detallada' && <>
-              <div className="selector-layout-detallada">
               {/* Vista 1 */}
               {vistaVisualizacion === 'carriles' && (
                 <div ref={vistaHorizontalRef} className="area-impresion">
