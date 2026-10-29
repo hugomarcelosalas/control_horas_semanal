@@ -891,7 +891,7 @@ async function loadPublishedSchedule(){
  const box=$('publishedScheduleContent');if(!box)return;
  box.innerHTML='<p class="muted">Cargando el último horario guardado…</p>';
  try{
-  const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],allTurnos=h.turnos||[];if(isAdmin())loadScheduleWeeklyHoursSummary();const nameFor=t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));return String(emp?.nombre||emp?.name||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'').toLocaleLowerCase('es');};const turnos=(!isAdmin()&&publishedScheduleView==='mine')?allTurnos.filter(t=>[currentUser?.name,currentUser?.username].filter(Boolean).some(v=>nameFor(t)===String(v).toLocaleLowerCase('es'))):allTurnos;const simpleBtn=$('publishedSimpleView'),mineBtn=$('publishedMyView');if(simpleBtn)simpleBtn.classList.toggle('primary',publishedScheduleView==='simple');if(mineBtn)mineBtn.classList.toggle('primary',publishedScheduleView==='mine');if(simpleBtn)simpleBtn.classList.toggle('ghost',publishedScheduleView!=='simple');if(mineBtn)mineBtn.classList.toggle('ghost',publishedScheduleView!=='mine');
+  const data=await api('/api/horarios/state');const h=data.horarios||{};const employees=h.empleados||[],allTurnos=h.turnos||[];if(isAdmin())loadScheduleWeeklyHoursSummary();const nameFor=t=>{const emp=employees.find(e=>String(e.id)===String(t.empleadoId));return String(emp?.nombre||emp?.name||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'').toLocaleLowerCase('es');};const turnos=(!isAdmin()&&publishedScheduleView==='mine')?allTurnos.filter(t=>[currentUser?.name,currentUser?.username].filter(Boolean).some(v=>nameFor(t)===String(v).toLocaleLowerCase('es'))):allTurnos;const detailBtn=$('publishedDetailedView'),simpleBtn=$('publishedSimpleView'),mineBtn=$('publishedMyView');if(detailBtn)detailBtn.classList.toggle('primary',publishedScheduleView==='detailed');if(detailBtn)detailBtn.classList.toggle('ghost',publishedScheduleView!=='detailed');if(simpleBtn)simpleBtn.classList.toggle('primary',publishedScheduleView==='simple');if(mineBtn)mineBtn.classList.toggle('primary',publishedScheduleView==='mine');if(simpleBtn)simpleBtn.classList.toggle('ghost',publishedScheduleView!=='simple');if(mineBtn)mineBtn.classList.toggle('ghost',publishedScheduleView!=='mine');
   if(!h.semanaGenerada||!turnos.length){box.innerHTML=isAdmin()?'<p class="empty-state">No hay un cuadrante publicado todavía. Puedes crear o revisar el cuadrante desde el generador y publicarlo cuando esté listo.</p><button type="button" class="primary" id="openScheduleGenerator">📅 Abrir generador de horarios</button>':'<p class="empty-state">📅 No hay un cuadrante publicado todavía. Cuando el administrador lo publique, podrás verlo aquí.</p>';return;}
   const dates=[...new Set([...(h.diasSemana||[]).map(d=>typeof d==='string'?d:(d.fecha||d.date||d.dia||'')),...turnos.map(t=>String(t.fecha||''))].filter(v=>/^\d{4}-\d{2}-\d{2}$/.test(v)))].sort();
   const weekdayNames=['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
@@ -925,6 +925,23 @@ async function loadPublishedSchedule(){
    return vals.length?vals.reduce((a,b)=>a+b,0):fromTurns;
   };
   let html='<p class="published-schedule-period"><strong>Semana:</strong> '+vendorEscape(h.fechaInicio||dates[0]||'')+' <span>· Solo lectura</span></p><div class="published-cumples-week"><h3>Eventos · niños por día</h3><table><thead><tr><th>Turno</th>'+['L','M','X','J','V','S','D'].map(x=>'<th>'+x+'</th>').join('')+'</tr></thead><tbody>'+[['Mañana','manana'],['Tarde','tarde']].map(([label,shift])=>'<tr><th>'+label+'</th>'+Array.from({length:7},(_,i)=>{const target=new Date((dates[0]||new Date().toISOString().slice(0,10))+'T12:00:00');target.setDate(target.getDate()+i-((target.getDay()+6)%7));const dateKey=target.getFullYear()+'-'+String(target.getMonth()+1).padStart(2,'0')+'-'+String(target.getDate()).padStart(2,'0');return '<td>'+weeklyCumples(shift,dateKey)+'</td>';}).join('')+'</tr>').join('')+'</tbody></table></div><div class="simple-published-schedule">';
+  if(publishedScheduleView==='detailed'){
+   html+='<div class="simple-published-schedule detailed-published-schedule">';
+   for(const date of dates){
+    const dayRows=turnos.filter(t=>String(t.fecha||'')===date);
+    const d=new Date(date+'T12:00:00');
+    html+='<section class="simple-schedule-day"><h3>'+weekdayNames[d.getDay()]+' '+d.getDate()+'/'+String(d.getMonth()+1).padStart(2,'0')+'</h3><div class="published-detailed-table-wrap"><table class="published-detailed-table"><thead><tr><th>Empleado</th><th>Puesto</th><th>Entrada</th><th>Salida</th><th>Observaciones</th></tr></thead><tbody>';
+    const sorted=[...dayRows].sort((a,b)=>String(a.horaInicio||'').localeCompare(String(b.horaInicio||''),'es'));
+    html+=sorted.map(t=>{
+     const emp=employees.find(e=>String(e.id)===String(t.empleadoId));
+     const name=emp?.nombre||emp?.username||t.empleadoNombre||t.nombreEmpleado||t.empleadoId||'Empleado';
+     return '<tr><td><strong>'+vendorEscape(name)+'</strong></td><td>'+vendorEscape(t.puesto||t.rol||t.area||t.departamento||'—')+'</td><td>'+vendorEscape(t.horaInicio||'—')+'</td><td>'+vendorEscape(t.horaFin||'—')+'</td><td>'+vendorEscape(t.observaciones||t.nota||'—')+'</td></tr>';
+    }).join('');
+    if(!sorted.length)html+='<tr><td colspan="5">No hay turnos asignados este día.</td></tr>';
+    html+='</tbody></table></div></section>';
+   }
+   html+='</div>';
+  }else{
   for(const date of dates){
    const dayRows=turnos.filter(t=>String(t.fecha||'')===date);
    const d=new Date(date+'T12:00:00');
@@ -974,10 +991,11 @@ async function loadPublishedSchedule(){
    }
    html+='</div></section>';
   }
+  }
   html+='</div>';box.innerHTML=html;
  }catch(e){box.innerHTML='<p class="error">No se pudo cargar el horario publicado: '+vendorEscape(e.message)+'</p>'}
 }
-document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule();if(e.target.closest('#openScheduleGenerator')&&isAdmin())showSection('horariosPanel');if(e.target.closest('#publishedSimpleView')){publishedScheduleView='simple';loadPublishedSchedule()}if(e.target.closest('#publishedMyView')){publishedScheduleView='mine';loadPublishedSchedule()}});
+document.addEventListener('click',e=>{if(e.target.closest('#refreshPublishedSchedule'))loadPublishedSchedule();if(e.target.closest('#openScheduleGenerator')&&isAdmin())showSection('horariosPanel');if(e.target.closest('#publishedDetailedView')){publishedScheduleView='detailed';loadPublishedSchedule()}if(e.target.closest('#publishedSimpleView')){publishedScheduleView='simple';loadPublishedSchedule()}if(e.target.closest('#publishedMyView')){publishedScheduleView='mine';loadPublishedSchedule()}});
 
 
 async function renderWages(){
