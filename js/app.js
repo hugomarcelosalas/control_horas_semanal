@@ -1187,7 +1187,7 @@ function updateSectionTabsVisibility(){
 
 function showSection(sectionId){
   if((sectionId==='importExportPanel'||sectionId==='invoicesPanel'||sectionId==='wagesPanel'||sectionId==='monthlyHoursPanel'||sectionId==='vendorWorkspace')&&!isAdmin())return;
-  if(sectionId==='horariosPanel'&&!isAdmin())sectionId='publishedSchedulePanel';
+  // Empleados también acceden al generador en modo de solo lectura; TablaHorario oculta y bloquea las acciones de edición.
   if(['dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel'].includes(sectionId)&&!isAdmin())return;
   ['mainPanel','dashboardPanel','balancesPanel','employeesPanel','hugoErikaPanel','importExportPanel','horariosPanel','publishedSchedulePanel','vacationsPanel','personalSpacePanel','invoicesPanel','wagesPanel','monthlyHoursPanel','vendorWorkspace'].forEach(id=>$(id)?.classList.toggle('hidden',id!==sectionId));
   const importPanel=$('importExportPanel');
