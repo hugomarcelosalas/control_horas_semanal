@@ -970,7 +970,8 @@ useEffect(() => {
     }
 
     try {
-      const pdf = new jsPDF(orientacion, 'mm', 'a4');
+      const esVistaSimple = refObjetivo === vistaSimplePDFRef;
+      const pdf = new jsPDF(esVistaSimple ? 'landscape' : orientacion, 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       const margen = 8;
@@ -987,18 +988,29 @@ useEffect(() => {
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: Math.max(document.documentElement.clientWidth, nodo.scrollWidth, nodo.offsetWidth),
+          windowWidth: Math.max(document.documentElement.clientWidth, esVistaSimple ? 1140 : nodo.scrollWidth, nodo.offsetWidth),
           windowHeight: Math.max(document.documentElement.clientHeight, nodo.scrollHeight, nodo.offsetHeight),
           onclone: (doc) => {
             const original = nodo;
             const clonado = doc.querySelector('[data-pdf-capture-target="true"]');
             if (clonado) {
-              clonado.style.width = original.offsetWidth + 'px';
+              clonado.style.width = (esVistaSimple ? 1120 : original.offsetWidth) + 'px';
+              clonado.style.minWidth = esVistaSimple ? '1120px' : '0';
               clonado.style.maxWidth = 'none';
               clonado.style.height = 'auto';
               clonado.style.maxHeight = 'none';
               clonado.style.overflow = 'visible';
               clonado.style.boxSizing = 'border-box';
+              if (esVistaSimple) {
+                clonado.style.display = 'block';
+                clonado.style.position = 'relative';
+                clonado.style.transform = 'none';
+                clonado.querySelectorAll('.dia-simple-card').forEach(card => {
+                  card.style.width = '100%'; card.style.minWidth = '0';
+                  card.style.maxWidth = 'none'; card.style.overflow = 'visible';
+                  card.style.boxSizing = 'border-box';
+                });
+              }
             }
             doc.querySelectorAll('[data-html2canvas-ignore="true"]').forEach(n => n.style.display = 'none');
           }
