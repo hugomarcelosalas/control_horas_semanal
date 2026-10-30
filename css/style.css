@@ -559,3 +559,10 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
   .admin-actions button { flex: 1 1 auto; }
   .generator-frame-wrap iframe { height: 2200px; }
 }
+
+
+/* El generador usa el scroll de la página principal: su iframe se redimensiona desde app.js. */
+.generator-frame-wrap { min-height:0; overflow:visible; }
+.generator-frame-wrap iframe { height:900px; min-height:0; overflow:hidden; }
+@media(max-width:900px){.generator-frame-wrap iframe{height:1000px}}
+@media(max-width:640px){.generator-frame-wrap iframe{height:1100px}}
