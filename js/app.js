@@ -44,16 +44,25 @@ function ajustarAlturaGenerador(){
      if(!doc)return;
      doc.documentElement.style.overflowY='hidden';
      doc.body.style.overflowY='hidden';
+     let pendiente=false;
      const ajustar=()=>{
-       const alto=Math.max(doc.documentElement.scrollHeight,doc.body.scrollHeight,doc.documentElement.offsetHeight,doc.body.offsetHeight);
-       if(alto>0)frame.style.height=(alto+8)+'px';
+       if(pendiente)return;
+       pendiente=true;
+       requestAnimationFrame(()=>{
+         pendiente=false;
+         // No sumar píxeles ni observar el tamaño del iframe: hacerlo crea un
+         // bucle porque el contenido mínimo de la app sigue la altura del iframe.
+         const alto=Math.max(doc.documentElement.scrollHeight,doc.body.scrollHeight);
+         if(alto>0 && Math.abs(frame.getBoundingClientRect().height-alto)>2){
+           frame.style.height=alto+'px';
+         }
+       });
      };
      ajustar();
-     if(frame._alturaObserver)frame._alturaObserver.disconnect();
-     if(typeof ResizeObserver!=='undefined'){
-       frame._alturaObserver=new ResizeObserver(ajustar);
-       frame._alturaObserver.observe(doc.documentElement);
-       frame._alturaObserver.observe(doc.body);
+     if(frame._contenidoObserver)frame._contenidoObserver.disconnect();
+     if(typeof MutationObserver!=='undefined'){
+       frame._contenidoObserver=new MutationObserver(ajustar);
+       frame._contenidoObserver.observe(doc.body,{childList:true,subtree:true,attributes:true,characterData:true});
      }
      if(doc.fonts?.ready)doc.fonts.ready.then(ajustar);
      setTimeout(ajustar,250);
