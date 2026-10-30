@@ -33,6 +33,37 @@ document.addEventListener('click',e=>{
   if(list){e.preventDefault();e.stopImmediatePropagation();if(typeof vacationsViewMode!=='undefined')vacationsViewMode='list';if(typeof renderVacationsSection==='function')renderVacationsSection();return;}
 },true);
 
+// Ajusta la altura del generador embebido a su contenido para evitar una segunda barra vertical.
+function ajustarAlturaGenerador(){
+ const frame=document.getElementById('generatorFrame');
+ if(!frame || frame.dataset.autoHeight==='true')return;
+ frame.dataset.autoHeight='true';
+ frame.addEventListener('load',()=>{
+   try{
+     const doc=frame.contentDocument;
+     if(!doc)return;
+     doc.documentElement.style.overflowY='hidden';
+     doc.body.style.overflowY='hidden';
+     const ajustar=()=>{
+       const alto=Math.max(doc.documentElement.scrollHeight,doc.body.scrollHeight,doc.documentElement.offsetHeight,doc.body.offsetHeight);
+       if(alto>0)frame.style.height=(alto+8)+'px';
+     };
+     ajustar();
+     if(frame._alturaObserver)frame._alturaObserver.disconnect();
+     if(typeof ResizeObserver!=='undefined'){
+       frame._alturaObserver=new ResizeObserver(ajustar);
+       frame._alturaObserver.observe(doc.documentElement);
+       frame._alturaObserver.observe(doc.body);
+     }
+     if(doc.fonts?.ready)doc.fonts.ready.then(ajustar);
+     setTimeout(ajustar,250);
+     setTimeout(ajustar,900);
+   }catch(error){console.warn('No se pudo ajustar la altura del generador:',error);}
+ });
+}
+document.addEventListener('DOMContentLoaded',ajustarAlturaGenerador);
+ajustarAlturaGenerador();
+
 let db={users:[],records:{},locks:{},weekly:{},vacations:{},balanceVisibility:{},version:8};
 let authToken=null;
 let currentUser=null,selectedEmployee=null,editingHeId=null,hugoErikaRecords=[],currentDate=new Date(),selectedDate=null,selectedWeeklyId=null,selectedVacationId=null,activeView="calendar",pendingDeleteUser=null,editingUsername=null,selectedDashboardEmployees=null,inactiveEmployeesVisible=false;
