@@ -2114,3 +2114,9 @@ button {
 .nuevo-horario-opciones{display:flex;flex-direction:column;gap:8px;margin-top:14px}
 .nuevo-horario-opciones button{white-space:normal;text-align:left;line-height:1.4}
 .nuevo-horario-opciones small{font-size:12px;color:#64748b;line-height:1.45;margin:0 0 8px}
+
+
+/* Matriz semanal interactiva para administradores */
+.resumen-matriz-celda-admin { cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, outline-color .12s ease; outline:1px solid transparent; outline-offset:1px; }
+.resumen-matriz-celda-admin:hover { transform:scale(1.08); outline-color:#2563eb; box-shadow:0 2px 8px #1d4ed833; z-index:2; }
+.resumen-matriz-celda-admin:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
