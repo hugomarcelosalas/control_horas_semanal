@@ -761,6 +761,25 @@ useEffect(() => {
     setMostrarModalTurno(true);
   };
 
+  const abrirModalTurnoDesdeMatriz = (empleado, dia, turnosDia) => {
+    if(!isAdmin || isViewingHistory) return;
+    // Si la celda ya contiene un turno, abrirlo para editarlo; si está vacía,
+    // preparar el formulario con empleado y fecha de esa celda.
+    if(turnosDia.length > 0) {
+      abrirModalEditarTurno(turnosDia[0]);
+      return;
+    }
+    setIdTurnoEdit(null);
+    setTurnoEmpId(String(empleado.id));
+    setTurnoFecha(dia.isoFecha);
+    setTurnoUbicacion('vendedor');
+    setTurnoHoraInicio('10:00');
+    setTurnoHoraFin('14:00');
+    setTurnoSiEsNecesario(false);
+    setTurnoEncargado(false);
+    setMostrarModalTurno(true);
+  };
+
   const abrirModalEditarTurno = (turno) => {
     if(!isAdmin) return;
     if(!isAdmin) return;
@@ -1580,13 +1599,13 @@ useEffect(() => {
                         <span className="resumen-matriz-nombre" title={isAdmin ? 'Pulsa para editar '+emp.nombre : emp.nombre} onClick={isAdmin ? () => abrirModalEditarEmpleado(emp) : undefined} style={isAdmin ? {cursor:'pointer'} : undefined}>{String(emp.nombre||'').trim().split(/\s+/)[0]}</span>
                         {[...diasSemana].sort((a,b)=>{const ai=new Date(a.isoFecha+'T12:00:00').getDay();const bi=new Date(b.isoFecha+'T12:00:00').getDay();return ((ai+6)%7)-((bi+6)%7)}).map(d=>{
                           const ts=turnos.filter(t=>t.fecha===d.isoFecha&&String(t.empleadoId)===String(emp.id));
-                          if(!ts.length)return <span key={d.isoFecha} className="resumen-matriz-celda" title="Sin turno"/>;
+                          if(!ts.length)return <span key={d.isoFecha} className={`resumen-matriz-celda ${isAdmin && !isViewingHistory ? 'resumen-matriz-celda-admin' : ''}`} title={isAdmin && !isViewingHistory ? 'Asignar turno a '+emp.nombre+' · '+d.fecha : 'Sin turno'} onClick={isAdmin && !isViewingHistory ? () => abrirModalTurnoDesdeMatriz(emp,d,ts) : undefined} role={isAdmin && !isViewingHistory ? 'button' : undefined} tabIndex={isAdmin && !isViewingHistory ? 0 : undefined} onKeyDown={isAdmin && !isViewingHistory ? e => {if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirModalTurnoDesdeMatriz(emp,d,ts);}} : undefined}/>;
                           const horas=ts.reduce((s,t)=>{const [ih,im]=String(t.horaInicio||'0:0').split(':').map(Number);const [fh,fm]=String(t.horaFin||'0:0').split(':').map(Number);return s+Math.max(0,(fh*60+(fm||0)-ih*60-(im||0))/60);},0);
                           const primerInicio=ts.map(t=>String(t.horaInicio||'11:00')).sort()[0];
                           const marca=horas>6?'C':primerInicio<'15:00'?'M':'T';
                           const encargado = ts.some(t => Boolean(t.encargado));
                           const necesario = ts.some(t => Boolean(t.siEsNecesario));
-                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-turno" style={{background:emp.color||'#94a3b8'}} title={emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')}>{marca}{necesario && <span title="Si hace falta" aria-label="Si hace falta" className="resumen-matriz-marcador">⚠️</span>}{encargado && <span title="Encargado" aria-label="Encargado" className="resumen-matriz-marcador">★</span>}</span>;
+                          return <span key={d.isoFecha} className={`resumen-matriz-celda resumen-matriz-turno ${isAdmin && !isViewingHistory ? 'resumen-matriz-celda-admin' : ''}`} style={{background:emp.color||'#94a3b8'}} title={isAdmin && !isViewingHistory ? 'Editar turno de '+emp.nombre+' · '+d.fecha : emp.nombre+' · '+(marca==='C'?'Completo':marca==='M'?'Mañana':'Tarde')} onClick={isAdmin && !isViewingHistory ? () => abrirModalTurnoDesdeMatriz(emp,d,ts) : undefined} role={isAdmin && !isViewingHistory ? 'button' : undefined} tabIndex={isAdmin && !isViewingHistory ? 0 : undefined} onKeyDown={isAdmin && !isViewingHistory ? e => {if(e.key==='Enter'||e.key===' '){e.preventDefault();abrirModalTurnoDesdeMatriz(emp,d,ts);}} : undefined}>{marca}{necesario && <span title="Si hace falta" aria-label="Si hace falta" className="resumen-matriz-marcador">⚠️</span>}{encargado && <span title="Encargado" aria-label="Encargado" className="resumen-matriz-marcador">★</span>}</span>;
                         })}
                       </div>)}
                       <div className="resumen-matriz-separador"><span>Eventos · niños por día</span></div>
