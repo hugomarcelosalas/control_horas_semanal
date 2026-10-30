@@ -2120,3 +2120,18 @@ button {
 .resumen-matriz-celda-admin { cursor:pointer; transition:transform .12s ease, box-shadow .12s ease, outline-color .12s ease; outline:1px solid transparent; outline-offset:1px; }
 .resumen-matriz-celda-admin:hover { transform:scale(1.08); outline-color:#2563eb; box-shadow:0 2px 8px #1d4ed833; z-index:2; }
 .resumen-matriz-celda-admin:focus-visible { outline:2px solid #2563eb; outline-offset:2px; }
+
+
+/* Los formularios se abren cerca de la parte superior del generador,
+   sin quedar centrados a cientos de píxeles dentro del horario largo. */
+.modal-overlay {
+  align-items: flex-start;
+  justify-content: center;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.modal-contenido {
+  margin: 18px auto;
+  max-height: calc(100% - 36px);
+  overflow-y: auto;
+}
