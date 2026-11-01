@@ -655,16 +655,10 @@ async function renderPersonalDocuments(){
  }catch(e){box.innerHTML='<div class="personal-space-empty">No se pudieron cargar los documentos: '+esc(e.message)+'</div>'}
 }
 async function loadPayrolls(){
-  const box=$("payrollBox"),payrollUser=isAdmin()?selectedEmployee:currentUser;
-  if(!box||!payrollUser)return;
-  try{
-    const rows=await api("/api/payrolls");
-    const mine=rows.filter(x=>x.username===payrollUser.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)));
-    const esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
-    box.innerHTML=mine.length?'<div class="payroll-list">'+mine.map(x=>'<div class="payroll-row"><div class="payroll-period"><strong>'+esc(String(x.month||"").split("-").reverse().join("/"))+'</strong>'+(isAdmin()?'<span>'+esc(x.employeeName||payrollUser.name||"")+'</span>':'')+'</div>'+(isAdmin()&&x.amount!=null?'<div class="payroll-amount">'+Number(x.amount||0).toLocaleString("es-ES",{style:"currency",currency:"EUR"})+'</div>':'')+'<div class="payroll-actions">'+(x.driveUrl?'<a class="small-btn payroll-view" href="'+esc(x.driveUrl)+'" target="_blank" rel="noopener noreferrer">🔗 Abrir en Google Drive</a>':'<span class="muted">Sin enlace de Google Drive</span>')+(isAdmin()?'<button class="small-btn payroll-edit" data-payroll-id="'+esc(x.id)+'">Editar</button><button class="small-btn danger-small payroll-delete" data-payroll-id="'+esc(x.id)+'">Eliminar</button>':'')+'</div></div>').join("")+'</div>':'<div class="empty-state">Todavía no hay nóminas cargadas.</div>';
-    box.querySelectorAll(".payroll-edit").forEach(b=>b.onclick=async()=>{if(!isAdmin())return;const p=mine.find(x=>String(x.id)===b.dataset.payrollId);if(!p)return;const month=prompt("Periodo (AAAA-MM):",p.month);if(month===null)return;const amount=prompt("Importe (€), vacío si no quieres indicar:",p.amount??"");if(amount===null)return;const driveUrl=prompt("Enlace de Google Drive:",p.driveUrl||"");if(driveUrl===null)return;try{await api("/api/admin/payroll/"+encodeURIComponent(p.id),{method:"PUT",body:JSON.stringify({month,amount,driveUrl})});await loadPayrolls()}catch(e){alert(e.message)}});
-    box.querySelectorAll(".payroll-delete").forEach(b=>b.onclick=async()=>{if(!confirm("¿Eliminar esta nómina de la lista?"))return;try{await api("/api/admin/payroll/"+encodeURIComponent(b.dataset.payrollId),{method:"DELETE"});loadPayrolls();}catch(e){alert(e.message)}});
-  }catch(e){box.innerHTML='<div class="empty-state">No se pudieron cargar las nóminas: '+String(e.message)+'</div>'}
+ const box=$("payrollBox"),payrollUser=isAdmin()?selectedEmployee:currentUser;if(!box||!payrollUser)return;
+ try{const rows=await api("/api/payrolls"),p=rows.find(x=>x.username===payrollUser.username),esc=s=>String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+ box.innerHTML=p?.driveUrl?'<div class="payroll-row"><div class="payroll-period"><strong>Carpeta de nóminas</strong><span>'+(isAdmin()?esc(p.employeeName||payrollUser.name||""):'Todas tus nóminas')+'</span></div><div class="payroll-actions"><a class="small-btn payroll-view" href="'+esc(p.driveUrl)+'" target="_blank" rel="noopener noreferrer">🔗 Abrir carpeta en Google Drive</a></div></div>':'<div class="empty-state">Todavía no hay una carpeta de nóminas enlazada.</div>';
+ }catch(e){box.innerHTML='<div class="empty-state">No se pudo cargar la carpeta de nóminas: '+String(e.message)+'</div>'}
 }
 function syncPersonalSpaceEmployee(){
  if(!isAdmin()||!selectedEmployee)return;
@@ -672,70 +666,29 @@ function syncPersonalSpaceEmployee(){
  renderMyVacations();loadPayrolls();renderPersonalDocuments();
 }
 async function renderPersonalSpaceAdminOverview(){
- const overview=$('personalSpaceAdminOverview');if(!overview)return;
- if(!isAdmin()){overview.classList.add('hidden');return}
- overview.classList.remove('hidden');
- const host=$('personalSpaceAdminTable');if(!host)return;
- const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
- try{
-  const [docs,payrolls]=await Promise.all([api('/api/admin/documents'),api('/api/payrolls')]);
-  const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es'));
-  const rows=employees.map(u=>({u,docs:docs.filter(d=>d.username===u.username),payrolls:payrolls.filter(p=>p.username===u.username).sort((a,b)=>String(b.month).localeCompare(String(a.month)))}));
-  const yearSelect=$('spacePayrollYear');
-  if(yearSelect){
-   const selectedYear=yearSelect.value;
-   const years=[...new Set(rows.flatMap(r=>r.payrolls.map(p=>String(p.month||'').slice(0,4)).filter(y=>/^\d{4}$/.test(y))))].sort((a,b)=>b.localeCompare(a));
-   yearSelect.innerHTML='<option value="">Todos los años</option>'+years.map(y=>'<option value="'+esc(y)+'">'+esc(y)+'</option>').join('');
-   if(years.includes(selectedYear))yearSelect.value=selectedYear;
-  }
-  const render=()=>{
-   const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all',year=yearSelect?.value||'';
-   const visible=rows.filter(r=>{if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;if(f==='payroll'&&!r.payrolls.length)return false;if(f==='documents'&&!r.docs.some(d=>d.type!=='Contrato'))return false;if(f==='missing'&&(r.docs.length||r.payrolls.length))return false;return true});
-   host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Contrato</th><th>Documentos</th><th>Nóminas</th></tr></thead><tbody>'+visible.map(r=>{
-    const contracts=r.docs.filter(d=>d.type==='Contrato'),otherDocs=r.docs.filter(d=>d.type!=='Contrato');
-    const contractHtml=contracts.length?contracts.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a>'+(d.month?'<small>'+esc(d.month)+'</small>':'')+'</div>').join(''):'<span class="muted">Sin contrato cargado</span>';
-    const filteredPayrolls=r.payrolls.filter(p=>!year||String(p.month||'').startsWith(year));
-    const payrollHtml=filteredPayrolls.length?'<div class="personal-space-month-list">'+filteredPayrolls.map(p=>p.driveUrl?'<a class="personal-space-month" href="'+esc(p.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(p.month)+'</a>':'<span class="personal-space-month">'+esc(p.month)+'</span>').join('')+'</div>':'<div class="muted">'+(r.payrolls.length?'Sin nóminas en este año':'Sin nóminas')+'</div>';
-    const docsHtml=otherDocs.length?otherDocs.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a><small>'+esc(d.type)+(d.month?' · '+esc(d.month):'')+'</small></div>').join(''):'<span class="muted">Sin documentos</span>';
-    return '<tr><td><strong>'+esc(r.u.name)+'</strong><div class="muted">'+esc(r.u.username)+'</div><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Gestionar empleado</button></td><td>'+contractHtml+'</td><td>'+docsHtml+'</td><td>'+payrollHtml+'</td></tr>';
-   }).join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
-   host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;selectedEmployee=u;syncPersonalSpaceEmployee();$('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'});});
-  };
-  $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;if(yearSelect)yearSelect.onchange=render;render();
- }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen: '+esc(e.message)+'<br>Si aparece «No autorizado», vuelve a iniciar sesión.</p>'}
+ const overview=$('personalSpaceAdminOverview');if(!overview)return;if(!isAdmin()){overview.classList.add('hidden');return}overview.classList.remove('hidden');
+ const host=$('personalSpaceAdminTable');if(!host)return;const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+ try{const [docs,payrolls]=await Promise.all([api('/api/admin/documents'),api('/api/payrolls')]),employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name).localeCompare(String(b.name),'es')),rows=employees.map(u=>({u,docs:docs.filter(d=>d.username===u.username),payroll:payrolls.find(p=>p.username===u.username)}));
+ const render=()=>{const q=String($('spaceEmployeeSearch')?.value||'').trim().toLocaleLowerCase('es'),f=$('spaceEmployeeFilter')?.value||'all',visible=rows.filter(r=>{if(q&&!String(r.u.name+' '+r.u.username).toLocaleLowerCase('es').includes(q))return false;if(f==='payroll'&&!r.payroll?.driveUrl)return false;if(f==='documents'&&!r.docs.some(d=>d.type!=='Contrato'))return false;if(f==='missing'&&(r.docs.length||r.payroll?.driveUrl))return false;return true});
+ host.innerHTML=visible.length?'<div class="table-wrap"><table class="published-schedule-table"><thead><tr><th>Empleado</th><th>Contrato</th><th>Documentos</th><th>Carpeta de nóminas</th></tr></thead><tbody>'+visible.map(r=>{const contracts=r.docs.filter(d=>d.type==='Contrato'),other=r.docs.filter(d=>d.type!=='Contrato'),contractHtml=contracts.length?contracts.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a></div>').join(''):'<span class="muted">Sin contrato cargado</span>',payrollHtml=r.payroll?.driveUrl?'<a class="personal-space-month" href="'+esc(r.payroll.driveUrl)+'" target="_blank" rel="noopener noreferrer">🔗 Abrir carpeta</a>':'<span class="muted">Sin carpeta enlazada</span>',docsHtml=other.length?other.map(d=>'<div class="personal-space-file"><a href="'+esc(d.driveUrl)+'" target="_blank" rel="noopener noreferrer">'+esc(d.title)+'</a><small>'+esc(d.type)+(d.month?' · '+esc(d.month):'')+'</small></div>').join(''):'<span class="muted">Sin documentos</span>';return '<tr><td><strong>'+esc(r.u.name)+'</strong><div class="muted">'+esc(r.u.username)+'</div><button type="button" class="small-btn" data-space-view-employee="'+esc(r.u.username)+'">Gestionar empleado</button></td><td>'+contractHtml+'</td><td>'+docsHtml+'</td><td>'+payrollHtml+'</td></tr>'}).join('')+'</tbody></table></div>':'<p class="personal-space-empty">No hay empleados que coincidan con el filtro.</p>';
+ host.querySelectorAll('[data-space-view-employee]').forEach(btn=>btn.onclick=()=>{const u=(db.users||[]).find(x=>x.username===btn.dataset.spaceViewEmployee);if(!u)return;selectedEmployee=u;syncPersonalSpaceEmployee();$('personalSpacePanel')?.querySelector('.personal-space-grid')?.scrollIntoView({behavior:'smooth',block:'start'})})};
+ $('spaceEmployeeSearch').oninput=render;$('spaceEmployeeFilter').onchange=render;render();
+ }catch(e){host.innerHTML='<p class="error">No se pudo cargar el resumen: '+esc(e.message)+'</p>'}
 }
 function setupPayrollUI(){
-  if(isAdmin()&&!$("payrollAdminTools")){
-    const panel=$("personalSpacePanel");
-    if(panel){
-      const box=document.createElement("div");box.id="payrollAdminTools";box.className="personal-space-card payroll-admin";
-      box.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">📄</div><h3>Gestionar nóminas</h3><p>Registra el enlace de Google Drive de cada nómina para el empleado y el mes correspondiente.</p></div><div class="payroll-upload-form"><label>Empleado<select id="payrollEmployee" required></select></label><label>Periodo (mes y año)<input id="payrollMonth" type="month" required></label><label>Importe (€), solo administración<input id="payrollAmount" type="number" min="0" step="0.01" placeholder="Ej. 1450,00"></label><label>Enlace de Google Drive<input id="payrollDriveUrl" type="url" placeholder="https://drive.google.com/..." required></label><button id="uploadPayrollBtn" class="primary" type="button">🔗 Guardar enlace de nómina</button></div><div id="payrollUploadStatus" class="muted"></div>';
-      panel.querySelector(".personal-space-grid")?.appendChild(box);
-      const sel=$("payrollEmployee");sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+String(u.username).replace(/"/g,"&quot;")+'">'+String(u.name).replace(/</g,'&lt;')+'</option>').join("");
-      sel.value=selectedEmployee?.username||sel.value;sel.onchange=()=>{if(!isAdmin())return;selectedEmployee=db.users.find(u=>u.username===sel.value)||selectedEmployee;syncPersonalSpaceEmployee();};$("payrollMonth").value=dateKey(new Date()).slice(0,7);$("uploadPayrollBtn").onclick=uploadPayroll;
-    }
-  }
-  loadPayrolls();
-  setupPersonalDocuments();
+ if(isAdmin()&&!$("payrollAdminTools")){const panel=$("personalSpacePanel");if(panel){const box=document.createElement("div");box.id="payrollAdminTools";box.className="personal-space-card payroll-admin";
+ box.innerHTML='<div class="payroll-form-heading"><div class="personal-space-card-icon">📁</div><h3>Carpeta de nóminas</h3><p>Guarda un único enlace a la carpeta de Google Drive de cada empleado. Dentro puedes organizar todas sus nóminas por mes y año.</p></div><div class="payroll-upload-form"><label>Empleado<select id="payrollEmployee" required></select></label><label>Enlace a la carpeta de Google Drive<input id="payrollDriveUrl" type="url" placeholder="https://drive.google.com/drive/folders/..." required></label><button id="uploadPayrollBtn" class="primary" type="button">🔗 Guardar carpeta de nóminas</button></div><div id="payrollUploadStatus" class="muted"></div>';
+ panel.querySelector(".personal-space-grid")?.appendChild(box);const sel=$("payrollEmployee");sel.innerHTML=db.users.filter(u=>u.role==="employee"&&u.active!==false).map(u=>'<option value="'+String(u.username).replace(/"/g,"&quot;")+'">'+String(u.name).replace(/</g,'&lt;')+'</option>').join("");sel.value=selectedEmployee?.username||sel.value;sel.onchange=()=>{selectedEmployee=db.users.find(u=>u.username===sel.value)||selectedEmployee;syncPersonalSpaceEmployee()};$("uploadPayrollBtn").onclick=uploadPayroll}}
+ loadPayrolls();setupPersonalDocuments();
 }
 async function uploadPayroll(){
-  if(!isAdmin())return alert("Solo el administrador puede gestionar nóminas.");
-  const username=$("payrollEmployee")?.value,month=$("payrollMonth")?.value,amount=$("payrollAmount")?.value,driveUrl=$("payrollDriveUrl")?.value?.trim(),status=$("payrollUploadStatus");
-  if(!username||!month||!driveUrl)return alert("Selecciona empleado, mes y pega el enlace de Google Drive.");
-  try{const url=new URL(driveUrl);if(url.protocol!=="https:"||!["drive.google.com","docs.google.com"].includes(url.hostname))return alert("Introduce un enlace válido de Google Drive.");}catch(e){return alert("Introduce un enlace válido de Google Drive.");}
-  if(amount!==""&&(!Number.isFinite(Number(amount))||Number(amount)<0))return alert("El importe debe ser un número igual o superior a cero.");
-  if(status)status.textContent="Guardando enlace de Google Drive…";
-  try{
-    await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,month,amount:amount===""?null:Number(amount),driveUrl})});
-    if(status)status.textContent="Enlace de nómina guardado correctamente.";
-    $("payrollDriveUrl").value="";$("payrollAmount").value="";
-    selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;loadPayrolls();
-  }catch(e){if(status)status.textContent=e.message||"No se pudo guardar el enlace."}
+ if(!isAdmin())return alert("Solo administración puede gestionar carpetas de nóminas.");
+ const username=$("payrollEmployee")?.value,driveUrl=$("payrollDriveUrl")?.value?.trim(),status=$("payrollUploadStatus");
+ if(!username||!driveUrl)return alert("Selecciona un empleado y pega el enlace de su carpeta de Google Drive.");
+ try{const url=new URL(driveUrl);if(url.protocol!=="https:"||!["drive.google.com","docs.google.com"].includes(url.hostname))return alert("Introduce un enlace HTTPS válido de Google Drive.")}catch(e){return alert("Introduce un enlace válido de Google Drive.")}
+ if(status)status.textContent="Guardando enlace de la carpeta…";
+ try{await api("/api/admin/payroll",{method:"POST",body:JSON.stringify({username,driveUrl})});if(status)status.textContent="✓ Carpeta de nóminas guardada en el servidor.";selectedEmployee=db.users.find(u=>u.username===username)||selectedEmployee;$("payrollDriveUrl").value="";await loadPayrolls();await renderPersonalSpaceAdminOverview()}catch(e){if(status)status.textContent=e.message||"No se pudo guardar el enlace."}
 }
-
-
-
-
 function allVacationRows(){
  const rows=[];
  (db.dayOffRequests||[]).forEach(r=>{const u=(db.users||[]).find(x=>x.username===r.username);if(u)rows.push({...r,employeeName:u.name,year:Number(String(r.start||'').slice(0,4)),isDayOffRequest:true})});
