@@ -986,3 +986,5 @@ body.stock-workbook-mode #stockMovementSummary .stock-movement-size-summary,body
 body.stock-workbook-mode #stockMovementSummary .stock-movement-size-summary h4{min-height:20px;margin:0 0 8px}
 @media(max-width:1050px){body.stock-workbook-mode .stock-warehouse-align-spacer{height:153px}}
 @media(max-width:760px){body.stock-workbook-mode .stock-warehouse-align-spacer{height:0;display:none}}
+
+body.stock-workbook-mode .stock-movement-tag.transfer{background:#edf2ff;color:#36558a}
