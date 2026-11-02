@@ -301,7 +301,7 @@
       return '<section class="card week-card"><h3>'+esc(title)+'</h3><p class="sub">'+esc(range)+'</p>'+copy.outerHTML+'</section>';
     }).join('');
     const metrics=[...document.querySelectorAll('#stockMetrics .stock-metric')].map(m=>'<div class="metric"><span>'+esc(m.querySelector('span')?.textContent)+'</span><b>'+esc(m.querySelector('strong')?.textContent)+'</b><small>'+esc(m.querySelector('small')?.textContent)+'</small></div>').join('');
-    const reconciliation=cloneTable('#stockReconciliation .stock-reconcile-table');
+    const reconciliation=[...document.querySelectorAll('#stockReconciliation .stock-reconcile-table')].map((table,index)=>{const copy=table.cloneNode(true);copy.querySelectorAll('button').forEach(btn=>btn.remove());return '<div class="reconcile-table reconcile-table-'+index+'">'+copy.outerHTML+'</div>';}).join('');
     const summaries=($('stockMovementSummary')?.innerHTML||'')+($('stockWarehouseMovementSummary')?.innerHTML||'');
     const ledgers=($('stockMovements')?.innerHTML||'');
     const win=window.open('','_blank');
