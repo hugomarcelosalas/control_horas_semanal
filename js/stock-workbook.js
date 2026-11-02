@@ -208,13 +208,13 @@
       const type=originKind==='external'?'ingreso':destinationKind==='external'?'egreso':'traslado';
       const previous=stockMovements.slice();stockMovements.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),date:String(fd.get('date')),type,origin,destination,originKind,destinationKind,quantities,note:String(fd.get('note')||'').trim()});
       dirty=true;updateStatus('Guardando movimiento en el servidor…');const submit=form.querySelector('button[type="submit"]');if(submit){submit.disabled=true;submit.textContent='Guardando…';}
-      const ok=await save(false);if(ok){showMovementForm=false;renderMovements();alert('Movimiento registrado y guardado en el servidor.');}else{stockMovements=previous;showMovementForm=true;renderMovements();alert('No se pudo guardar el movimiento en el servidor. No se ha confirmado el registro; inténtalo de nuevo.');}
+      const ok=await save(false);if(ok){showMovementForm=false;renderMovements();renderMetrics();alert('Movimiento registrado y guardado en el servidor.');}else{stockMovements=previous;showMovementForm=true;renderMovements();renderMetrics();alert('No se pudo guardar el movimiento en el servidor. No se ha confirmado el registro; inténtalo de nuevo.');}
     });
     host.querySelectorAll('[data-movement-id]').forEach(btn=>btn.addEventListener('click',()=>{
       const movement=stockMovements.find(m=>m.id===btn.dataset.movementId);if(!movement)return;
       const detail=Object.entries(movement.quantities||{}).filter(([size,qty])=>numberOf(qty)>0).map(([size,qty])=>size+' × '+numberOf(qty)).join(', ');
       if(!confirm('¿Eliminar este '+(movement.type==='ingreso'?'ingreso':'egreso')+' del '+(movement.date||'')+'?\\n\\n'+(detail||'Sin cantidades')+'\\n\\nEsta acción se guardará en el servidor y no se puede deshacer.'))return;
-      const previous=stockMovements.slice();stockMovements=stockMovements.filter(m=>m.id!==btn.dataset.movementId);dirty=true;renderMovements();updateStatus('Guardando eliminación en el servidor…');save(false).then(ok=>{if(!ok){stockMovements=previous;renderMovements();alert('No se pudo eliminar en el servidor. El movimiento se ha restaurado en pantalla.');}else{alert('Movimiento eliminado y cambio guardado en el servidor.');}});
+      const previous=stockMovements.slice();stockMovements=stockMovements.filter(m=>m.id!==btn.dataset.movementId);dirty=true;renderMovements();updateStatus('Guardando eliminación en el servidor…');save(false).then(ok=>{if(!ok){stockMovements=previous;renderMovements();renderMetrics();alert('No se pudo eliminar en el servidor. El movimiento se ha restaurado en pantalla.');}else{renderMetrics();alert('Movimiento eliminado y cambio guardado en el servidor.');}});
     }));
   }
 
