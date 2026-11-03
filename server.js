@@ -13,6 +13,8 @@ app.use('/horarios', express.static(path.join(__dirname,'horarios-app','build'))
 
 const pool = process.env.DATABASE_URL ? new Pool({ connectionString: process.env.DATABASE_URL, ssl: {rejectUnauthorized:false} }) : null;
 const TEST_MODE = process.env.TEST_MODE === '1';
+// The Stock test service shares the existing PostgreSQL instance but uses a separate row/table.
+const STATE_TABLE = TEST_MODE ? 'stock_test_app_state' : 'app_state';
 let memoryDb = null;
 const sessions = new Map();
 const revokedTokens = new Set();
@@ -80,12 +82,12 @@ async function init(){
     return;
   }
   if(!process.env.DATABASE_URL) throw new Error('DATABASE_URL is required');
-  await pool.query(`CREATE TABLE IF NOT EXISTS app_state (id integer primary key, data jsonb not null, updated_at timestamptz not null default now())`);
-  const r=await pool.query('SELECT id FROM app_state WHERE id=1');
+  await pool.query(`CREATE TABLE IF NOT EXISTS ${STATE_TABLE} (id integer primary key, data jsonb not null, updated_at timestamptz not null default now())`);
+  const r=await pool.query(`SELECT id FROM ${STATE_TABLE} WHERE id=1`);
   if(!r.rowCount){
     const password=process.env.ADMIN_PASSWORD;
     if(!password) throw new Error('ADMIN_PASSWORD is required on first startup');
-    await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[createInitialDb(password)]);
+    await pool.query(`INSERT INTO ${STATE_TABLE}(id,data) VALUES(1,$1)`,[createInitialDb(password)]);
   }
   await ensureVendorAccount();
 }
@@ -102,8 +104,8 @@ function driveConfig(){
 }
 function ensurePayrolls(db){db.payrolls=db.payrolls||[];return db.payrolls}
 function enforceRolePolicy(db){if(!db||!Array.isArray(db.users))return db;db.users=db.users.map(u=>({...u,role:String(u.username).toLowerCase()==='admin'?'admin':String(u.username).toLowerCase()==='vendedor'?'vendedor':'employee',active:String(u.username).toLowerCase()==='admin'?true:u.active!==false}));return db}
-async function getDb(){if(TEST_MODE && !process.env.DATABASE_URL)return enforceRolePolicy(memoryDb);const r=await pool.query('SELECT data FROM app_state WHERE id=1');return enforceRolePolicy(r.rows[0].data)}
-async function putDb(db){enforceRolePolicy(db);if(TEST_MODE && !process.env.DATABASE_URL){memoryDb=db;return}await pool.query('UPDATE app_state SET data=$1,updated_at=now() WHERE id=1',[db])}
+async function getDb(){if(TEST_MODE && !process.env.DATABASE_URL)return enforceRolePolicy(memoryDb);const r=await pool.query(`SELECT data FROM ${STATE_TABLE} WHERE id=1`);return enforceRolePolicy(r.rows[0].data)}
+async function putDb(db){enforceRolePolicy(db);if(TEST_MODE && !process.env.DATABASE_URL){memoryDb=db;return}await pool.query(`UPDATE ${STATE_TABLE} SET data=$1,updated_at=now() WHERE id=1`,[db])}
 function publicDb(db,viewerRole='admin',viewerUsername=null){if(viewerRole==='vendedor'){const u=db.users.find(x=>x.username===viewerUsername);const {passwordHash,...user}=u||{};return {users:u?[user]:[],vendorSheets:db.vendorSheets||createVendorSheetTemplate(),version:8};}const safe={...db,users:db.users.map(({passwordHash,...u})=>u),payrolls:(db.payrolls||[]).map(({driveFileId,...p})=>p)};delete safe.gmailNotification;safe.dayOffRequests=(db.dayOffRequests||[]).filter(r=>viewerRole==='admin'||r.username===viewerUsername);safe.invoices=viewerRole==='admin'?(db.invoices||[]):[];if(viewerRole!=='admin'){safe.vacations=Object.fromEntries(Object.entries(db.vacations||{}).map(([username,rows])=>[username,(rows||[]).map(({adminObservations,...v})=>v)]));}return safe;}
 function tokenUser(req){const token=(req.headers.authorization||'').replace(/^Bearer\s+/,'');if(!token||revokedTokens.has(token))return null;const parts=token.split('.');if(parts.length!==2)return sessions.get(token)||null;try{const expected=crypto.createHmac('sha256',authSigningSecret()).update(parts[0]).digest(),actual=Buffer.from(parts[1],'base64url');if(actual.length!==expected.length||!crypto.timingSafeEqual(actual,expected))return null;const user=JSON.parse(Buffer.from(parts[0],'base64url').toString('utf8'));if(!user.username||!user.role||!Number.isFinite(user.exp)||user.exp<=Math.floor(Date.now()/1000))return null;return {username:user.username,role:user.role,name:user.name,weeklyHours:user.weeklyHours}}catch(e){return null}}
 function requireAuth(req,res,next){const u=tokenUser(req);if(!u)return res.status(401).json({error:'No autorizado'});if(u.role==='vendedor'&&!((req.path==='/api/logout')||(req.path==='/api/state'&&req.method==='GET')||(req.path==='/api/vendor/sheets')))return res.status(403).json({error:'Acceso no permitido'});req.auth=u;next()}
