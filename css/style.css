@@ -566,3 +566,27 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .generator-frame-wrap iframe { height:900px; min-height:0; overflow:hidden; }
 @media(max-width:900px){.generator-frame-wrap iframe{height:1000px}}
 @media(max-width:640px){.generator-frame-wrap iframe{height:1100px}}
+
+
+/* Panel anual de derechos de vacaciones */
+.vacation-entitlement-panel{margin-top:26px;padding:22px;background:var(--card-bg,#fff);border:1px solid var(--border-color,#dce3ed);border-radius:18px;box-shadow:0 8px 24px rgba(20,40,70,.06)}
+.vacation-entitlement-panel .section-head{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.vacation-entitlement-panel .section-head h3{margin:0 0 5px}
+.vacation-entitlement-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0}
+.vacation-entitlement-summary>div{padding:14px;border:1px solid var(--border-color,#dce3ed);border-radius:12px;background:var(--surface,#f8fafc);display:flex;flex-direction:column;gap:4px}
+.vacation-entitlement-summary strong{font-size:1.5rem}.vacation-entitlement-summary span,.vacation-entitlement-legend{font-size:.82rem;color:var(--muted,#64748b)}
+.vacation-entitlement-scroll{overflow-x:auto}
+.vacation-entitlement-grid{width:100%;border-collapse:separate;border-spacing:0 8px;min-width:720px}
+.vacation-entitlement-grid th,.vacation-entitlement-grid td{padding:9px;text-align:left;vertical-align:middle}
+.vacation-entitlement-grid thead th{font-size:.82rem;color:var(--muted,#64748b)}
+.vacation-entitlement-slots{display:grid;grid-template-columns:repeat(4,minmax(105px,1fr));gap:8px}
+.vacation-entitlement-slot{min-height:62px;border:1px solid #cbd5e1;border-radius:10px;padding:8px;display:flex;flex-direction:column;justify-content:center;gap:4px;background:#22c55e;color:#14532d}
+.vacation-entitlement-slot small{font-size:.68rem;opacity:.8}.vacation-entitlement-slot strong{font-size:.78rem;line-height:1.25}
+.vacation-entitlement-slot.vac-status-booked{background:#fff;color:#1e293b;border-color:#cbd5e1}
+.vacation-entitlement-slot.vac-status-taken{background:#9ca3af;color:#374151;border-color:#9ca3af}
+.vacation-entitlement-legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:16px}
+.vacation-entitlement-legend span{display:inline-flex;align-items:center;gap:7px}
+.vacation-entitlement-legend i{width:13px;height:13px;border-radius:4px;display:inline-block;background:#22c55e}
+.vacation-entitlement-legend span:nth-child(2) i{background:#fff;border:1px solid #cbd5e1}
+.vacation-entitlement-legend span:nth-child(3) i{background:#9ca3af}
+@media(max-width:700px){.vacation-entitlement-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.vacation-entitlement-panel{padding:14px}}
