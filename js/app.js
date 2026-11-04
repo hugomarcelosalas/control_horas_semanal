@@ -764,9 +764,9 @@ function renderVacationEntitlements(){
  const yearSelect=$('vacationEntitlementYear'),host=$('vacationEntitlementTable'),summary=$('vacationEntitlementSummary');
  if(!yearSelect||!host||!summary)return;
  const yearNow=new Date().getFullYear(),existing=Number(yearSelect.value)||yearNow;
- const years=[...new Set([yearNow,existing,...(db.users||[]).filter(u=>u.role==='employee').map(u=>String(u.contractStart||'').slice(0,4)).filter(Boolean).map(Number)])].sort((x,y)=>y-x);
+ const years=[...new Set([yearNow,existing,...(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).map(u=>String(u.contractStart||'').slice(0,4)).filter(Boolean).map(Number)])].sort((x,y)=>y-x);
  yearSelect.innerHTML=years.map(y=>'<option value="'+y+'">'+y+'</option>').join('');yearSelect.value=String(years.includes(existing)?existing:yearNow);
- const year=Number(yearSelect.value),today=dateKey(new Date()),employees=(db.users||[]).filter(u=>u.role==='employee').slice().sort((x,y)=>String(x.name||x.username).localeCompare(String(y.name||y.username),'es'));
+ const year=Number(yearSelect.value),today=dateKey(new Date()),employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((x,y)=>String(x.name||x.username).localeCompare(String(y.name||y.username),'es'));
  let totalEntitled=0,totalPending=0,totalBooked=0,totalTaken=0;
  const rows=employees.map(u=>{
   const entitlement=vacationEntitlementForYear(u,year),vacations=(db.vacations?.[u.username]||[]).filter(v=>!v.cancelled&&(Number(v.year)||Number(String(v.start||'').slice(0,4)))===year);
