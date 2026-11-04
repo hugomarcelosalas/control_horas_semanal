@@ -590,3 +590,13 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .vacation-entitlement-legend span:nth-child(2) i{background:#fff;border:1px solid #cbd5e1}
 .vacation-entitlement-legend span:nth-child(3) i{background:#9ca3af}
 @media(max-width:700px){.vacation-entitlement-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.vacation-entitlement-panel{padding:14px}}
+
+/* Diferenciar claramente el año anterior en el control de vacaciones */
+.vacation-year-block{margin-top:18px;padding:16px;border:1px solid var(--border-color,#dce3ed);border-radius:14px;background:var(--card-bg,#fff)}
+.vacation-year-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.vacation-year-heading h4{margin:0;font-size:1.05rem}.vacation-year-heading span{font-size:.8rem;color:var(--muted,#64748b)}
+.vacation-year-previous{background:#f1f5f9;border-color:#cbd5e1}
+.vacation-year-previous .vacation-entitlement-grid th,.vacation-year-previous .vacation-entitlement-grid td{background:rgba(226,232,240,.55)}
+.vacation-year-previous .vacation-entitlement-slot.vac-status-pending{background:#c7d2e2;color:#334155;border-color:#94a3b8}
+.vacation-year-previous .vacation-entitlement-slot.vac-status-booked{background:#e2e8f0;color:#334155;border-color:#94a3b8}
+.vacation-year-previous .vacation-entitlement-slot.vac-status-taken{background:#a8b2c0;color:#263445;border-color:#94a3b8}
