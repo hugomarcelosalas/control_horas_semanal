@@ -770,22 +770,27 @@ function renderVacationEntitlements(){
  const encargados=isAdmin()?sortEmployees(activeEmployees.filter(u=>hasPermission('encargado',u))):[];
  const buildRows=(list,year)=>list.map(u=>{
   const entitlement=vacationEntitlementForYear(u,year),vacations=(db.vacations?.[u.username]||[]).filter(v=>!v.cancelled&&(Number(v.year)||Number(String(v.start||'').slice(0,4)))===year);
-  if(entitlement===null)return {u,missing:true,slots:[]};
-  const slots=Array.from({length:entitlement},(_,i)=>{
-   const v=vacations.find(x=>Number(x.week||inferVacationWeek(u.username,x))===i+1)||null;
-   if(!v)return {week:i+1,status:'pending'};
-   if(!v.start||!v.end)return {week:i+1,status:'pending',v};
-   return {week:i+1,status:v.end<today?'taken':'booked',v};
+  if(entitlement===null)return {u,missing:true,weeks:[]};
+  const weeks=Array.from({length:entitlement},(_,i)=>{
+   const week=i+1,periods=vacations.filter(v=>Number(v.week||inferVacationWeek(u.username,v))===week&&v.start&&v.end).sort((a,b)=>String(a.start).localeCompare(String(b.start)));
+   const cells=Array(7).fill(null);let cursor=0;
+   periods.forEach(v=>{
+    const from=parseKey(v.start),to=parseKey(v.end);
+    for(let d=new Date(from);d<=to&&cursor<7;d.setDate(d.getDate()+1)){
+     const date=dateKey(d);cells[cursor++]={date,status:v.end<today?'taken':'booked',periodId:v.id};
+    }
+   });
+   return {week,cells,periods,remaining:7-cursor};
   });
-  return {u,entitlement,slots};
+  return {u,entitlement,weeks};
  });
  const currentRows=buildRows(employees,currentYear),previousRows=buildRows(employees,previousYear);
  let totalEntitled=0,totalPending=0,totalBooked=0,totalTaken=0,carryOver=0;
- currentRows.forEach(row=>{if(row.missing)return;totalEntitled+=row.entitlement;totalPending+=row.slots.filter(x=>x.status==='pending').length;totalBooked+=row.slots.filter(x=>x.status==='booked').length;totalTaken+=row.slots.filter(x=>x.status==='taken').length;});
- previousRows.forEach(row=>{if(!row.missing)carryOver+=row.slots.filter(x=>x.status==='pending').length;});
- const renderTable=(items,year,previous=false)=>'<div class="vacation-entitlement-scroll"><table class="vacation-entitlement-grid"><thead><tr><th>Empleado</th><th>Derecho</th><th colspan="4">Semanas de vacaciones</th></tr></thead><tbody>'+items.map(row=>'<tr><th>'+escapeHtml(row.u.name||row.u.username)+'</th><td>'+(row.missing?'<span class="muted">Configurar fecha de contrato</span>':row.entitlement+' semanas')+'</td><td colspan="4"><div class="vacation-entitlement-slots">'+(row.missing?'<span class="muted">Añade la fecha de inicio en la ficha del empleado</span>':row.slots.map(slot=>{const v=slot.v,dates=v?.start&&v?.end?fmtDate(v.start)+'–'+fmtDate(v.end):'Sin fecha';const label=slot.status==='pending'?(previous?'Sin disfrutar':'Pendiente'):dates;const tip='Semana '+slot.week+(v?.start?' · '+dates:'');return '<div class="vacation-entitlement-slot vac-status-'+slot.status+'" title="'+escapeHtml(tip)+'"><small>Semana '+slot.week+'</small><strong>'+escapeHtml(label)+'</strong></div>'}).join(''))+'</div></td></tr>').join('')+'</tbody></table></div>';
- const renderYear=(year,items,previous=false)=>'<section class="vacation-year-block '+(previous?'vacation-year-previous':'vacation-year-current')+'"><div class="vacation-year-heading"><h4>'+year+(previous?' · Año anterior':' · Año actual')+'</h4>'+(previous?'<span>Posibles semanas pendientes de disfrutar</span>':'<span>Planificación y seguimiento del año en curso</span>')+'</div>'+renderTable(items,year,previous)+'</section>';
- summary.innerHTML='<div><strong>'+totalEntitled+'</strong><span>Semanas correspondientes · '+currentYear+'</span></div><div><strong>'+totalPending+'</strong><span>Pendientes de asignar · '+currentYear+'</span></div><div><strong>'+totalBooked+'</strong><span>Programadas · '+currentYear+'</span></div><div><strong>'+carryOver+'</strong><span>Sin disfrutar · '+previousYear+'</span></div>';
+ currentRows.forEach(row=>{if(row.missing)return;totalEntitled+=row.entitlement*7;row.weeks.forEach(w=>{totalPending+=w.cells.filter(x=>!x).length;totalBooked+=w.cells.filter(x=>x?.status==='booked').length;totalTaken+=w.cells.filter(x=>x?.status==='taken').length;});});
+ previousRows.forEach(row=>{if(!row.missing)row.weeks.forEach(w=>{carryOver+=w.cells.filter(x=>!x).length;});});
+ const renderTable=(items,previous=false)=>'<div class="vacation-entitlement-scroll"><table class="vacation-entitlement-grid"><thead><tr><th>Empleado</th><th>Derecho</th><th>Semanas · 7 días cada una</th></tr></thead><tbody>'+items.map(row=>'<tr><th>'+escapeHtml(row.u.name||row.u.username)+'</th><td>'+(row.missing?'<span class="muted">Configurar fecha de contrato</span>':row.entitlement+' semanas · '+(row.entitlement*7)+' días')+'</td><td>'+(row.missing?'<span class="muted">Añade la fecha de inicio en la ficha del empleado</span>':'<div class="vacation-week-stack">'+row.weeks.map(w=>'<div class="vacation-week-line"><small>Semana '+w.week+'</small><div class="vacation-entitlement-slots vacation-day-slots">'+w.cells.map((cell,index)=>'<div class="vacation-entitlement-slot '+(cell?'vac-status-'+cell.status:'vac-status-pending')+'" title="'+(cell?escapeHtml(fmtDate(cell.date)):'Día pendiente de asignar')+'"><small>'+['L','M','X','J','V','S','D'][index]+'</small><strong>'+(cell?escapeHtml(fmtDate(cell.date)):'—')+'</strong></div>').join('')+'</div></div>').join('')+'</div>')+'</td></tr>').join('')+'</tbody></table></div>';
+ const renderYear=(year,items,previous=false)=>'<section class="vacation-year-block '+(previous?'vacation-year-previous':'vacation-year-current')+'"><div class="vacation-year-heading"><h4>'+year+(previous?' · Año anterior':' · Año actual')+'</h4>'+(previous?'<span>Días que pudieron quedar pendientes</span>':'<span>Planificación y seguimiento del año en curso</span>')+'</div>'+renderTable(items,previous)+'</section>';
+ summary.innerHTML='<div><strong>'+totalEntitled+'</strong><span>Días correspondientes · '+currentYear+'</span></div><div><strong>'+totalPending+'</strong><span>Días pendientes · '+currentYear+'</span></div><div><strong>'+totalBooked+'</strong><span>Días programados · '+currentYear+'</span></div><div><strong>'+carryOver+'</strong><span>Días pendientes · '+previousYear+'</span></div>';
  host.innerHTML=renderYear(currentYear,currentRows)+renderYear(previousYear,previousRows,true)+(isAdmin()&&encargados.length?'<section class="vacation-encargados-section"><h3>Encargados</h3><p class="muted">Visible solo para administración</p>'+renderYear(currentYear,buildRows(encargados,currentYear))+renderYear(previousYear,buildRows(encargados,previousYear),true)+'</section>':'');
 }
 function renderVacationsSection(){
