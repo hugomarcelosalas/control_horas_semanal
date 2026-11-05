@@ -796,7 +796,7 @@ function renderVacationEntitlements(){
  const renderTable=(items,previous=false)=>'<div class="vacation-entitlement-scroll"><table class="vacation-entitlement-grid"><thead><tr><th>Empleado</th><th>Derecho</th><th colspan="4">Semanas de vacaciones</th></tr></thead><tbody>'+items.map(row=>'<tr><th>'+escapeHtml(row.u.name||row.u.username)+'</th><td>'+(row.missing?'<span class="muted">Configurar fecha de contrato</span>':row.entitlement+' semanas')+'</td><td colspan="4"><div class="vacation-entitlement-slots">'+(row.missing?'<span class="muted">Añade la fecha de inicio en la ficha del empleado</span>':row.slots.map(slot=>{
   const takenPct=slot.counts.taken/7*100,bookedPct=slot.counts.booked/7*100;
   const takenEnd=takenPct,bookedEnd=takenPct+bookedPct;
-  const fill=slot.used?'linear-gradient(to right,#9ca3af 0% '+takenEnd+'%,#fff '+takenEnd+'% '+bookedEnd+'%,var(--vacation-progress-empty,#22c55e) '+bookedEnd+'% 100%)':'';
+  const fill=slot.used?'linear-gradient(to right,#9ca3af 0% '+takenEnd+'%,#fff '+takenEnd+'% '+bookedEnd+'%, #e5e7eb '+bookedEnd+'% 100%)':'';
   const statusText=slot.used?(slot.remaining?slot.used+' de 7 días · faltan '+slot.remaining:'7 de 7 días · completa'):'Pendiente';
   const tip='Semana '+slot.week+(slot.details?' · '+slot.details:'')+' · '+statusText;
   return '<div class="vacation-entitlement-slot vacation-week-progress '+(previous?'vacation-week-progress-previous':'')+'" title="'+escapeHtml(tip)+'"><div class="vacation-week-progress-top"><small>Semana '+slot.week+'</small><strong>'+statusText+'</strong></div><div class="vacation-week-progress-track" style="'+(fill?'background:'+fill:'')+'"></div><span class="vacation-week-progress-dates">'+escapeHtml(slot.details||'Añadir fechas')+'</span></div>';
