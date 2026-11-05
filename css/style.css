@@ -601,11 +601,11 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .vacation-year-previous .vacation-entitlement-slot.vac-status-booked{background:#e2e8f0;color:#334155;border-color:#94a3b8}
 .vacation-year-previous .vacation-entitlement-slot.vac-status-taken{background:#a8b2c0;color:#263445;border-color:#94a3b8}
 
-/* Progreso proporcional de cada bloque semanal de vacaciones */
-.vacation-week-progress{min-height:82px;gap:6px;align-items:stretch;background:var(--vacation-progress-empty,#22c55e);color:#14532d}
+/* Progreso proporcional sin recuadro verde */
+.vacation-week-progress{min-height:82px;gap:6px;align-items:stretch;background:#fff;color:#334155}
 .vacation-week-progress-top{display:flex;justify-content:space-between;align-items:center;gap:5px}
 .vacation-week-progress-top strong{font-size:.72rem;text-align:right}
-.vacation-week-progress-track{height:9px;border-radius:999px;background:rgba(255,255,255,.42);border:1px solid rgba(20,83,45,.18);overflow:hidden}
+.vacation-week-progress-track{height:9px;border-radius:999px;background:#e5e7eb;border:1px solid #cbd5e1;overflow:hidden}
 .vacation-week-progress-dates{font-size:.7rem;line-height:1.2;min-height:1em;overflow-wrap:anywhere}
-.vacation-week-progress-previous{background:#c7d2e2;color:#334155}
-.vacation-week-progress-previous .vacation-week-progress-track{border-color:#94a3b8}
+.vacation-week-progress-previous{background:#eef2f7;color:#475569}
+.vacation-week-progress-previous .vacation-week-progress-track{border-color:#b6c2d1}
