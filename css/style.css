@@ -600,3 +600,14 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .vacation-year-previous .vacation-entitlement-slot.vac-status-pending{background:#c7d2e2;color:#334155;border-color:#94a3b8}
 .vacation-year-previous .vacation-entitlement-slot.vac-status-booked{background:#e2e8f0;color:#334155;border-color:#94a3b8}
 .vacation-year-previous .vacation-entitlement-slot.vac-status-taken{background:#a8b2c0;color:#263445;border-color:#94a3b8}
+
+/* Desglose de cada semana en siete días independientes */
+.vacation-week-stack{display:flex;flex-direction:column;gap:8px;min-width:650px}
+.vacation-week-line{display:grid;grid-template-columns:78px 1fr;align-items:center;gap:8px}
+.vacation-week-line>small{font-size:.75rem;font-weight:700;color:var(--muted,#64748b)}
+.vacation-day-slots{grid-template-columns:repeat(7,minmax(0,1fr));gap:5px}
+.vacation-day-slots .vacation-entitlement-slot{min-width:0;min-height:54px;padding:5px 3px;text-align:center;overflow:hidden}
+.vacation-day-slots .vacation-entitlement-slot small{font-weight:800;font-size:.7rem}
+.vacation-day-slots .vacation-entitlement-slot strong{font-size:.66rem;overflow-wrap:anywhere}
+.vacation-year-previous .vacation-day-slots .vacation-entitlement-slot.vac-status-pending{background:#c7d2e2;color:#334155;border-color:#94a3b8}
+@media(max-width:700px){.vacation-week-line{grid-template-columns:58px 1fr;gap:5px}.vacation-day-slots{gap:3px}.vacation-day-slots .vacation-entitlement-slot{min-height:48px;padding:4px 1px}.vacation-day-slots .vacation-entitlement-slot strong{font-size:.58rem}}
