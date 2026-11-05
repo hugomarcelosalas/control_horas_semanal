@@ -778,14 +778,15 @@ function renderVacationEntitlements(){
     const from=parseKey(v.start),to=parseKey(v.end);
     for(let d=new Date(from);d<=to;d.setDate(d.getDate()+1)){
      const key=dateKey(d);
-     if(!days.has(key))days.set(key,{date:key,status:v.end<today?'taken':'booked'});
+     if(!days.has(key))days.set(key,{date:key,status:key<today?'taken':'signed'});
     }
    });
    const used=Math.min(7,days.size),remaining=Math.max(0,7-used);
-   const counts={taken:0,booked:0};
-   [...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(0,7).forEach(d=>counts[d.status]++);
+   const counts={taken:0,signed:0};
+   const orderedDays=[...days.values()].sort((a,b)=>a.date.localeCompare(b.date)).slice(0,7);
+   orderedDays.forEach(d=>counts[d.status]++);
    const details=periods.map(v=>fmtDate(v.start)+'–'+fmtDate(v.end)).join(' · ');
-   return {week,periods,used,remaining,counts,details};
+   return {week,periods,used,remaining,counts,orderedDays,details};
   });
   return {u,entitlement,slots};
  });
@@ -794,12 +795,12 @@ function renderVacationEntitlements(){
  currentRows.forEach(row=>{if(row.missing)return;totalEntitled+=row.entitlement;totalPending+=row.slots.filter(x=>x.remaining===7).length;totalBooked+=row.slots.filter(x=>x.used&&x.counts.booked).length;totalTaken+=row.slots.filter(x=>x.used&&x.counts.taken).length;});
  previousRows.forEach(row=>{if(!row.missing)carryOver+=row.slots.filter(x=>x.remaining===7).length;});
  const renderTable=(items,previous=false)=>'<div class="vacation-entitlement-scroll"><table class="vacation-entitlement-grid"><thead><tr><th>Empleado</th><th>Derecho</th><th colspan="4">Semanas de vacaciones</th></tr></thead><tbody>'+items.map(row=>'<tr><th>'+escapeHtml(row.u.name||row.u.username)+'</th><td>'+(row.missing?'<span class="muted">Configurar fecha de contrato</span>':row.entitlement+' semanas')+'</td><td colspan="4"><div class="vacation-entitlement-slots">'+(row.missing?'<span class="muted">Añade la fecha de inicio en la ficha del empleado</span>':row.slots.map(slot=>{
-  const takenPct=slot.counts.taken/7*100,bookedPct=slot.counts.booked/7*100;
-  const takenEnd=takenPct,bookedEnd=takenPct+bookedPct;
-  const fill=slot.used?'linear-gradient(to right,#9ca3af 0% '+takenEnd+'%,#fff '+takenEnd+'% '+bookedEnd+'%, #e5e7eb '+bookedEnd+'% 100%)':'';
-  const statusText=slot.used?(slot.remaining?slot.used+' de 7 días · faltan '+slot.remaining:'7 de 7 días · completa'):'Pendiente';
+  const palette={taken:'#9ca3af',signed:'#6b9bd2',pending:'#e5e7eb'};
+  const segments=Array.from({length:7},(_,i)=>palette[slot.orderedDays[i]?.status||'pending']);
+  const fill='linear-gradient(to right,'+segments.map((color,i)=>color+' '+(i/7*100)+'% '+((i+1)/7*100)+'%').join(',')+')';
+  const statusText=slot.used?(slot.remaining?slot.used+' de 7 días · '+slot.remaining+' pendientes':'7 de 7 días · completa'):'Pendiente de asignar';
   const tip='Semana '+slot.week+(slot.details?' · '+slot.details:'')+' · '+statusText;
-  return '<div class="vacation-entitlement-slot vacation-week-progress '+(previous?'vacation-week-progress-previous':'')+'" title="'+escapeHtml(tip)+'"><div class="vacation-week-progress-top"><small>Semana '+slot.week+'</small><strong>'+statusText+'</strong></div><div class="vacation-week-progress-track" style="'+(fill?'background:'+fill:'')+'"></div><span class="vacation-week-progress-dates">'+escapeHtml(slot.details||'Añadir fechas')+'</span></div>';
+  return '<div class="vacation-entitlement-slot vacation-week-progress '+(previous?'vacation-week-progress-previous':'')+'" title="'+escapeHtml(tip)+'"><div class="vacation-week-progress-top"><small>Semana '+slot.week+'</small><strong>'+statusText+'</strong></div><div class="vacation-week-progress-track" style="background:'+fill+'"></div><span class="vacation-week-progress-dates">'+escapeHtml(slot.details||'Sin fechas asignadas')+'</span></div>';
  }).join(''))+'</div></td></tr>').join('')+'</tbody></table></div>';
  const renderYear=(year,items,previous=false)=>'<section class="vacation-year-block '+(previous?'vacation-year-previous':'vacation-year-current')+'"><div class="vacation-year-heading"><h4>'+year+(previous?' · Año anterior':' · Año actual')+'</h4>'+(previous?'<span>Posibles semanas pendientes de disfrutar</span>':'<span>Planificación y seguimiento del año en curso</span>')+'</div>'+renderTable(items,previous)+'</section>';
  summary.innerHTML='<div><strong>'+totalEntitled+'</strong><span>Semanas correspondientes · '+currentYear+'</span></div><div><strong>'+totalPending+'</strong><span>Pendientes de asignar · '+currentYear+'</span></div><div><strong>'+totalBooked+'</strong><span>Programadas · '+currentYear+'</span></div><div><strong>'+carryOver+'</strong><span>Sin disfrutar · '+previousYear+'</span></div>';
