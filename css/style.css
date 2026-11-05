@@ -611,3 +611,19 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .vacation-day-slots .vacation-entitlement-slot strong{font-size:.66rem;overflow-wrap:anywhere}
 .vacation-year-previous .vacation-day-slots .vacation-entitlement-slot.vac-status-pending{background:#c7d2e2;color:#334155;border-color:#94a3b8}
 @media(max-width:700px){.vacation-week-line{grid-template-columns:58px 1fr;gap:5px}.vacation-day-slots{gap:3px}.vacation-day-slots .vacation-entitlement-slot{min-height:48px;padding:4px 1px}.vacation-day-slots .vacation-entitlement-slot strong{font-size:.58rem}}
+
+/* Mantener el diseño compacto de bloques semanales, cada uno dividido en 7 celdas */
+.vacation-week-stack,.vacation-week-line{display:initial;min-width:0}
+.vacation-week-blocks{display:grid;grid-template-columns:repeat(4,minmax(180px,1fr));gap:8px}
+.vacation-week-card{min-width:0;min-height:0;padding:8px;display:flex;flex-direction:column;gap:7px}
+.vacation-week-title{font-size:.78rem;line-height:1.2}
+.vacation-seven-cells{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.vacation-day-cell{min-width:0;min-height:38px;padding:3px 1px;border:1px solid #cbd5e1;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;overflow:hidden;background:#22c55e;color:#14532d}
+.vacation-day-cell small{font-size:.62rem;font-weight:800}.vacation-day-cell strong{font-size:.57rem;line-height:1.1;overflow-wrap:anywhere}
+.vacation-day-cell.vac-status-booked{background:#fff;color:#1e293b;border-color:#cbd5e1}
+.vacation-day-cell.vac-status-taken{background:#9ca3af;color:#374151;border-color:#9ca3af}
+.vacation-year-previous .vacation-week-card{background:#e2e8f0;color:#334155;border-color:#cbd5e1}
+.vacation-year-previous .vacation-day-cell.vac-status-pending{background:#c7d2e2;color:#334155;border-color:#94a3b8}
+.vacation-year-previous .vacation-day-cell.vac-status-booked{background:#e2e8f0;color:#334155;border-color:#94a3b8}
+@media(max-width:900px){.vacation-week-blocks{grid-template-columns:repeat(2,minmax(180px,1fr))}}
+@media(max-width:560px){.vacation-week-blocks{grid-template-columns:1fr}}
