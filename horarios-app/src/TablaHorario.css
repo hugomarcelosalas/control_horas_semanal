@@ -2135,3 +2135,25 @@ button {
   max-height: calc(100% - 36px);
   overflow-y: auto;
 }
+
+/* Formularios modales siempre visibles: bloquear scroll de la página y permitir scroll interno */
+.modal-overlay{
+  position:fixed !important;
+  inset:0 !important;
+  z-index:2147483000 !important;
+  align-items:center !important;
+  justify-content:center !important;
+  overflow-y:auto !important;
+  overscroll-behavior:contain;
+  padding:16px !important;
+}
+.modal-contenido{
+  max-height:calc(100dvh - 32px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  margin:auto;
+}
+@media(max-height:600px){
+  .modal-overlay{align-items:flex-start !important;padding:8px !important}
+  .modal-contenido{max-height:calc(100dvh - 16px)}
+}
