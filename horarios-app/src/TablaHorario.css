@@ -2136,28 +2136,26 @@ button {
   overflow-y: auto;
 }
 
-/* Formularios modales: colocarlos debajo de la cabecera fija de la aplicación principal.
-   El iframe no puede superponerse a esa cabecera, por eso el modal empieza más abajo. */
+/* Formularios dentro del flujo normal: el usuario llega a ellos desplazándose por la página */
 .modal-overlay{
-  position:fixed !important;
-  inset:0 !important;
-  z-index:2147483000 !important;
+  position:relative !important;
+  inset:auto !important;
+  z-index:10 !important;
   display:flex !important;
   align-items:flex-start !important;
   justify-content:center !important;
-  overflow-y:auto !important;
-  overscroll-behavior:contain;
-  padding:clamp(92px, 13vh, 138px) 16px 16px !important;
+  width:100%;
+  padding:18px 16px 28px !important;
   box-sizing:border-box;
+  overflow:visible !important;
+  background:rgba(15,23,42,.24);
 }
 .modal-contenido{
-  max-height:calc(100dvh - clamp(108px, 15vh, 154px));
-  overflow-y:auto;
-  overscroll-behavior:contain;
+  position:relative;
+  width:100%;
+  max-width:400px;
+  max-height:none !important;
+  overflow:visible !important;
   margin:0 auto !important;
   flex-shrink:0;
-}
-@media(max-height:600px){
-  .modal-overlay{padding:76px 8px 8px !important}
-  .modal-contenido{max-height:calc(100dvh - 84px)}
 }
