@@ -872,16 +872,15 @@ useEffect(() => {
     }
   };
 
-  const abrirModalNuevoCumple = () => {
-    if(!isAdmin) return;
-    if(!isAdmin) return;
+  const abrirModalNuevoCumple = (fecha = (diasSemana.length > 0 ? diasSemana[0].isoFecha : ''), turno = 'tarde') => {
+    if(!isAdmin || isViewingHistory) return;
     setIdCumpleEdit(null);
     setCumpleCantNinos('');
     setCumpleEdad('');
     setCumpleObservaciones('');
-    setCumpleHoraInicio('17:00');
+    setCumpleHoraInicio(turno === 'manana' ? '11:00' : '17:00');
     setCumpleTipo('XT');
-    setCumpleFecha(diasSemana.length > 0 ? diasSemana[0].isoFecha : '');
+    setCumpleFecha(fecha);
     setMostrarModalCumple(true);
   };
 
@@ -1658,7 +1657,7 @@ useEffect(() => {
                           const lista=cumples.filter(x=>x.fecha===d.isoFecha && ((String(x.horaInicio||'17:00')<'15:00'?'manana':'tarde')===turno));
                           const n=lista.reduce((s,x)=>s+Math.max(0,Number(x.cantNinos)||0),0);
                           const bg=!lista.length?'#eef2f7':n<10?'#bbf7d0':n<20?'#86efac':n<35?'#d9f99d':n<50?'#fef08a':n<65?'#fed7aa':n<80?'#fdba74':n<90?'#fca5a5':'#f87171';
-                          return <span key={d.isoFecha} className="resumen-matriz-celda resumen-matriz-evento" style={{background:bg}} title={lista.length?n+' niños · '+(turno==='manana'?'mañana':'tarde'):'Sin eventos'}>{lista.length?n:''}</span>;
+                          return <span key={d.isoFecha} className={`resumen-matriz-celda resumen-matriz-evento ${isAdmin && !isViewingHistory ? 'resumen-matriz-celda-admin' : ''}`} style={{background:bg}} title={isAdmin && !isViewingHistory ? (lista.length?'Editar evento':'Añadir evento')+' · '+d.fecha : lista.length?n+' niños · '+(turno==='manana'?'mañana':'tarde'):'Sin eventos'} onClick={isAdmin && !isViewingHistory ? () => lista.length ? abrirModalEditarCumple(lista[0]) : abrirModalNuevoCumple(d.isoFecha,turno) : undefined} role={isAdmin && !isViewingHistory ? 'button' : undefined} tabIndex={isAdmin && !isViewingHistory ? 0 : undefined} onKeyDown={isAdmin && !isViewingHistory ? e => {if(e.key==='Enter'||e.key===' '){e.preventDefault();lista.length ? abrirModalEditarCumple(lista[0]) : abrirModalNuevoCumple(d.isoFecha,turno);}} : undefined}>{lista.length?n:''}</span>;
                         })}
                       </div>)}
                     </div>
@@ -1754,7 +1753,7 @@ useEffect(() => {
         </div>
       )}
 
-      {mostrarModalTurno && (
+      {mostrarModalTurno && createPortal(
             <div className="modal-overlay">
               <div className="modal-contenido">
                 <h3>{idTurnoEdit ? '✏️ Modificar Turno' : '📋 Asignar / Crear Turno'}</h3>
@@ -1820,8 +1819,9 @@ useEffect(() => {
                   </div>
                 </form>
               </div>
-            </div>
-          )}
+            </div>,
+        window.parent && window.parent.document ? window.parent.document.body : document.body
+      )}
 
           {mostrarModalCumple && createPortal(
             <div className="modal-overlay horarios-parent-modal-overlay">
