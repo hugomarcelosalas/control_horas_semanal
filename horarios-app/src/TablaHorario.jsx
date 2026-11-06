@@ -89,6 +89,15 @@ const [empleados, setEmpleados] = useState(EMPLEADOS_INICIALES);
   const vistaVerticalRef = useRef();
 
 useEffect(() => {
+  const modalAbierto = mostrarModalCumple || mostrarModalTurno || mostrarModalGestionEmp || mostrarModalNuevoHorario;
+  if(!modalAbierto) return;
+  const docs = [document, window.parent && window.parent.document].filter(Boolean);
+  const anteriores = docs.map(doc => ({body:doc.body, overflow:doc.body.style.overflow}));
+  docs.forEach(doc => { doc.body.style.overflow = 'hidden'; });
+  return () => anteriores.forEach(item => { item.body.style.overflow = item.overflow; });
+}, [mostrarModalCumple,mostrarModalTurno,mostrarModalGestionEmp,mostrarModalNuevoHorario]);
+
+useEffect(() => {
   let activo = true;
   let cargando = false;
   const cargarCuadrante = async () => {
