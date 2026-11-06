@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import './TablaHorario.css';
@@ -87,6 +88,32 @@ const [empleados, setEmpleados] = useState(EMPLEADOS_INICIALES);
   const areaExportarRef = useRef();
   const vistaHorizontalRef = useRef();
   const vistaVerticalRef = useRef();
+
+useEffect(() => {
+  const modalAbierto = mostrarModalCumple || mostrarModalTurno || mostrarModalGestionEmp || mostrarModalNuevoHorario;
+  const parentDoc = window.parent && window.parent.document;
+  if(!modalAbierto || !parentDoc) return;
+  const styleId = 'horarios-modal-parent-style';
+  let style = parentDoc.getElementById(styleId);
+  if(!style) {
+    style = parentDoc.createElement('style');
+    style.id = styleId;
+    style.textContent = `
+      .horarios-parent-modal-overlay{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:rgba(15,23,42,.48);overflow-y:auto;overscroll-behavior:contain}
+      .horarios-parent-modal-overlay .modal-contenido{background:#fff;padding:20px;border-radius:10px;width:100%;max-width:400px;max-height:calc(100vh - 36px);overflow-y:auto;box-shadow:0 12px 36px rgba(15,23,42,.28);box-sizing:border-box;margin:auto}
+      .horarios-parent-modal-overlay .modal-contenido label{display:block;margin:10px 0 4px;font-size:14px;font-weight:700;color:#1e293b}
+      .horarios-parent-modal-overlay .modal-contenido input,.horarios-parent-modal-overlay .modal-contenido select{width:100%;padding:8px;box-sizing:border-box;margin-bottom:6px;font:inherit}
+      .horarios-parent-modal-overlay .horas-grid{display:flex;gap:10px}
+      .horarios-parent-modal-overlay .horas-grid>div{min-width:0;flex:1}
+      .horarios-parent-modal-overlay .info-hora-calculada{text-align:center;margin:8px 0;font-size:13px}
+      .horarios-parent-modal-overlay .modal-acciones{display:flex;gap:6px;margin-top:15px;flex-wrap:wrap}
+      .horarios-parent-modal-overlay button{cursor:pointer}
+      @media(max-width:520px){.horarios-parent-modal-overlay{padding:10px}.horarios-parent-modal-overlay .modal-contenido{padding:15px}.horarios-parent-modal-overlay .horas-grid{gap:6px}}
+    `;
+    parentDoc.head.appendChild(style);
+  }
+  return () => { if(style && style.parentNode) style.parentNode.removeChild(style); };
+}, [mostrarModalCumple,mostrarModalTurno,mostrarModalGestionEmp,mostrarModalNuevoHorario]);
 
 useEffect(() => {
   let activo = true;
@@ -1796,8 +1823,8 @@ useEffect(() => {
             </div>
           )}
 
-          {mostrarModalCumple && (
-            <div className="modal-overlay">
+          {mostrarModalCumple && createPortal(
+            <div className="modal-overlay horarios-parent-modal-overlay">
               <div className="modal-contenido">
                 <h3>{idCumpleEdit ? '✏️ Modificar Evento' : '🎂 Registrar Evento'}</h3>
                 <form onSubmit={guardarCumple}>
@@ -1852,7 +1879,8 @@ useEffect(() => {
                   </div>
                 </form>
               </div>
-            </div>
+            </div>,
+            window.parent && window.parent.document ? window.parent.document.body : document.body
           )}
         </>
       )}
