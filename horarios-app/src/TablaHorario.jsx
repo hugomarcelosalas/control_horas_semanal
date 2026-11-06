@@ -99,16 +99,69 @@ useEffect(() => {
     style = parentDoc.createElement('style');
     style.id = styleId;
     style.textContent = `
-      .horarios-parent-modal-overlay{position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;padding:18px;box-sizing:border-box;background:rgba(15,23,42,.48);overflow-y:auto;overscroll-behavior:contain}
-      .horarios-parent-modal-overlay .modal-contenido{background:#fff;padding:20px;border-radius:10px;width:100%;max-width:400px;max-height:calc(100vh - 36px);overflow-y:auto;box-shadow:0 12px 36px rgba(15,23,42,.28);box-sizing:border-box;margin:auto}
-      .horarios-parent-modal-overlay .modal-contenido label{display:block;margin:10px 0 4px;font-size:14px;font-weight:700;color:#1e293b}
-      .horarios-parent-modal-overlay .modal-contenido input,.horarios-parent-modal-overlay .modal-contenido select{width:100%;padding:8px;box-sizing:border-box;margin-bottom:6px;font:inherit}
-      .horarios-parent-modal-overlay .horas-grid{display:flex;gap:10px}
-      .horarios-parent-modal-overlay .horas-grid>div{min-width:0;flex:1}
-      .horarios-parent-modal-overlay .info-hora-calculada{text-align:center;margin:8px 0;font-size:13px}
-      .horarios-parent-modal-overlay .modal-acciones{display:flex;gap:6px;margin-top:15px;flex-wrap:wrap}
-      .horarios-parent-modal-overlay button{cursor:pointer}
-      @media(max-width:520px){.horarios-parent-modal-overlay{padding:10px}.horarios-parent-modal-overlay .modal-contenido{padding:15px}.horarios-parent-modal-overlay .horas-grid{gap:6px}}
+      .horarios-parent-modal-overlay{
+        position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;
+        padding:24px;box-sizing:border-box;background:rgba(15,23,42,.48);backdrop-filter:blur(2px);
+        overflow-y:auto;overscroll-behavior:contain;font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+      }
+      .horarios-parent-modal-overlay .modal-contenido{
+        background:#fff;padding:26px 28px 24px;border:1px solid #e2e8f0;border-radius:16px;
+        width:100%;max-width:460px;max-height:calc(100vh - 48px);overflow-y:auto;
+        box-shadow:0 24px 70px rgba(15,23,42,.28);box-sizing:border-box;margin:auto;color:#1e293b;
+      }
+      .horarios-parent-modal-overlay .modal-contenido h3{
+        margin:0 0 22px;padding-bottom:14px;border-bottom:1px solid #e8edf3;
+        color:#172554;font-size:20px;font-weight:750;letter-spacing:-.025em;line-height:1.3;
+      }
+      .horarios-parent-modal-overlay .modal-contenido form{display:flex;flex-direction:column;gap:5px}
+      .horarios-parent-modal-overlay .modal-contenido label{
+        display:block;margin:9px 0 3px;font-size:12px;font-weight:700;letter-spacing:.015em;color:#475569;
+      }
+      .horarios-parent-modal-overlay .modal-contenido input:not([type="checkbox"]),
+      .horarios-parent-modal-overlay .modal-contenido select{
+        display:block;width:100%;min-height:42px;padding:9px 12px;box-sizing:border-box;margin:0 0 7px;
+        border:1px solid #cbd5e1;border-radius:9px;background:#fff;color:#1e293b;
+        font:500 14px/1.4 inherit;outline:none;transition:border-color .15s,box-shadow .15s;
+      }
+      .horarios-parent-modal-overlay .modal-contenido input:focus,
+      .horarios-parent-modal-overlay .modal-contenido select:focus{
+        border-color:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,.14);
+      }
+      .horarios-parent-modal-overlay .modal-contenido select:first-of-type{cursor:pointer}
+      .horarios-parent-modal-overlay .horas-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+      .horarios-parent-modal-overlay .horas-grid>div{min-width:0}
+      .horarios-parent-modal-overlay .turno-opciones-marcadores{
+        display:flex;gap:18px;flex-wrap:wrap;padding:12px 14px;margin:5px 0 8px;
+        background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;
+      }
+      .horarios-parent-modal-overlay .turno-opciones-marcadores label{
+        display:flex!important;align-items:center;gap:8px;margin:0!important;font-size:13px;font-weight:600;color:#334155;
+      }
+      .horarios-parent-modal-overlay .turno-opciones-marcadores input[type="checkbox"]{
+        appearance:auto!important;width:17px!important;height:17px!important;margin:0!important;accent-color:#2563eb;flex:0 0 auto;
+      }
+      .horarios-parent-modal-overlay .info-hora-calculada{
+        text-align:center;margin:4px 0 10px;padding:10px 12px;font-size:13px;line-height:1.5;
+        color:#1d4ed8;background:#eff6ff;border:1px solid #dbeafe;border-radius:9px;
+      }
+      .horarios-parent-modal-overlay .modal-acciones{
+        display:flex;gap:8px;margin-top:16px;padding-top:15px;border-top:1px solid #e8edf3;flex-wrap:wrap;
+      }
+      .horarios-parent-modal-overlay .modal-acciones button{
+        appearance:none;border:1px solid transparent;border-radius:9px;padding:10px 14px;min-height:40px;
+        font:650 13px/1.2 inherit;cursor:pointer;transition:background .15s,transform .15s,box-shadow .15s;
+      }
+      .horarios-parent-modal-overlay .modal-acciones button:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(15,23,42,.12)}
+      .horarios-parent-modal-overlay .modal-acciones .btn-secundario{background:#1e3a8a;color:#fff;border-color:#1e3a8a}
+      .horarios-parent-modal-overlay .modal-acciones .btn-terciario{background:#eef2ff;color:#3730a3;border-color:#c7d2fe}
+      .horarios-parent-modal-overlay .modal-acciones .btn-cancelar{background:#fff1f2;color:#be123c;border-color:#fecdd3}
+      .horarios-parent-modal-overlay .modal-acciones .btn-gris{background:#f1f5f9;color:#334155;border-color:#cbd5e1}
+      @media(max-width:520px){
+        .horarios-parent-modal-overlay{padding:12px}
+        .horarios-parent-modal-overlay .modal-contenido{padding:20px 17px;border-radius:13px;max-height:calc(100vh - 24px)}
+        .horarios-parent-modal-overlay .horas-grid{gap:8px}
+        .horarios-parent-modal-overlay .modal-acciones button{flex:1 1 auto}
+      }
     `;
     parentDoc.head.appendChild(style);
   }
