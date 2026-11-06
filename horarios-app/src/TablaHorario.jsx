@@ -539,8 +539,10 @@ useEffect(() => {
         d.setDate(d.getDate()+diferencia);
         return d.toISOString().slice(0,10);
       };
+      // Al conservar la semana, trasladar también los turnos al nuevo rango.
+      // Así se mantienen los empleados asignados, además de los cumpleaños/eventos.
       setCumples(prev => prev.map(c => ({...c,fecha:desplazarFecha(c.fecha)})));
-      setTurnos([]);
+      setTurnos(prev => prev.map(t => ({...t,fecha:desplazarFecha(t.fecha)})));
     } else {
       setCumples([]);
       setTurnos([]);
