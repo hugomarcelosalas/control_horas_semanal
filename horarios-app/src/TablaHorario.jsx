@@ -127,10 +127,11 @@ useEffect(() => {
     } catch (err) { console.error('Error cargando el cuadrante:', err); }
     finally { cargando = false; }
   };
+  const authEventTarget = window.parent || window;
   const onAuth = () => { cargarCuadrante(); };
-  window.addEventListener('control-horario-auth', onAuth);
+  authEventTarget.addEventListener('control-horario-auth', onAuth);
   cargarCuadrante();
-  return () => { activo = false; window.removeEventListener('control-horario-auth', onAuth); };
+  return () => { activo = false; authEventTarget.removeEventListener('control-horario-auth', onAuth); };
 }, []);
 
 useEffect(() => {
@@ -142,9 +143,10 @@ useEffect(() => {
       { setPestanaActiva('visualizacion'); setSubVista('simple'); }
     }
   };
-  window.addEventListener('control-horario-auth', syncRole);
+  const authEventTarget = window.parent || window;
+  authEventTarget.addEventListener('control-horario-auth', syncRole);
   syncRole();
-  return () => window.removeEventListener('control-horario-auth', syncRole);
+  return () => authEventTarget.removeEventListener('control-horario-auth', syncRole);
 }, []);
 
 useEffect(() => {
