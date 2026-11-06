@@ -1754,7 +1754,7 @@ useEffect(() => {
       )}
 
       {mostrarModalTurno && createPortal(
-            <div className="modal-overlay">
+            <div className="modal-overlay horarios-parent-modal-overlay">
               <div className="modal-contenido">
                 <h3>{idTurnoEdit ? '✏️ Modificar Turno' : '📋 Asignar / Crear Turno'}</h3>
                 <form onSubmit={guardarTurno}>
