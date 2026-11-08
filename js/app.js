@@ -472,7 +472,7 @@ function dashboardUsers(mode){
 }
 let dashboardEmployeeTab="active";
 function dashboardEmployeeWorkDates(user){
- const keys=Object.entries(db.records?.[user.username]||{}).filter(([key,record])=>/^\\d{4}-\\d{2}-\\d{2}$/.test(key)&&totalMinutes(record)>0).map(([key])=>key).sort();
+ const keys=Object.entries(db.records?.[user.username]||{}).filter(([key,record])=>/^\d{4}-\d{2}-\d{2}$/.test(key)&&totalMinutes(record)>0).map(([key])=>key).sort();
  return {first:keys[0]||"",last:keys[keys.length-1]||""};
 }
 function dashboardDateLabel(key){return key?fmtDate(key):"Sin registros";}
