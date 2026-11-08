@@ -438,7 +438,7 @@ $("dashboardBtn").onclick=()=>{$("dashboardPanel").classList.remove("hidden");$(
 function chartBars(items,users){
  const totals=items.map(x=>(x.segments||[]).reduce((sum,seg)=>sum+(Number(seg.minutes)||0),0)+(Number(x.vac)||0));
  const max=Math.max(1,...totals);
- const legend=(users||[]).map(u=>`<span><i class="legend-box" style="background:${u.color||'#172033'}"></i>${u.name}</span>`).join("");
+ const legend=(users||[]).filter(u=>u.active!==false).map(u=>`<span><i class="legend-box" style="background:${u.color||'#172033'}"></i>${u.name}</span>`).join("");
  const vacationLegend=items.some(x=>x.vac>0)?'<span><i class="legend-box vacation-legend"></i>Vacaciones</span>':"";
  const body=items.map((x,index)=>{
    const parts=(x.segments||[]).filter(seg=>seg.minutes>0);
@@ -467,8 +467,7 @@ function setupChartTooltips(){
 function dashboardUsers(mode){
  const all=(mode==="general"?db.users.filter(u=>u.role==="employee"):[selectedEmployee]).filter(Boolean);
  if(mode!=="general")return all;
- if(!selectedDashboardEmployees?.length)return [];
- return all.filter(u=>selectedDashboardEmployees.includes(u.username));
+ return all;
 }
 let dashboardEmployeeTab="active";
 function dashboardEmployeeWorkDates(user){
@@ -480,23 +479,12 @@ function renderDashboardEmployeeFilters(){
  const box=$("dashboardEmployeeFilters");if(!box)return;
  const employees=db.users.filter(u=>u.role==="employee");
  const active=employees.filter(u=>u.active!==false),inactive=employees.filter(u=>u.active===false);
- if(selectedDashboardEmployees===null)selectedDashboardEmployees=employees.map(u=>u.username);
  const shown=dashboardEmployeeTab==="active"?active:inactive;
- const tabs=`<div class="dashboard-employee-tabs"><button type="button" data-dashboard-tab="active" class="${dashboardEmployeeTab==="active"?"active":""}>Activos <span>${active.length}</span></button><button type="button" data-dashboard-tab="inactive" class="${dashboardEmployeeTab==="inactive"?"active":""}>No activos <span>${inactive.length}</span></button></div>`;
- const chips=shown.map(u=>{
-   const dates=dashboardEmployeeWorkDates(u);
-   return `<label class="dashboard-filter-chip dashboard-filter-chip-detail"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}"><strong>${u.name}</strong><small>Primero: ${dashboardDateLabel(dates.first)} · Último: ${dashboardDateLabel(dates.last)}</small></span></label>`;
- }).join("");
- box.innerHTML=tabs+`<div class="dashboard-employee-tab-list">${chips||'<p class="muted">No hay empleados en esta pestaña.</p>'}</div>`;
+ const tabs='<div class="dashboard-employee-tabs"><button type="button" data-dashboard-tab="active" class="'+(dashboardEmployeeTab==="active"?"active":"")+'">Activos <span>'+active.length+'</span></button><button type="button" data-dashboard-tab="inactive" class="'+(dashboardEmployeeTab==="inactive"?"active":"")+'">No activos <span>'+inactive.length+'</span></button></div>';
+ const rows=shown.map(u=>{const dates=dashboardEmployeeWorkDates(u);return '<div class="dashboard-filter-chip-detail"><i style="background:'+(u.color||"#172033")+'"></i><span><strong>'+escapeHtml(u.name)+'</strong><small>Primer día: '+dashboardDateLabel(dates.first)+' · Último día: '+dashboardDateLabel(dates.last)+'</small></span></div>';}).join("");
+ box.innerHTML=tabs+'<div class="dashboard-employee-tab-list">'+(rows||'<p class="muted">No hay empleados en esta pestaña.</p>')+'</div>';
  box.querySelectorAll("[data-dashboard-tab]").forEach(btn=>btn.onclick=()=>{dashboardEmployeeTab=btn.dataset.dashboardTab;renderDashboardEmployeeFilters()});
- box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
-   const hidden=employees.filter(u=>!shown.includes(u)&&selectedDashboardEmployees.includes(u.username)).map(u=>u.username);
-   const visible=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
-   selectedDashboardEmployees=[...hidden,...visible];
-   renderDashboard("general");
- });
- $("dashboardActiveEmployees").onclick=()=>{selectedDashboardEmployees=active.map(u=>u.username);dashboardEmployeeTab="active";renderDashboard("general")};
- $("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);dashboardEmployeeTab="active";renderDashboard("general")};
+ $("dashboardActiveEmployees")?.classList.add("hidden");$("dashboardAllEmployees")?.classList.add("hidden");
 }
 function dashboardMetricsForUser(user,k){
  const record=(db.records?.[user.username]||{})[k]||{};
