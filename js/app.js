@@ -1163,7 +1163,7 @@ function renderMonthlyHours(){
   if(!/^\d{4}-\d{2}$/.test(month))throw new Error('Selecciona un mes válido.');
   const [year,monthNum]=month.split('-').map(Number);
   const lastDay=new Date(year,monthNum,0).getDate();
-  const employees=(db.users||[]).filter(u=>u.role==='employee').slice().sort((a,b)=>String(a.name||a.username).localeCompare(String(b.name||b.username),'es'));
+  const employees=(db.users||[]).filter(u=>u.role==='employee'&&u.active!==false).slice().sort((a,b)=>String(a.name||a.username).localeCompare(String(b.name||b.username),'es'));
   if(!employees.length){
    table.innerHTML='<p class="empty-state">No se encontraron empleados en los datos cargados.</p>';
    return;
