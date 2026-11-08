@@ -632,3 +632,18 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .vacation-entitlement-grid tbody th{font-weight:650}
 .vacation-year-previous .vacation-week-progress{background:#f6f8fb;border-color:#d2dbe6}
 @media(max-width:700px){.vacation-week-progress{padding:8px 9px}.vacation-week-progress-top{align-items:flex-start;flex-direction:column;gap:3px}.vacation-week-progress-top strong{text-align:left}}
+
+
+/* Dashboard: pestañas separadas y fechas de actividad laboral */
+.dashboard-employee-tabs{display:flex;gap:8px;align-items:center;margin:12px 0 14px;border-bottom:1px solid #e2e8f0;padding-bottom:9px}
+.dashboard-employee-tabs button{border:1px solid #d7e0eb;background:#f8fafc;color:#475569;border-radius:9px;padding:8px 14px;font-weight:650;cursor:pointer}
+.dashboard-employee-tabs button.active{background:#1e355b;color:#fff;border-color:#1e355b}
+.dashboard-employee-tabs button span{display:inline-flex;align-items:center;justify-content:center;min-width:21px;height:21px;margin-left:5px;padding:0 5px;border-radius:99px;background:rgba(148,163,184,.2);font-size:11px}
+.dashboard-employee-tabs button.active span{background:rgba(255,255,255,.2)}
+.dashboard-employee-tab-list{display:flex;flex-wrap:wrap;gap:9px;align-items:stretch}
+.dashboard-filter-chip-detail{display:flex;align-items:flex-start;gap:7px;min-width:210px;max-width:100%;padding:8px 10px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}
+.dashboard-filter-chip-detail>span{display:flex;flex-direction:column;gap:4px;min-width:0}
+.dashboard-filter-chip-detail>span strong{font-size:12px;line-height:1.25;color:#26364d}
+.dashboard-filter-chip-detail>span small{font-size:10px;line-height:1.35;color:#64748b;white-space:normal}
+.dashboard-filter-chip-detail input{margin-top:2px;flex:0 0 auto}
+@media(max-width:650px){.dashboard-filter-chip-detail{flex:1 1 100%;min-width:0}.dashboard-employee-tabs button{flex:1}}
