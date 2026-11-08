@@ -647,3 +647,39 @@ button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-
 .dashboard-filter-chip-detail>span small{font-size:10px;line-height:1.35;color:#64748b;white-space:normal}
 .dashboard-filter-chip-detail input{margin-top:2px;flex:0 0 auto}
 @media(max-width:650px){.dashboard-filter-chip-detail{flex:1 1 100%;min-width:0}.dashboard-employee-tabs button{flex:1}}
+
+
+/* Dashboard: selector de empleados en panel ordenado y legible */
+#dashboardPanel .dashboard-filters{
+  display:block;align-items:stretch;padding:16px 20px 0;
+}
+#dashboardPanel .dashboard-filters>div:first-child{width:100%;min-width:0}
+#dashboardPanel .dashboard-employee-filters{
+  display:block;margin-top:10px;padding:12px;border:1px solid #e2e8f0;border-radius:12px;background:#f8fafc;
+}
+#dashboardPanel .dashboard-employee-tabs{margin:0 0 12px;padding:0 0 10px;gap:8px}
+#dashboardPanel .dashboard-employee-tabs button{min-width:130px}
+#dashboardPanel .dashboard-employee-tab-list{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(245px,1fr));gap:8px;
+}
+#dashboardPanel .dashboard-filter-chip-detail{
+  box-sizing:border-box;display:flex;align-items:center;gap:10px;min-width:0;width:100%;
+  max-width:none;padding:10px 12px;border:1px solid #dce4ee;border-radius:10px;background:#fff;
+}
+#dashboardPanel .dashboard-filter-chip-detail input{
+  position:static!important;opacity:1!important;pointer-events:auto!important;
+  appearance:auto;width:16px;height:16px;margin:0;accent-color:#24436d;flex:0 0 16px;
+}
+#dashboardPanel .dashboard-filter-chip-detail>span{
+  display:flex;flex:1;min-width:0;align-items:flex-start;flex-direction:column;gap:4px;
+  padding:0;border:0!important;border-radius:0;background:transparent!important;box-shadow:none!important;
+}
+#dashboardPanel .dashboard-filter-chip-detail>span strong{font-size:12px;font-weight:700;color:#24364b}
+#dashboardPanel .dashboard-filter-chip-detail>span small{font-size:10px;line-height:1.35;color:#64748b;white-space:normal}
+#dashboardPanel .dashboard-employee-tab-list>.muted{grid-column:1/-1;margin:4px 0;color:#64748b}
+#dashboardPanel .dashboard-filter-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
+@media(max-width:700px){
+ #dashboardPanel .dashboard-employee-tab-list{grid-template-columns:1fr}
+ #dashboardPanel .dashboard-employee-tabs button{flex:1;min-width:0}
+ #dashboardPanel .dashboard-filter-actions{justify-content:flex-start}
+}
