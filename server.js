@@ -88,6 +88,49 @@ async function init(){
     await pool.query('INSERT INTO app_state(id,data) VALUES(1,$1)',[createInitialDb(password)]);
   }
   await ensureVendorAccount();
+  await ensureHistoricalEmployees();
+}
+async function ensureHistoricalEmployees(){
+  const db=await getDb();
+  const historical=[
+    {name:'Alejandro Gavilan',weeklyHours:40},
+    {name:'Ashley Wullems',weeklyHours:0},
+    {name:'Alejandra Aguilo',weeklyHours:0},
+    {name:'Carlos Millan',weeklyHours:0},
+    {name:'Gabriel Garcia',weeklyHours:0},
+    {name:'Kaylee Wullems',weeklyHours:0},
+    {name:'Milana Buvaeva',weeklyHours:0},
+    {name:'Celeste Guzman',weeklyHours:0},
+    {name:'Evgeniy Vasiliev',weeklyHours:0},
+    {name:'Sonny Jasper',weeklyHours:0},
+    {name:'Claudia Barea Fernández',weeklyHours:0},
+    {name:'David Jesus Vazquez (hasta 14/6)',weeklyHours:0},
+    {name:'Ivan CUEVAS LOPEZ',weeklyHours:0},
+    {name:'Jose (hasta 14/6)',weeklyHours:0},
+    {name:'Juan Lu',weeklyHours:0},
+    {name:'Julia',weeklyHours:0},
+    {name:'Manuela Gaona Gonzalez',weeklyHours:30},
+    {name:'Odaris',weeklyHours:0},
+    {name:'Tati',weeklyHours:0},
+    {name:'Yerai Montes Sanchez',weeklyHours:30},
+    {name:'Francisco Rivero',weeklyHours:0}
+  ];
+  const norm=value=>String(value||'').normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/\\s+/g,' ').trim().toLowerCase();
+  let changed=false;
+  for(const person of historical){
+    if(db.users.some(u=>norm(u.name)===norm(person.name)))continue;
+    const base='historico_'+norm(person.name).replace(/[^a-z0-9]+/g,'_').replace(/^_|_$/g,'');
+    let username=base,n=2;
+    while(db.users.some(u=>u.username===username))username=base+'_'+n++;
+    db.users.push({
+      username,name:person.name,role:'employee',active:false,historical:true,
+      weeklyHours:person.weeklyHours,color:'#94a3b8',permission:'none',
+      passwordHash:bcrypt.hashSync(crypto.randomBytes(32).toString('hex'),12)
+    });
+    db.records[username]={};db.locks[username]={};db.weekly[username]=[];db.vacations[username]=[];db.balanceVisibility[username]=true;
+    changed=true;
+  }
+  if(changed)await putDb(db);
 }
 async function ensureVendorAccount(){const db=await getDb();let changed=false;let u=db.users.find(x=>x.username==='vendedor');if(!u){u={username:'vendedor',name:'Vendedor',role:'vendedor',weeklyHours:0,active:true,color:'#64748b',passwordHash:bcrypt.hashSync('vendedor',12)};db.users.push(u);db.records.vendedor={};db.locks.vendedor={};db.weekly.vendedor=[];db.vacations.vendedor=[];changed=true;}else if(u.role!=='vendedor'){u.role='vendedor';changed=true;}const template=createVendorSheetTemplate();if(!db.vendorSheets){db.vendorSheets=template;changed=true;}else{for(const [name,sheet] of Object.entries(template)){if(!db.vendorSheets[name]){db.vendorSheets[name]=sheet;changed=true;}}}if(changed)await putDb(db);}
 function driveConfig(){
