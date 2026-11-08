@@ -470,16 +470,34 @@ function dashboardUsers(mode){
  if(!selectedDashboardEmployees?.length)return [];
  return all.filter(u=>selectedDashboardEmployees.includes(u.username));
 }
+let dashboardEmployeeTab="active";
+function dashboardEmployeeWorkDates(user){
+ const keys=Object.entries(db.records?.[user.username]||{}).filter(([key,record])=>/^\\d{4}-\\d{2}-\\d{2}$/.test(key)&&totalMinutes(record)>0).map(([key])=>key).sort();
+ return {first:keys[0]||"",last:keys[keys.length-1]||""};
+}
+function dashboardDateLabel(key){return key?fmtDate(key):"Sin registros";}
 function renderDashboardEmployeeFilters(){
  const box=$("dashboardEmployeeFilters");if(!box)return;
  const employees=db.users.filter(u=>u.role==="employee");
+ const active=employees.filter(u=>u.active!==false),inactive=employees.filter(u=>u.active===false);
  if(selectedDashboardEmployees===null)selectedDashboardEmployees=employees.map(u=>u.username);
- box.innerHTML=employees.map(u=>`<label class="dashboard-filter-chip"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}">${u.name}${u.active===false?" · no activo":""}</span></label>`).join("");
+ const shown=dashboardEmployeeTab==="active"?active:inactive;
+ const tabs=`<div class="dashboard-employee-tabs"><button type="button" data-dashboard-tab="active" class="${dashboardEmployeeTab==="active"?"active":""}>Activos <span>${active.length}</span></button><button type="button" data-dashboard-tab="inactive" class="${dashboardEmployeeTab==="inactive"?"active":""}>No activos <span>${inactive.length}</span></button></div>`;
+ const chips=shown.map(u=>{
+   const dates=dashboardEmployeeWorkDates(u);
+   return `<label class="dashboard-filter-chip dashboard-filter-chip-detail"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}"><strong>${u.name}</strong><small>Primero: ${dashboardDateLabel(dates.first)} · Último: ${dashboardDateLabel(dates.last)}</small></span></label>`;
+ }).join("");
+ box.innerHTML=tabs+`<div class="dashboard-employee-tab-list">${chips||'<p class="muted">No hay empleados en esta pestaña.</p>'}</div>`;
+ box.querySelectorAll("[data-dashboard-tab]").forEach(btn=>btn.onclick=()=>{dashboardEmployeeTab=btn.dataset.dashboardTab;renderDashboardEmployeeFilters()});
  box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
    selectedDashboardEmployees=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
+   // Mantener las selecciones de la otra pestaña.
+   const hidden=employees.filter(u=>!shown.includes(u)&&selectedDashboardEmployees.includes(u.username)).map(u=>u.username);
+   selectedDashboardEmployees=[...hidden,...[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee)];
    renderDashboard("general");
  });
- $("dashboardActiveEmployees").onclick=()=>{selectedDashboardEmployees=employees.filter(u=>u.active!==false).map(u=>u.username);renderDashboard("general")};$("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);renderDashboard("general")};
+ $("dashboardActiveEmployees").onclick=()=>{selectedDashboardEmployees=active.map(u=>u.username);dashboardEmployeeTab="active";renderDashboard("general")};
+ $("dashboardAllEmployees").onclick=()=>{selectedDashboardEmployees=employees.map(u=>u.username);dashboardEmployeeTab="active";renderDashboard("general")};
 }
 function dashboardMetricsForUser(user,k){
  const record=(db.records?.[user.username]||{})[k]||{};
