@@ -490,10 +490,9 @@ function renderDashboardEmployeeFilters(){
  box.innerHTML=tabs+`<div class="dashboard-employee-tab-list">${chips||'<p class="muted">No hay empleados en esta pestaña.</p>'}</div>`;
  box.querySelectorAll("[data-dashboard-tab]").forEach(btn=>btn.onclick=()=>{dashboardEmployeeTab=btn.dataset.dashboardTab;renderDashboardEmployeeFilters()});
  box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
-   selectedDashboardEmployees=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
-   // Mantener las selecciones de la otra pestaña.
    const hidden=employees.filter(u=>!shown.includes(u)&&selectedDashboardEmployees.includes(u.username)).map(u=>u.username);
-   selectedDashboardEmployees=[...hidden,...[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee)];
+   const visible=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
+   selectedDashboardEmployees=[...hidden,...visible];
    renderDashboard("general");
  });
  $("dashboardActiveEmployees").onclick=()=>{selectedDashboardEmployees=active.map(u=>u.username);dashboardEmployeeTab="active";renderDashboard("general")};
