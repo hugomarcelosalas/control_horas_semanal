@@ -473,7 +473,7 @@ function dashboardUsers(mode){
 function renderDashboardEmployeeFilters(){
  const box=$("dashboardEmployeeFilters");if(!box)return;
  const employees=db.users.filter(u=>u.role==="employee");
- if(selectedDashboardEmployees===null)selectedDashboardEmployees=employees.filter(u=>u.active!==false).map(u=>u.username);
+ if(selectedDashboardEmployees===null)selectedDashboardEmployees=employees.map(u=>u.username);
  box.innerHTML=employees.map(u=>`<label class="dashboard-filter-chip"><input type="checkbox" data-dashboard-employee="${u.username}" ${selectedDashboardEmployees.includes(u.username)?"checked":""}><span style="border-color:${u.color||'#172033'}">${u.name}${u.active===false?" · no activo":""}</span></label>`).join("");
  box.querySelectorAll("[data-dashboard-employee]").forEach(cb=>cb.onchange=()=>{
    selectedDashboardEmployees=[...box.querySelectorAll("[data-dashboard-employee]:checked")].map(x=>x.dataset.dashboardEmployee);
